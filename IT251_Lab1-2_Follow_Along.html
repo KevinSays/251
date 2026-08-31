@@ -2,47 +2,47 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 
 <style>
   :root{
-    --bg:#faf6ef;
+    --bg:#f2f6f4;
     --surface:#ffffff;
-    --surface-2:#f1ead9;
-    --text:#211a12;
-    --muted:#625543;
-    --border:#e4d9c2;
-    --accent:#a15d0e;
-    --accent-soft:#f3e2c2;
-    --accent-2:#3c7a5c;
-    --accent-2-soft:#dcece2;
-    --danger:#b13a26;
-    --danger-soft:#f6ded7;
-    --correct:#2f7d43;
-    --correct-soft:#dcefe0;
-    --shadow: 0 1px 2px rgba(33,26,18,.06), 0 8px 24px rgba(33,26,18,.06);
+    --surface-2:#e6efec;
+    --text:#0c1a15;
+    --muted:#51655d;
+    --border:#cddcd5;
+    --accent:#0f7a5c;
+    --accent-soft:#dcf1e7;
+    --accent-2:#0e7490;
+    --accent-2-soft:#dbeff4;
+    --danger:#b3261e;
+    --danger-soft:#f8dcd9;
+    --correct:#0f7a5c;
+    --correct-soft:#dcf1e7;
+    --shadow: 0 1px 2px rgba(12,26,21,.06), 0 8px 24px rgba(12,26,21,.07);
     --mono:'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
-    --sans:'Source Sans 3', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --sans:'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   }
   @media (prefers-color-scheme: dark){
     :root:not([data-theme="light"]){
-      --bg:#161310; --surface:#1e1a15; --surface-2:#241f18;
-      --text:#f2ece2; --muted:#bfb5a7; --border:#332c22;
-      --accent:#e8b04b; --accent-soft:#3a2f18;
-      --accent-2:#6fae8f; --accent-2-soft:#16332a;
-      --danger:#e8674a; --danger-soft:#3a1c14;
-      --correct:#8fd19e; --correct-soft:#173322;
-      --shadow: 0 1px 2px rgba(0,0,0,.35), 0 12px 32px rgba(0,0,0,.4);
+      --bg:#0a0f0d; --surface:#0f1613; --surface-2:#131c18;
+      --text:#d9f5e8; --muted:#82a99a; --border:#1e2b26;
+      --accent:#3ddc97; --accent-soft:#123024;
+      --accent-2:#22d3ee; --accent-2-soft:#0c2b30;
+      --danger:#ff7a68; --danger-soft:#33150f;
+      --correct:#3ddc97; --correct-soft:#123024;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 12px 32px rgba(0,0,0,.45);
     }
   }
   :root[data-theme="dark"]{
-    --bg:#161310; --surface:#1e1a15; --surface-2:#241f18;
-    --text:#f2ece2; --muted:#bfb5a7; --border:#332c22;
-    --accent:#e8b04b; --accent-soft:#3a2f18;
-    --accent-2:#6fae8f; --accent-2-soft:#16332a;
-    --danger:#e8674a; --danger-soft:#3a1c14;
-    --correct:#8fd19e; --correct-soft:#173322;
-    --shadow: 0 1px 2px rgba(0,0,0,.35), 0 12px 32px rgba(0,0,0,.4);
+    --bg:#0a0f0d; --surface:#0f1613; --surface-2:#131c18;
+    --text:#d9f5e8; --muted:#82a99a; --border:#1e2b26;
+    --accent:#3ddc97; --accent-soft:#123024;
+    --accent-2:#22d3ee; --accent-2-soft:#0c2b30;
+    --danger:#ff7a68; --danger-soft:#33150f;
+    --correct:#3ddc97; --correct-soft:#123024;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 12px 32px rgba(0,0,0,.45);
   }
 
   *{box-sizing:border-box;}
@@ -59,10 +59,15 @@
     padding:56px 0 40px;
   }
   .termbar{ display:flex; gap:6px; margin-bottom:20px; }
-  .termbar span{ width:11px; height:11px; border-radius:50%; background:var(--border); }
+  .termbar span{ width:11px; height:11px; border-radius:50%; }
+  .termbar span:nth-child(1){ background:#ff5f57; }
+  .termbar span:nth-child(2){ background:#febc2e; }
+  .termbar span:nth-child(3){ background:#28c840; }
   .eyebrow{ font-family:var(--mono); font-size:.8rem; color:var(--accent); }
   .eyebrow::before{ content:"$ "; opacity:.7; }
   h1{ font-family:var(--mono); font-weight:700; font-size:clamp(2rem,4vw,3rem); line-height:1.08; margin:.4em 0 .3em; text-wrap:balance; letter-spacing:-.01em; }
+  h1 .cursor{ display:inline-block; width:.5ch; background:var(--accent); margin-left:.15em; animation:blink 1.1s steps(1) infinite; }
+  @keyframes blink{ 50%{ opacity:0; } }
   .hero p.lede{ max-width:62ch; font-size:1.1rem; color:var(--muted); margin:0 0 1.6em; }
   .factrow{ display:flex; flex-wrap:wrap; gap:10px; }
   .fact{ font-family:var(--mono); font-size:.78rem; background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:.5em .8em; display:flex; gap:.5em; }
@@ -75,6 +80,7 @@
   nav.index a:hover{ color:var(--text); border-color:var(--border); background:var(--surface); }
   nav.index a.toc-link{ font-weight:600; color:var(--accent); border-right:1px solid var(--border); border-radius:0; margin-right:8px; padding-right:16px; }
   nav.index a.toc-link:hover{ color:var(--accent); background:transparent; border-right-color:var(--border); }
+  nav.index a:not(.toc-link)::before{ content:'#'; opacity:.5; margin-right:.3em; }
 
   .back-to-top{ position:fixed; bottom:22px; right:22px; z-index:40; width:46px; height:46px;
     background:var(--surface); border:1px solid var(--border); border-radius:10px; box-shadow:var(--shadow);
@@ -91,6 +97,7 @@
   section:last-of-type{ border-bottom:none; }
   .section-head{ margin-bottom:28px; max-width:70ch; }
   .kicker{ font-family:var(--mono); font-size:.75rem; letter-spacing:.1em; text-transform:uppercase; color:var(--accent-2); margin:0 0 .5em; }
+  .kicker::before{ content:"// "; opacity:.6; }
   h2{ font-family:var(--mono); font-size:clamp(1.4rem,2.4vw,1.9rem); margin:0 0 .3em; text-wrap:balance; }
   h3{ font-family:var(--mono); font-size:1.05rem; margin:1.6em 0 .5em; }
   .section-head p{ color:var(--muted); margin:.4em 0 0; }
@@ -155,7 +162,7 @@
   <div class="wrap">
     <div class="termbar"><span></span><span></span><span></span></div>
     <p class="eyebrow">IT251 · Weeks 1–2</p>
-    <h1>VM Setup &amp; Linux Basics</h1>
+    <h1>VM Setup &amp; Linux Basics<span class="cursor">&nbsp;</span></h1>
     <p class="lede">Follow along step by step: build the personal VM you'll use for every lab this semester, turn on logging that proves your work automatically, then put it to use navigating a real filesystem.</p>
     <div class="factrow">
       <span class="fact"><b>1.2</b> Lab 1</span>
