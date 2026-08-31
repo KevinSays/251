@@ -1,0 +1,598 @@
+<title>Linux+ Foundations</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --bg:#faf6ef;
+    --surface:#ffffff;
+    --surface-2:#f1ead9;
+    --text:#211a12;
+    --muted:#625543;
+    --border:#e4d9c2;
+    --accent:#a15d0e;
+    --accent-soft:#f3e2c2;
+    --accent-2:#3c7a5c;
+    --accent-2-soft:#dcece2;
+    --danger:#b13a26;
+    --danger-soft:#f6ded7;
+    --correct:#2f7d43;
+    --correct-soft:#dcefe0;
+    --shadow: 0 1px 2px rgba(33,26,18,.06), 0 8px 24px rgba(33,26,18,.06);
+    --mono:'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    --sans:'Source Sans 3', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#161310; --surface:#1e1a15; --surface-2:#241f18;
+      --text:#f2ece2; --muted:#bfb5a7; --border:#332c22;
+      --accent:#e8b04b; --accent-soft:#3a2f18;
+      --accent-2:#6fae8f; --accent-2-soft:#16332a;
+      --danger:#e8674a; --danger-soft:#3a1c14;
+      --correct:#8fd19e; --correct-soft:#173322;
+      --shadow: 0 1px 2px rgba(0,0,0,.35), 0 12px 32px rgba(0,0,0,.4);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#161310; --surface:#1e1a15; --surface-2:#241f18;
+    --text:#f2ece2; --muted:#bfb5a7; --border:#332c22;
+    --accent:#e8b04b; --accent-soft:#3a2f18;
+    --accent-2:#6fae8f; --accent-2-soft:#16332a;
+    --danger:#e8674a; --danger-soft:#3a1c14;
+    --correct:#8fd19e; --correct-soft:#173322;
+    --shadow: 0 1px 2px rgba(0,0,0,.35), 0 12px 32px rgba(0,0,0,.4);
+  }
+
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto;} *{animation-duration:.001ms !important; transition-duration:.001ms !important;} }
+  body{ margin:0; background:var(--bg); color:var(--text); font-family:var(--sans); line-height:1.55; -webkit-font-smoothing:antialiased; }
+  a{ color:var(--accent-2); }
+  ::selection{ background:var(--accent-soft); }
+  .wrap{ max-width:1080px; margin:0 auto; padding:0 24px; }
+
+  header.hero{
+    border-bottom:1px solid var(--border);
+    background:repeating-linear-gradient(180deg, var(--surface-2) 0 1px, var(--bg) 1px 28px);
+    padding:56px 0 40px;
+  }
+  .termbar{
+    display:flex; gap:6px; margin-bottom:20px;
+  }
+  .termbar span{ width:11px; height:11px; border-radius:50%; background:var(--border); }
+  .eyebrow{
+    font-family:var(--mono); font-size:.8rem; color:var(--accent);
+  }
+  .eyebrow::before{ content:"$ "; opacity:.7; }
+  h1{
+    font-family:var(--mono); font-weight:700; font-size:clamp(2rem,4vw,3rem);
+    line-height:1.08; margin:.4em 0 .3em; text-wrap:balance; letter-spacing:-.01em;
+  }
+  .hero p.lede{ max-width:62ch; font-size:1.1rem; color:var(--muted); margin:0 0 1.6em; }
+  .factrow{ display:flex; flex-wrap:wrap; gap:10px; }
+  .fact{ font-family:var(--mono); font-size:.78rem; background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:.5em .8em; display:flex; gap:.5em; }
+  .fact b{ color:var(--muted); font-weight:500; text-transform:uppercase; letter-spacing:.06em; font-size:.72rem; }
+
+  nav.index{ position:sticky; top:0; z-index:20; background:color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter:blur(8px); border-bottom:1px solid var(--border); }
+  nav.index .wrap{ display:flex; gap:4px; overflow-x:auto; padding:10px 24px; scrollbar-width:none; }
+  nav.index .wrap::-webkit-scrollbar{ display:none; }
+  nav.index a{ font-family:var(--mono); font-size:.82rem; text-decoration:none; color:var(--muted); padding:.5em .9em; border-radius:6px; white-space:nowrap; border:1px solid transparent; }
+  nav.index a:hover{ color:var(--text); border-color:var(--border); background:var(--surface); }
+
+  section{ padding:52px 0; border-bottom:1px solid var(--border); }
+  section:last-of-type{ border-bottom:none; }
+  .section-head{ margin-bottom:28px; max-width:70ch; }
+  .kicker{ font-family:var(--mono); font-size:.75rem; letter-spacing:.1em; text-transform:uppercase; color:var(--accent-2); margin:0 0 .5em; }
+  h2{ font-family:var(--mono); font-size:clamp(1.4rem,2.4vw,1.9rem); margin:0 0 .3em; text-wrap:balance; }
+  .section-head p{ color:var(--muted); margin:.4em 0 0; }
+
+  .obj-list{ display:grid; gap:12px; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); list-style:none; margin:0; padding:0; }
+  .obj-list li{ background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:16px 18px; box-shadow:var(--shadow); font-size:.95rem; }
+  .obj-list li::before{ content:"$"; color:var(--accent); font-family:var(--mono); margin-right:.6em; font-weight:700; }
+
+  figure{ margin:36px 0 0; }
+  figure svg{ width:100%; height:auto; display:block; background:var(--surface); border:1px solid var(--border); border-radius:12px; }
+  figcaption{ font-size:.85rem; color:var(--muted); margin-top:.6em; }
+  .diagram-grid{ display:grid; gap:32px; grid-template-columns:1fr; }
+  @media(min-width:860px){ .diagram-grid{ grid-template-columns:1.3fr 1fr; } }
+
+  .toolbar{ display:flex; gap:10px; align-items:center; margin-bottom:20px; flex-wrap:wrap; }
+  button.btn{ font-family:var(--mono); font-size:.82rem; background:var(--surface); color:var(--text); border:1px solid var(--border); border-radius:7px; padding:.6em 1em; cursor:pointer; }
+  button.btn:hover{ border-color:var(--accent); color:var(--accent); }
+  button.btn:focus-visible, a:focus-visible, .flashcard:focus-visible, input:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+  #cardProgress{ font-family:var(--mono); font-size:.8rem; color:var(--muted); }
+
+  .card-grid{ display:grid; gap:16px; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); }
+  .flashcard{ perspective:1200px; height:150px; cursor:pointer; border:none; background:none; padding:0; font-family:inherit; text-align:left; width:100%; }
+  .flashcard-inner{ position:relative; width:100%; height:100%; transition:transform .5s cubic-bezier(.4,.2,.2,1); transform-style:preserve-3d; }
+  .flashcard.flipped .flashcard-inner{ transform:rotateY(180deg); }
+  .flashcard-face{ position:absolute; inset:0; backface-visibility:hidden; border-radius:10px; border:1px solid var(--border); box-shadow:var(--shadow); padding:16px; display:flex; flex-direction:column; justify-content:center; }
+  .flashcard-face.front{ background:var(--surface); }
+  .flashcard-face.back{ background:var(--accent-soft); transform:rotateY(180deg); overflow-y:auto; }
+  .flashcard-face .lbl{ font-family:var(--mono); font-size:.68rem; text-transform:uppercase; letter-spacing:.1em; color:var(--muted); margin-bottom:.5em; }
+  .flashcard-face.front .term{ font-family:var(--mono); font-weight:600; font-size:1.02rem; }
+  .flashcard-face.back .def{ font-size:.88rem; }
+  .flashcard.known .flashcard-face.front{ border-color:var(--correct); }
+
+  .quiz-q{ background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px 22px; margin-bottom:18px; box-shadow:var(--shadow); }
+  .quiz-q .qtext{ font-weight:600; margin:0 0 14px; }
+  .quiz-q .qnum{ font-family:var(--mono); color:var(--accent); margin-right:.5em; }
+  .choices{ display:grid; gap:8px; }
+  .choice{ text-align:left; font-family:var(--sans); font-size:.95rem; background:var(--surface-2); border:1px solid var(--border); border-radius:8px; padding:.7em .9em; cursor:pointer; color:var(--text); }
+  .choice:hover{ border-color:var(--accent); }
+  .choice.correct{ background:var(--correct-soft); border-color:var(--correct); }
+  .choice.incorrect{ background:var(--danger-soft); border-color:var(--danger); }
+  .choice[disabled]{ cursor:default; }
+  .explain{ margin-top:12px; font-size:.88rem; color:var(--muted); border-left:3px solid var(--accent-2); padding-left:12px; display:none; }
+  .explain.show{ display:block; }
+  #quizScore{ font-family:var(--mono); font-size:.85rem; color:var(--muted); margin-bottom:16px; }
+
+  .example{ background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px 22px; margin-bottom:16px; box-shadow:var(--shadow); }
+  .example h3{ font-family:var(--mono); font-size:1.02rem; margin:0 0 8px; }
+  .example .tag{ display:inline-block; font-family:var(--mono); font-size:.68rem; text-transform:uppercase; letter-spacing:.08em; color:var(--accent-2); background:var(--accent-2-soft); border-radius:5px; padding:.25em .6em; margin-bottom:10px; }
+  code.inline{ font-family:var(--mono); background:var(--surface-2); border-radius:4px; padding:.1em .4em; font-size:.92em; }
+  pre.term{ font-family:var(--mono); font-size:.85rem; background:#0000; background:var(--surface-2); border:1px solid var(--border); border-radius:8px; padding:12px 14px; overflow-x:auto; margin:10px 0; }
+  details.solution{ margin-top:12px; }
+  details.solution summary{ cursor:pointer; font-family:var(--mono); font-size:.82rem; color:var(--accent); list-style:none; display:inline-flex; align-items:center; gap:.4em; }
+  details.solution summary::-webkit-details-marker{ display:none; }
+  details.solution summary::before{ content:"▸"; transition:transform .15s; }
+  details.solution[open] summary::before{ transform:rotate(90deg); }
+  details.solution .solbody{ margin-top:10px; padding:14px 16px; background:var(--surface-2); border-radius:8px; font-size:.92rem; }
+
+  #glossarySearch{ width:100%; max-width:420px; font-family:var(--sans); font-size:.95rem; padding:.7em .9em; border-radius:8px; border:1px solid var(--border); background:var(--surface); color:var(--text); margin-bottom:16px; }
+  .alpha-nav{ display:flex; flex-wrap:wrap; gap:4px; margin-bottom:24px; }
+  .alpha-nav a{ font-family:var(--mono); font-size:.78rem; width:1.9em; height:1.9em; display:flex; align-items:center; justify-content:center; border:1px solid var(--border); border-radius:5px; text-decoration:none; color:var(--muted); }
+  .alpha-nav a.has{ color:var(--text); }
+  .alpha-nav a.has:hover{ border-color:var(--accent); color:var(--accent); }
+  .glossary-letter{ font-family:var(--mono); color:var(--accent); font-size:1.1rem; margin:22px 0 8px; }
+  dl.glossary{ margin:0; }
+  dl.glossary .gitem{ border-top:1px solid var(--border); padding:12px 0; }
+  dl.glossary dt{ font-family:var(--mono); font-weight:600; }
+  dl.glossary dd{ margin:.3em 0 0; color:var(--muted); font-size:.92rem; }
+  .gitem.hidden{ display:none; }
+
+  footer{ padding:32px 0 60px; }
+  footer p{ color:var(--muted); font-size:.85rem; font-family:var(--mono); }
+</style>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="termbar"><span></span><span></span><span></span></div>
+    <p class="eyebrow">IT251 · Week 1</p>
+    <h1>Linux+ Foundations</h1>
+    <p class="lede">From power button to login prompt: the boot sequence, the filesystem layout, and the tools that manage devices underneath it all — then straight into your first hands-on box.</p>
+    <div class="factrow">
+      <span class="fact"><b>Mon lecture</b> 2:30–3:45 PM</span>
+      <span class="fact"><b>Wed lab</b> 2:30–3:45 PM</span>
+      <span class="fact"><b>Covers</b> Module 1: System Management</span>
+      <span class="fact"><b>Lab track</b> VM Setup → FHS Hunt → Kali/tooling → THM/HTB</span>
+      <span class="fact"><b>Midterm</b> Week 8</span>
+    </div>
+  </div>
+</header>
+
+<nav class="index" aria-label="Section index">
+  <div class="wrap">
+    <a href="#overview">Overview</a>
+    <a href="#diagrams">Concepts</a>
+    <a href="#lab">Hands-On Lab</a>
+    <a href="#flashcards">Flashcards</a>
+    <a href="#quiz">Quiz</a>
+    <a href="#examples">Examples</a>
+    <a href="#glossary">Glossary</a>
+  </div>
+</nav>
+
+<main class="wrap">
+
+  <section id="overview">
+    <div class="section-head">
+      <p class="kicker">Overview</p>
+      <h2>What Week 1 covers</h2>
+      <p>Before you can troubleshoot a Linux box, you need to know what happens between pressing the power button and seeing a prompt — and where things live once you're in. This week is the map: boot sequence, directory structure, distro families, and the tools that manage devices and kernel modules underneath it all.</p>
+    </div>
+    <ul class="obj-list">
+      <li>Trace the boot process from firmware to a running shell</li>
+      <li>Navigate the FHS confidently and explain what each top-level directory is for</li>
+      <li>Compare Debian-family and RHEL-family distros and their package managers</li>
+      <li>Load, unload, and inspect kernel modules</li>
+      <li>Explain what initramfs does and why it exists</li>
+      <li>Build a personal Linux VM and set up persistent terminal logging (Wednesday's hands-on lab)</li>
+    </ul>
+  </section>
+
+  <section id="diagrams">
+    <div class="section-head">
+      <p class="kicker">Concepts</p>
+      <h2>Two ways to see it</h2>
+      <p>The boot sequence shows <em>what happens in order</em>. The FHS shows <em>where things live once you're up</em>.</p>
+    </div>
+    <div class="diagram-grid">
+      <figure>
+        <svg viewBox="0 0 620 220" role="img" aria-label="Boot sequence flow: firmware, then bootloader, then kernel, then initramfs, then systemd, ending at a running system.">
+          <defs>
+            <marker id="arrow251" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+            </marker>
+          </defs>
+          <g font-family="JetBrains Mono" font-size="12" font-weight="600">
+            <rect x="10" y="80" width="100" height="50" rx="6" fill="none" stroke="currentColor"/>
+            <text x="60" y="110" text-anchor="middle" fill="currentColor">Firmware</text>
+            <rect x="140" y="80" width="100" height="50" rx="6" fill="none" stroke="currentColor"/>
+            <text x="190" y="110" text-anchor="middle" fill="currentColor">GRUB</text>
+            <rect x="270" y="80" width="100" height="50" rx="6" fill="none" stroke="currentColor"/>
+            <text x="320" y="110" text-anchor="middle" fill="currentColor">Kernel</text>
+            <rect x="400" y="80" width="100" height="50" rx="6" fill="none" stroke="currentColor"/>
+            <text x="450" y="103" text-anchor="middle" fill="currentColor">initramfs</text>
+            <rect x="510" y="10" width="0" height="0"/>
+            <rect x="400" y="150" width="200" height="50" rx="6" fill="var(--accent-soft)" stroke="var(--accent)"/>
+            <text x="500" y="180" text-anchor="middle" fill="var(--accent)">systemd (PID 1)</text>
+          </g>
+          <line x1="110" y1="105" x2="140" y2="105" stroke="currentColor" marker-end="url(#arrow251)"/>
+          <text x="125" y="95" font-family="Source Sans 3" font-size="10" fill="var(--muted)" text-anchor="middle">POST</text>
+          <line x1="240" y1="105" x2="270" y2="105" stroke="currentColor" marker-end="url(#arrow251)"/>
+          <text x="255" y="95" font-family="Source Sans 3" font-size="10" fill="var(--muted)" text-anchor="middle">loads</text>
+          <line x1="370" y1="105" x2="400" y2="105" stroke="currentColor" marker-end="url(#arrow251)"/>
+          <text x="385" y="95" font-family="Source Sans 3" font-size="10" fill="var(--muted)" text-anchor="middle">hands to</text>
+          <line x1="450" y1="130" x2="500" y2="150" stroke="var(--accent)" marker-end="url(#arrow251)"/>
+          <text x="500" y="140" font-family="Source Sans 3" font-size="10" fill="var(--accent)" text-anchor="middle">starts</text>
+        </svg>
+        <figcaption>Boot sequence: each stage hands off to the next until <code class="inline">systemd</code> brings the system fully up.</figcaption>
+      </figure>
+
+      <figure>
+        <svg viewBox="0 0 420 300" role="img" aria-label="FHS tree diagram: root branching into bin, etc, home, var, usr, dev, proc, and sys.">
+          <g font-family="JetBrains Mono" font-size="13" font-weight="600" fill="currentColor">
+            <text x="30" y="30">/</text>
+          </g>
+          <g stroke="currentColor" stroke-width="1" opacity=".6">
+            <line x1="35" y1="35" x2="35" y2="260"/>
+            <line x1="35" y1="60" x2="60" y2="60"/>
+            <line x1="35" y1="95" x2="60" y2="95"/>
+            <line x1="35" y1="130" x2="60" y2="130"/>
+            <line x1="35" y1="165" x2="60" y2="165"/>
+            <line x1="35" y1="200" x2="60" y2="200"/>
+            <line x1="35" y1="235" x2="60" y2="235"/>
+            <line x1="35" y1="260" x2="60" y2="260"/>
+          </g>
+          <g font-family="JetBrains Mono" font-size="12.5" fill="currentColor">
+            <text x="66" y="64">/etc</text><text x="140" y="64" font-family="Source Sans 3" font-size="11" fill="var(--muted)">config files</text>
+            <text x="66" y="99">/home</text><text x="140" y="99" font-family="Source Sans 3" font-size="11" fill="var(--muted)">user directories</text>
+            <text x="66" y="134">/var</text><text x="140" y="134" font-family="Source Sans 3" font-size="11" fill="var(--muted)">logs, spool, variable data</text>
+            <text x="66" y="169">/usr</text><text x="140" y="169" font-family="Source Sans 3" font-size="11" fill="var(--muted)">installed programs, libraries</text>
+            <text x="66" y="204">/dev</text><text x="140" y="204" font-family="Source Sans 3" font-size="11" fill="var(--muted)">device files</text>
+            <text x="66" y="239">/proc</text><text x="140" y="239" font-family="Source Sans 3" font-size="11" fill="var(--accent)">live kernel/process state</text>
+            <text x="66" y="264">/sys</text><text x="140" y="264" font-family="Source Sans 3" font-size="11" fill="var(--accent)">live device/driver state</text>
+          </g>
+        </svg>
+        <figcaption><code class="inline">/proc</code> and <code class="inline">/sys</code> aren't real files on disk — they're live windows into the kernel.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section id="lab">
+    <div class="section-head">
+      <p class="kicker">Wednesday · Hands-On</p>
+      <h2>Lab: VirtualBox Setup & Terminal Logging</h2>
+      <p>Every Wednesday this semester is lab time, not lecture. Today is infrastructure day: build the personal VM you'll use for every lab going forward, and set up persistent shell-history logging so proof-of-work is automatic from here on. No new Linux content yet — that starts next week.</p>
+    </div>
+
+    <p style="color:var(--muted); font-size:.92rem; max-width:65ch;">Keep a running notes file as you go all semester (grab <a href="https://obsidian.md/" target="_blank" rel="noopener">Obsidian</a> or <a href="https://www.giaccone.me/cherrytree/" target="_blank" rel="noopener">CherryTree</a> if you don't already have a note-taking habit — both are free). Full step-by-step walkthrough, including the logging setup script, lives in <code class="inline">IT251_Lab1_VM_Setup_Logging.md</code>.</p>
+
+    <div class="card-grid" style="margin-top:24px; grid-template-columns:repeat(auto-fill,minmax(260px,1fr));">
+      <div class="example" style="margin-bottom:0;">
+        <span class="tag">Step 1</span>
+        <h3>Create the VM</h3>
+        <p>VirtualBox → Machine → New. 4096 MB RAM minimum, 2 CPU cores, 25 GB dynamically-allocated disk.</p>
+      </div>
+      <div class="example" style="margin-bottom:0;">
+        <span class="tag">Step 2</span>
+        <h3>Install a distro</h3>
+        <p>Any real distro is fine — Ubuntu Desktop is the safe default if you didn't pick one in advance.</p>
+      </div>
+      <div class="example" style="margin-bottom:0;">
+        <span class="tag">Step 3</span>
+        <h3>Update & snapshot</h3>
+        <p>First boot, update packages, shut down, then <strong>Take Snapshot</strong> named <code class="inline">clean-install</code> — your safety net for the rest of the semester.</p>
+      </div>
+      <div class="example" style="margin-bottom:0;">
+        <span class="tag">Step 4</span>
+        <h3>Set up logging</h3>
+        <p>Run a one-time setup script that timestamps and immediately flushes shell history to disk — every future lab's proof-of-work, generated automatically.</p>
+      </div>
+      <div class="example" style="margin-bottom:0;">
+        <span class="tag">Step 5</span>
+        <h3>Export & submit</h3>
+        <p>Run the export helper, confirm timestamps and commands show up, then submit the log file plus a snapshot screenshot.</p>
+      </div>
+      <div class="example" style="margin-bottom:0;">
+        <span class="tag">Ahead</span>
+        <h3>What this sets up</h3>
+        <p>Weeks 2 onward all run inside this same VM — Linux Basics, an FHS scavenger-hunt challenge, text processing & cron, then pentest tooling and THM/HTB rooms.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="flashcards">
+    <div class="section-head">
+      <p class="kicker">Study</p>
+      <h2>Flashcards</h2>
+      <p>Click a card to flip it. Double-click to mark it known once you've got it cold.</p>
+    </div>
+    <div class="toolbar">
+      <button class="btn" id="shuffleBtn">Shuffle</button>
+      <button class="btn" id="resetKnownBtn">Reset progress</button>
+      <span id="cardProgress"></span>
+    </div>
+    <div class="card-grid" id="cardGrid"></div>
+  </section>
+
+  <section id="quiz">
+    <div class="section-head">
+      <p class="kicker">Check yourself</p>
+      <h2>Sample questions</h2>
+      <p>Pick an answer to see if you're right — same style as the checkpoint quizzes.</p>
+    </div>
+    <div id="quizScore"></div>
+    <div id="quizList"></div>
+    <button class="btn" id="resetQuizBtn">Reset quiz</button>
+  </section>
+
+  <section id="examples">
+    <div class="section-head">
+      <p class="kicker">Applied</p>
+      <h2>Worked examples</h2>
+      <p>Think it through before you expand the answer.</p>
+    </div>
+
+    <div class="example">
+      <span class="tag">Boot troubleshooting</span>
+      <h3>Where did it stop?</h3>
+      <p>A server hangs on a blinking cursor before any boot menu ever appears — no GRUB menu, nothing.</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <p><strong>Stage:</strong> This is failing before the bootloader even loads — likely a firmware/BIOS-UEFI issue or a corrupted/missing bootloader on the disk, not a kernel or initramfs problem.</p>
+          <p><strong>Why it matters:</strong> knowing the stage narrows your fix — a missing GRUB entry needs a rescue disk and <code class="inline">grub-install</code>, not a kernel parameter change.</p>
+        </div>
+      </details>
+    </div>
+
+    <div class="example">
+      <span class="tag">Kernel modules</span>
+      <h3>Load it, prove it, unload it</h3>
+      <p>You need to load the <code class="inline">usb_storage</code> module, confirm it's active, then remove it.</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <pre class="term">modprobe usb_storage
+lsmod | grep usb_storage
+modprobe -r usb_storage</pre>
+          <p><code class="inline">modprobe</code> handles dependencies for you (unlike <code class="inline">insmod</code>/<code class="inline">rmmod</code>), which is why it's the go-to command day to day.</p>
+        </div>
+      </details>
+    </div>
+
+    <div class="example">
+      <span class="tag">FHS</span>
+      <h3>Where would you look?</h3>
+      <p>A web server is misbehaving and you need to check its error log, and separately, find where a newly installed package put its shared libraries.</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <p><strong>Error log:</strong> <code class="inline">/var/log/</code> — that's where variable, frequently-changing data like logs lives.</p>
+          <p><strong>Shared libraries:</strong> under <code class="inline">/usr/lib</code> (or <code class="inline">/usr/lib64</code>) — the bulk of installed software and its dependencies live under <code class="inline">/usr</code>.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section id="glossary">
+    <div class="section-head">
+      <p class="kicker">Reference</p>
+      <h2>Glossary &amp; index</h2>
+      <p>Every term from this week, searchable and indexed A–Z.</p>
+    </div>
+    <input type="text" id="glossarySearch" placeholder="Search terms…" aria-label="Search glossary">
+    <div class="alpha-nav" id="alphaNav"></div>
+    <dl class="glossary" id="glossaryList"></dl>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>IT251 · Linux+ (XK0-006) · Monday lecture + Wednesday hands-on lab track (VM setup → FHS/text-processing labs → Kali/VirtualBox tooling → THM/HTB) · Week 1 reference — more weeks added as the course progresses.</p>
+  </div>
+</footer>
+
+<script>
+  const TERMS = [
+    {t:"BIOS / UEFI", d:"The firmware that runs first at power-on. BIOS is legacy (works with MBR disks); UEFI is modern (works with GPT, supports Secure Boot)."},
+    {t:"Block device", d:"A device that reads/writes data in fixed-size blocks — disks (/dev/sda). Contrast with character devices."},
+    {t:"Bootloader (GRUB2)", d:"Loads the kernel and initramfs into memory and hands off execution. Presents the boot menu for kernel/OS selection."},
+    {t:"Character device", d:"A device that reads/writes a continuous stream of data, one character at a time — e.g., a serial port (/dev/tty)."},
+    {t:"Distribution (distro)", d:"A packaged version of Linux with a chosen package manager, defaults, and release model — e.g., Ubuntu (Debian family) or Rocky Linux (RHEL family)."},
+    {t:"dracut / update-initramfs", d:"Tools used to rebuild the initramfs — needed after adding a driver required at boot time. dracut is common on RHEL family, update-initramfs on Debian family."},
+    {t:"ext4", d:"The default, mature journaling filesystem on most Linux distros."},
+    {t:"FHS (Filesystem Hierarchy Standard)", d:"The standard that defines what each top-level Linux directory is for, so software behaves predictably across distros."},
+    {t:"GPT", d:"GUID Partition Table — modern partitioning scheme, supports many partitions and disks larger than 2TB, pairs with UEFI."},
+    {t:"GPL", d:"GNU General Public License — a 'copyleft' open source license requiring derivative works to also be released under the GPL."},
+    {t:"initramfs (initrd)", d:"A temporary root filesystem loaded into RAM at boot, containing just enough drivers to find and mount the real root filesystem — critical when root lives on LVM, RAID, or encrypted storage."},
+    {t:"Kernel", d:"The core of the OS — manages hardware, memory, processes, and provides the interface everything else runs on top of."},
+    {t:"Kernel module", d:"A piece of kernel code (often a driver) that can be loaded or unloaded without rebooting."},
+    {t:"LVM (PV/VG/LV)", d:"Logical Volume Manager — abstracts storage as Physical Volume → Volume Group → Logical Volume, letting you resize storage without repartitioning."},
+    {t:"lsmod / modprobe", d:"lsmod lists currently loaded kernel modules. modprobe loads or unloads (-r) a module and its dependencies."},
+    {t:"MBR", d:"Master Boot Record — legacy partitioning scheme, limited to 4 primary partitions and 2TB disks."},
+    {t:"Package manager", d:"Tool that installs, updates, and removes software and resolves dependencies — apt/dpkg (Debian family), dnf/rpm (RHEL family), pacman (Arch)."},
+    {t:"POST", d:"Power-On Self-Test — the firmware's hardware check that runs before handing off to the bootloader."},
+    {t:"/proc", d:"A pseudo-filesystem exposing live kernel and process information — not real files on disk."},
+    {t:"Runlevel / Target", d:"A defined system state (e.g., multi-user, graphical). systemd calls these 'targets'; legacy SysV init called them 'runlevels.'"},
+    {t:"systemd", d:"The init system (PID 1) used by virtually all modern distros — starts services in parallel based on dependency ordering, replacing legacy SysV init."},
+    {t:"/sys", d:"A pseudo-filesystem exposing the kernel's live view of devices and drivers."},
+    {t:"udev", d:"The dynamic device manager — creates and removes entries in /dev as hardware is plugged in or removed."},
+    {t:"XFS", d:"A journaling filesystem common on RHEL-family systems, known for strong large-file performance."},
+  ];
+
+  const QUIZ = [
+    {
+      q:"Put the boot process in the correct order.",
+      choices:["Kernel → Firmware → GRUB → systemd","Firmware → GRUB → Kernel → systemd","GRUB → Firmware → Kernel → systemd","Firmware → Kernel → GRUB → systemd"],
+      correct:1,
+      explain:"Firmware runs POST and hands off to the bootloader (GRUB), which loads the kernel, which eventually starts systemd as PID 1."
+    },
+    {
+      q:"Which directory holds logs and other frequently-changing data?",
+      choices:["/etc","/usr","/var","/proc"],
+      correct:2,
+      explain:"/var is short for 'variable' — it's exactly where changing data like logs, mail, and spool files live."
+    },
+    {
+      q:"What's the main reason initramfs exists?",
+      choices:[
+        "To store user home directories temporarily",
+        "To provide just enough drivers to find and mount the real root filesystem",
+        "To replace the kernel entirely",
+        "To hold package manager cache files"
+      ],
+      correct:1,
+      explain:"initramfs is a minimal, RAM-loaded filesystem with the drivers needed to reach the real root — essential when root lives on LVM, RAID, or an encrypted volume."
+    },
+    {
+      q:"Which command lists currently loaded kernel modules?",
+      choices:["modinfo","lsmod","insmod","udevadm"],
+      correct:1,
+      explain:"lsmod reads /proc/modules and lists what's currently loaded; modprobe/insmod are for loading, not listing."
+    },
+    {
+      q:"/proc and /sys are unusual among Linux directories because:",
+      choices:[
+        "They only exist on RHEL-family systems",
+        "They're pseudo-filesystems exposing live kernel state, not real files on disk",
+        "They require root access to even view",
+        "They store the bootloader configuration"
+      ],
+      correct:1,
+      explain:"Both are windows into live kernel/process/device state — nothing there persists on disk."
+    },
+    {
+      q:"GPT is generally preferred over MBR because:",
+      choices:[
+        "It's simpler to configure",
+        "It supports more partitions and disks larger than 2TB",
+        "It doesn't require a bootloader",
+        "It's only usable with BIOS firmware"
+      ],
+      correct:1,
+      explain:"MBR is capped at 4 primary partitions and 2TB disks; GPT removes both limits and pairs naturally with UEFI."
+    },
+    {
+      q:"Which license requires that derivative works also be released under the same open terms?",
+      choices:["MIT","Apache 2.0","GPL","BSD"],
+      correct:2,
+      explain:"That 'copyleft' requirement is the defining trait of the GPL — MIT/Apache/BSD are permissive and don't require it."
+    },
+  ];
+
+  const grid = document.getElementById('cardGrid');
+  TERMS.forEach((item, i) => {
+    const card = document.createElement('button');
+    card.className = 'flashcard';
+    card.setAttribute('aria-label', 'Flashcard: ' + item.t + '. Press to flip.');
+    card.dataset.i = i;
+    card.innerHTML = `
+      <div class="flashcard-inner">
+        <div class="flashcard-face front"><div class="lbl">Term</div><div class="term">${item.t}</div></div>
+        <div class="flashcard-face back"><div class="lbl">Definition</div><div class="def">${item.d}</div></div>
+      </div>`;
+    card.addEventListener('click', () => card.classList.toggle('flipped'));
+    card.addEventListener('dblclick', () => { card.classList.toggle('known'); updateProgress(); });
+    grid.appendChild(card);
+  });
+  function updateProgress(){
+    const known = document.querySelectorAll('.flashcard.known').length;
+    document.getElementById('cardProgress').textContent = `${known} / ${TERMS.length} marked known (double-click a card to mark it)`;
+  }
+  updateProgress();
+  document.getElementById('shuffleBtn').addEventListener('click', () => {
+    const cards = Array.from(grid.children);
+    cards.sort(() => Math.random() - 0.5);
+    cards.forEach(c => { c.classList.remove('flipped'); grid.appendChild(c); });
+  });
+  document.getElementById('resetKnownBtn').addEventListener('click', () => {
+    document.querySelectorAll('.flashcard.known').forEach(c => c.classList.remove('known'));
+    updateProgress();
+  });
+
+  const quizList = document.getElementById('quizList');
+  let score = 0, answered = 0;
+  function renderQuiz(){
+    quizList.innerHTML = ''; score = 0; answered = 0;
+    QUIZ.forEach((item, qi) => {
+      const box = document.createElement('div');
+      box.className = 'quiz-q';
+      box.innerHTML = `<p class="qtext"><span class="qnum">Q${qi+1}.</span>${item.q}</p><div class="choices"></div><p class="explain"></p>`;
+      const choicesEl = box.querySelector('.choices');
+      item.choices.forEach((c, ci) => {
+        const b = document.createElement('button');
+        b.className = 'choice'; b.textContent = c;
+        b.addEventListener('click', () => {
+          if (box.dataset.done) return;
+          box.dataset.done = '1'; answered++;
+          if (ci === item.correct) score++;
+          Array.from(choicesEl.children).forEach((el, ei) => {
+            el.disabled = true;
+            if (ei === item.correct) el.classList.add('correct');
+            else if (ei === ci) el.classList.add('incorrect');
+          });
+          box.querySelector('.explain').textContent = item.explain;
+          box.querySelector('.explain').classList.add('show');
+          updateScore();
+        });
+        choicesEl.appendChild(b);
+      });
+      quizList.appendChild(box);
+    });
+    updateScore();
+  }
+  function updateScore(){
+    document.getElementById('quizScore').textContent =
+      answered === 0 ? `${QUIZ.length} questions — click an answer to check yourself` : `Score: ${score} / ${answered} answered`;
+  }
+  renderQuiz();
+  document.getElementById('resetQuizBtn').addEventListener('click', renderQuiz);
+
+  const glossaryList = document.getElementById('glossaryList');
+  const alphaNav = document.getElementById('alphaNav');
+  const letters = [...new Set(TERMS.map(t => t.t[0].toUpperCase()))];
+  'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').forEach(L => {
+    const a = document.createElement('a');
+    a.textContent = L;
+    if (letters.includes(L)) { a.href = '#g-' + L; a.className = 'has'; }
+    else { a.href = 'javascript:void(0)'; }
+    alphaNav.appendChild(a);
+  });
+  let currentLetter = '';
+  TERMS.forEach(item => {
+    const L = item.t[0].toUpperCase();
+    if (L !== currentLetter) {
+      currentLetter = L;
+      const h = document.createElement('div');
+      h.className = 'glossary-letter'; h.id = 'g-' + L; h.textContent = L;
+      glossaryList.appendChild(h);
+    }
+    const wrap = document.createElement('div');
+    wrap.className = 'gitem';
+    wrap.innerHTML = `<dt>${item.t}</dt><dd>${item.d}</dd>`;
+    wrap.dataset.search = (item.t + ' ' + item.d).toLowerCase();
+    glossaryList.appendChild(wrap);
+  });
+  document.getElementById('glossarySearch').addEventListener('input', (e) => {
+    const q = e.target.value.toLowerCase().trim();
+    document.querySelectorAll('.gitem').forEach(el => {
+      el.classList.toggle('hidden', q && !el.dataset.search.includes(q));
+    });
+  });
+</script>

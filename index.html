@@ -1,0 +1,456 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>IT251 – Table of Contents</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --bg:#f2f6f4;
+    --surface:#ffffff;
+    --surface-2:#e6efec;
+    --text:#0c1a15;
+    --muted:#51655d;
+    --border:#cddcd5;
+    --accent:#0f7a5c;
+    --accent-soft:#dcf1e7;
+    --accent-2:#0e7490;
+    --accent-2-soft:#dbeff4;
+    --danger:#b3261e;
+    --danger-soft:#f8dcd9;
+    --shadow: 0 1px 2px rgba(12,26,21,.06), 0 8px 24px rgba(12,26,21,.07);
+    --mono:'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    --sans:'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0a0f0d; --surface:#0f1613; --surface-2:#131c18;
+      --text:#d9f5e8; --muted:#82a99a; --border:#1e2b26;
+      --accent:#3ddc97; --accent-soft:#123024;
+      --accent-2:#22d3ee; --accent-2-soft:#0c2b30;
+      --danger:#ff7a68; --danger-soft:#33150f;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 12px 32px rgba(0,0,0,.45);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0a0f0d; --surface:#0f1613; --surface-2:#131c18;
+    --text:#d9f5e8; --muted:#82a99a; --border:#1e2b26;
+    --accent:#3ddc97; --accent-soft:#123024;
+    --accent-2:#22d3ee; --accent-2-soft:#0c2b30;
+    --danger:#ff7a68; --danger-soft:#33150f;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 12px 32px rgba(0,0,0,.45);
+  }
+
+  *{ box-sizing:border-box; }
+  html{ scroll-behavior:smooth; }
+  @media (prefers-reduced-motion: reduce){ html{ scroll-behavior:auto; } *{ animation-duration:.001ms !important; transition-duration:.001ms !important; } }
+  body{ margin:0; background:var(--bg); color:var(--text); font-family:var(--sans); line-height:1.55; -webkit-font-smoothing:antialiased; }
+  a{ color:var(--accent-2); }
+  ::selection{ background:var(--accent-soft); }
+  .wrap{ max-width:1000px; margin:0 auto; padding:0 22px; }
+  code{ font-family:var(--mono); background:var(--surface-2); padding:1px 6px; border-radius:3px; font-size:.9em; border:1px solid var(--border); }
+
+  /* MASTHEAD — terminal window chrome */
+  header.masthead{ padding:52px 0 34px; }
+  .term-card{ background:var(--surface); border:1px solid var(--border); border-radius:8px; box-shadow:var(--shadow); overflow:hidden; }
+  .term-titlebar{ display:flex; align-items:center; gap:8px; padding:10px 14px; background:var(--surface-2); border-bottom:1px solid var(--border); }
+  .term-dot{ width:10px; height:10px; border-radius:50%; }
+  .term-dot.r{ background:#ff5f57; } .term-dot.y{ background:#febc2e; } .term-dot.g{ background:#28c840; }
+  .term-path{ margin-left:10px; font-family:var(--mono); font-size:.78rem; color:var(--muted); letter-spacing:.02em; }
+  .term-body{ padding:30px 26px 26px; }
+  .prompt{ font-family:var(--mono); font-size:.85rem; color:var(--accent); letter-spacing:.02em; }
+  .prompt::before{ content:'$ '; opacity:.7; }
+  h1{ font-family:var(--mono); font-weight:700; font-size:clamp(1.7rem,4.5vw,2.5rem); letter-spacing:-.01em;
+    margin:10px 0 12px; line-height:1.2; }
+  h1 .cursor{ display:inline-block; width:.55ch; background:var(--accent); margin-left:.15em; animation:blink 1.1s steps(1) infinite; }
+  @keyframes blink{ 50%{ opacity:0; } }
+  .lede{ max-width:66ch; font-size:1rem; line-height:1.6; color:var(--muted); margin:0 0 20px; }
+  .factrow{ display:flex; flex-wrap:wrap; gap:10px; }
+  .fact{ font-family:var(--mono); font-size:.8rem; letter-spacing:.01em; background:var(--surface-2);
+    border:1px solid var(--border); border-radius:5px; padding:.45em .8em; display:flex; gap:.5em; }
+  .fact b{ color:var(--accent); font-weight:600; text-transform:uppercase; letter-spacing:.05em; font-size:.82rem; }
+
+  nav.index{ position:sticky; top:0; z-index:20; background:color-mix(in srgb, var(--bg) 90%, transparent);
+    backdrop-filter:blur(6px); border-bottom:1px solid var(--border); }
+  nav.index .wrap{ display:flex; gap:4px; overflow-x:auto; padding:10px 22px; scrollbar-width:none; }
+  nav.index .wrap::-webkit-scrollbar{ display:none; }
+  nav.index a{ font-family:var(--mono); font-weight:500; font-size:.82rem; text-decoration:none;
+    color:var(--muted); padding:.5em .7em; white-space:nowrap; border-radius:5px; }
+  nav.index a::before{ content:'#'; opacity:.55; margin-right:.3em; }
+  nav.index a:hover{ color:var(--text); background:var(--surface-2); }
+
+  section{ padding:44px 0; border-bottom:1px dashed var(--border); }
+  section:last-of-type{ border-bottom:none; }
+  .section-head{ margin-bottom:24px; max-width:70ch; }
+  .kicker{ font-family:var(--mono); font-weight:600; font-size:.82rem; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--accent-2); margin:0 0 .5em; }
+  .kicker::before{ content:'// '; opacity:.6; }
+  h2{ font-family:var(--mono); font-weight:700; font-size:clamp(1.25rem,2.6vw,1.6rem); margin:0 0 .3em; letter-spacing:-.005em; }
+  .section-head p{ color:var(--muted); margin:.5em 0 0; }
+
+  .note-box{ background:var(--surface); border:1px solid var(--border); border-left:3px solid var(--accent-2);
+    border-radius:6px; padding:16px 18px; margin:22px 0; box-shadow:var(--shadow); }
+  .note-box .tag{ font-family:var(--mono); font-size:.78rem; letter-spacing:.08em; color:var(--accent-2); margin:0 0 6px; text-transform:uppercase; }
+  .note-box p{ margin:0; font-size:.92rem; line-height:1.6; color:var(--muted); }
+
+  /* SESSION LOG TABLE */
+  .table-scroll{ overflow-x:auto; border:1px solid var(--border); border-radius:8px; box-shadow:var(--shadow); }
+  table.log{ width:100%; border-collapse:collapse; font-size:.88rem; background:var(--surface); min-width:640px; }
+  table.log th{ font-family:var(--mono); font-weight:600; text-transform:uppercase; letter-spacing:.04em; font-size:.74rem;
+    color:var(--accent-2); text-align:left; padding:10px 12px; border-bottom:1px solid var(--border); background:var(--surface-2); }
+  table.log td{ padding:11px 12px; border-bottom:1px solid var(--border); vertical-align:top; }
+  table.log tr:last-child td{ border-bottom:none; }
+  table.log tr.off td{ opacity:.55; font-style:italic; }
+  td.num{ font-family:var(--mono); color:var(--accent); white-space:nowrap; font-weight:600; }
+  td.week{ font-family:var(--mono); white-space:nowrap; color:var(--muted); font-size:.82rem; }
+  .status{ font-family:var(--mono); font-weight:600; font-size:.76rem; letter-spacing:.03em; text-transform:uppercase; white-space:nowrap; }
+  .status.filed{ color:var(--accent); }
+  .status.pending{ color:var(--muted); opacity:.8; }
+  .status.off{ color:var(--muted); }
+  a.open-link{ display:inline-flex; align-items:center; gap:.3em; font-family:var(--mono); font-weight:600; font-size:.82rem;
+    text-decoration:none; color:var(--accent-2); border-bottom:1.5px solid var(--accent-2); padding-bottom:1px; }
+  a.open-link:hover{ background:var(--accent-2-soft); }
+  .cell-stack{ display:flex; flex-direction:column; gap:4px; align-items:flex-start; }
+
+  footer{ padding:28px 0 60px; }
+  footer p{ color:var(--muted); font-size:.8rem; font-family:var(--mono); letter-spacing:.01em; }
+
+  .back-to-top{ position:fixed; bottom:22px; right:22px; z-index:40; width:48px; height:48px;
+    background:var(--surface); border:1px solid var(--border); border-radius:8px; box-shadow:var(--shadow);
+    font-family:var(--mono); font-size:1.2rem; color:var(--accent); line-height:1;
+    display:flex; align-items:center; justify-content:center; padding:0; cursor:pointer; text-decoration:none;
+    opacity:0; visibility:hidden; transform:translateY(10px);
+    transition:opacity .25s ease, transform .25s ease, visibility 0s .25s; }
+  .back-to-top.show{ opacity:1; visibility:visible; transform:translateY(0); transition:opacity .25s ease, transform .25s ease, visibility 0s; }
+  .back-to-top:hover{ background:var(--accent-soft); border-color:var(--accent); }
+  .back-to-top:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+
+  .theme-toggle{ font-family:var(--mono); font-size:.76rem; background:var(--surface-2); border:1px solid var(--border);
+    color:var(--muted); border-radius:5px; padding:.4em .7em; cursor:pointer; }
+  .theme-toggle:hover{ color:var(--text); border-color:var(--accent-2); }
+
+  @media print{
+    body{ background:#fff; }
+    nav.index, .back-to-top{ display:none; }
+  }
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="wrap">
+    <div class="term-card">
+      <div class="term-titlebar">
+        <span class="term-dot r"></span><span class="term-dot y"></span><span class="term-dot g"></span>
+        <span class="term-path">z3d@it251:~$</span>
+      </div>
+      <div class="term-body">
+        <span class="prompt">cat table-of-contents.md</span>
+        <h1>IT251 &mdash; Table of Contents<span class="cursor">&nbsp;</span></h1>
+        <p class="lede">Every weekly study page and hands-on lab follow-along for this course, filed in one place. Pages are added here as they're built &mdash; bookmark this page and start each week from it.</p>
+        <div class="factrow">
+          <span class="fact"><b>Term</b> 16 weeks, Mon &amp; Wed</span>
+          <span class="fact"><b>Meets</b> 2:30&ndash;3:45 PM, Room 250</span>
+          <span class="fact"><b>Filed</b> Week 1&ndash;2 pages</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<nav class="index" aria-label="Section index">
+  <div class="wrap">
+    <a href="#weeks">weekly-log</a>
+    <a href="#about">about</a>
+  </div>
+</nav>
+
+<main class="wrap">
+
+  <section id="weeks">
+    <div class="section-head">
+      <p class="kicker">weekly-log</p>
+      <h2>Week-by-week index</h2>
+      <p>Monday lecture and Wednesday hands-on lab, tracked separately &mdash; a week can have one filed and one still pending. Filed lecture pages open a full study page (concept diagrams, flashcards, a sample quiz, worked examples, glossary); filed lab pages open an interactive follow-along with step-by-step checklists.</p>
+    </div>
+
+    <div class="note-box">
+      <p class="tag">note</p>
+      <p>Most weeks are still unfiled &mdash; that's not missing work, it's the semester not having happened yet. Each page gets built out the week of, or the week before, its class date.</p>
+    </div>
+
+    <div class="table-scroll">
+      <table class="log">
+        <thead>
+          <tr><th>Wk</th><th>Dates</th><th>Monday &mdash; Lecture</th><th>Wednesday &mdash; Lab</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="num">01</td>
+            <td class="week">Aug 24&ndash;28</td>
+            <td>
+              <div class="cell-stack">
+                <span>Module 1 &mdash; System Management</span>
+                <span class="status filed"><a class="open-link" href="IT251_Study_Page.html">Open &rarr;</a></span>
+              </div>
+            </td>
+            <td>
+              <div class="cell-stack">
+                <span>VM Setup &amp; Terminal Logging</span>
+                <span class="status filed"><a class="open-link" href="IT251_Lab1-2_Follow_Along.html#lab1">Open &rarr;</a></span>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td class="num">02</td>
+            <td class="week">Aug 31&ndash;Sep 4</td>
+            <td>
+              <div class="cell-stack">
+                <span>Module 2 &mdash; System Management II</span>
+                <span class="status pending">Pending</span>
+              </div>
+            </td>
+            <td>
+              <div class="cell-stack">
+                <span>Linux Basics Lab &mdash; Day 1</span>
+                <span class="status filed"><a class="open-link" href="IT251_Lab1-2_Follow_Along.html#lab2">Open &rarr;</a></span>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td class="num">03</td>
+            <td class="week">Sep 7&ndash;11</td>
+            <td>
+              <div class="cell-stack">
+                <span>&mdash; <em>(Labor Day, no lecture)</em></span>
+              </div>
+            </td>
+            <td>
+              <div class="cell-stack">
+                <span>FHS Scavenger Hunt &amp; Permissions</span>
+                <span class="status pending">Pending</span>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td class="num">04</td>
+            <td class="week">Sep 14&ndash;18</td>
+            <td>
+              <div class="cell-stack">
+                <span>Module 3 &mdash; Services &amp; User Mgmt I</span>
+                <span class="status pending">Pending</span>
+              </div>
+            </td>
+            <td>
+              <div class="cell-stack">
+                <span>Pentest Tooling: Install or Build</span>
+                <span class="status pending">Pending</span>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td class="num">05</td>
+            <td class="week">Sep 21&ndash;25</td>
+            <td>
+              <div class="cell-stack">
+                <span>Module 4 &mdash; Services &amp; User Mgmt II</span>
+                <span class="status pending">Pending</span>
+              </div>
+            </td>
+            <td>
+              <div class="cell-stack">
+                <span>Text Processing, File Typing &amp; Cron</span>
+                <span class="status pending">Pending</span>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td class="num">06</td>
+            <td class="week">Sep 28&ndash;Oct 2</td>
+            <td>
+              <div class="cell-stack">
+                <span>Midterm Review (Modules 1&ndash;4)</span>
+                <span class="status pending">Pending</span>
+              </div>
+            </td>
+            <td>
+              <div class="cell-stack">
+                <span>Timed Practice Checkpoint</span>
+                <span class="status pending">Pending</span>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td class="num">07</td>
+            <td class="week">Oct 5&ndash;9</td>
+            <td>
+              <div class="cell-stack">
+                <span>Midterm Review / Open Q&amp;A</span>
+                <span class="status pending">Pending</span>
+              </div>
+            </td>
+            <td>
+              <div class="cell-stack">
+                <span>Open Lab / Practice Review</span>
+                <span class="status pending">Pending</span>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td class="num">08</td>
+            <td class="week">Oct 12&ndash;16</td>
+            <td>
+              <div class="cell-stack">
+                <span>Linux+ Midterm Exam (Modules 1&ndash;4)</span>
+                <span class="status pending">Pending</span>
+              </div>
+            </td>
+            <td>
+              <div class="cell-stack">
+                <span>Practical Midterm Checkpoint</span>
+                <span class="status pending">Pending</span>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td class="num">09</td>
+            <td class="week">Oct 19&ndash;23</td>
+            <td>
+              <div class="cell-stack">
+                <span>Module 5 &mdash; Security I (AAA in Linux)</span>
+                <span class="status pending">Pending</span>
+              </div>
+            </td>
+            <td>
+              <div class="cell-stack">
+                <span>Free-Tier TryHackMe Room</span>
+                <span class="status pending">Pending</span>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td class="num">10</td>
+            <td class="week">Oct 26&ndash;30</td>
+            <td>
+              <div class="cell-stack">
+                <span>Module 5 cont. &mdash; Firewalls &amp; OS Hardening</span>
+                <span class="status pending">Pending</span>
+              </div>
+            </td>
+            <td>
+              <div class="cell-stack">
+                <span>PwnLabs or THM Free Room</span>
+                <span class="status pending">Pending</span>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td class="num">11</td>
+            <td class="week">Nov 2&ndash;6</td>
+            <td>
+              <div class="cell-stack">
+                <span>Module 6 &mdash; Security II</span>
+                <span class="status pending">Pending</span>
+              </div>
+            </td>
+            <td>
+              <div class="cell-stack">
+                <span>THM Free Room</span>
+                <span class="status pending">Pending</span>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td class="num">12</td>
+            <td class="week">Nov 9&ndash;13</td>
+            <td>
+              <div class="cell-stack">
+                <span>Module 6 cont. &mdash; Compliance &amp; Audit</span>
+                <span class="status pending">Pending</span>
+              </div>
+            </td>
+            <td>
+              <div class="cell-stack">
+                <span>Kali VM + Vulnerable Target VM</span>
+                <span class="status pending">Pending</span>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td class="num">13</td>
+            <td class="week">Nov 16&ndash;20</td>
+            <td>
+              <div class="cell-stack">
+                <span>Module 7 &mdash; Automation &amp; Scripting</span>
+                <span class="status pending">Pending</span>
+              </div>
+            </td>
+            <td>
+              <div class="cell-stack">
+                <span>Scripting Lab</span>
+                <span class="status pending">Pending</span>
+              </div>
+            </td>
+          </tr>
+          <tr class="off">
+            <td class="num">14</td>
+            <td class="week">Nov 23&ndash;27</td>
+            <td colspan="2">Thanksgiving Break &mdash; no classes</td>
+          </tr>
+          <tr>
+            <td class="num">15</td>
+            <td class="week">Nov 30&ndash;Dec 4</td>
+            <td>
+              <div class="cell-stack">
+                <span>Module 7 cont.; Modules 8&ndash;9; Final Review</span>
+                <span class="status pending">Pending</span>
+              </div>
+            </td>
+            <td>
+              <div class="cell-stack">
+                <span>Capstone Mini-CTF</span>
+                <span class="status pending">Pending</span>
+              </div>
+            </td>
+          </tr>
+          <tr class="off">
+            <td class="num">16</td>
+            <td class="week">Dec 7&ndash;11</td>
+            <td colspan="2">Finals Week &mdash; exam per registrar's finals grid, no regular class meeting</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="about">
+    <div class="section-head">
+      <p class="kicker">about</p>
+      <h2>How this site works</h2>
+      <p>Monday lecture pages are self-contained study guides: concept diagrams, flashcards, a sample quiz, worked examples, and a glossary. Wednesday lab pages are interactive follow-alongs with step-by-step checklists your browser remembers as you check things off &mdash; nothing is submitted anywhere from this site itself. All of it runs as plain static HTML, no build step, no tracking.</p>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>IT251 &middot; Linux+ (XK0-006) &middot; Table of contents &mdash; updated as pages are filed.</p>
+  </div>
+</footer>
+
+<button id="backToTop" class="back-to-top" aria-label="Back to top" title="Back to top">&uarr;</button>
+
+<script>
+  const backToTop = document.getElementById('backToTop');
+  function toggleBackToTop(){ backToTop.classList.toggle('show', window.scrollY > 480); }
+  window.addEventListener('scroll', toggleBackToTop, {passive:true});
+  toggleBackToTop();
+  backToTop.addEventListener('click', () => window.scrollTo({top:0, behavior:'smooth'}));
+</script>
+</body>
+</html>

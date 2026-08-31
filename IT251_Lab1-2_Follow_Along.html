@@ -1,0 +1,576 @@
+<title>VM Setup &amp; Linux Basics</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --bg:#faf6ef;
+    --surface:#ffffff;
+    --surface-2:#f1ead9;
+    --text:#211a12;
+    --muted:#625543;
+    --border:#e4d9c2;
+    --accent:#a15d0e;
+    --accent-soft:#f3e2c2;
+    --accent-2:#3c7a5c;
+    --accent-2-soft:#dcece2;
+    --danger:#b13a26;
+    --danger-soft:#f6ded7;
+    --correct:#2f7d43;
+    --correct-soft:#dcefe0;
+    --shadow: 0 1px 2px rgba(33,26,18,.06), 0 8px 24px rgba(33,26,18,.06);
+    --mono:'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    --sans:'Source Sans 3', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#161310; --surface:#1e1a15; --surface-2:#241f18;
+      --text:#f2ece2; --muted:#bfb5a7; --border:#332c22;
+      --accent:#e8b04b; --accent-soft:#3a2f18;
+      --accent-2:#6fae8f; --accent-2-soft:#16332a;
+      --danger:#e8674a; --danger-soft:#3a1c14;
+      --correct:#8fd19e; --correct-soft:#173322;
+      --shadow: 0 1px 2px rgba(0,0,0,.35), 0 12px 32px rgba(0,0,0,.4);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#161310; --surface:#1e1a15; --surface-2:#241f18;
+    --text:#f2ece2; --muted:#bfb5a7; --border:#332c22;
+    --accent:#e8b04b; --accent-soft:#3a2f18;
+    --accent-2:#6fae8f; --accent-2-soft:#16332a;
+    --danger:#e8674a; --danger-soft:#3a1c14;
+    --correct:#8fd19e; --correct-soft:#173322;
+    --shadow: 0 1px 2px rgba(0,0,0,.35), 0 12px 32px rgba(0,0,0,.4);
+  }
+
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto;} *{animation-duration:.001ms !important; transition-duration:.001ms !important;} }
+  body{ margin:0; background:var(--bg); color:var(--text); font-family:var(--sans); line-height:1.55; -webkit-font-smoothing:antialiased; }
+  a{ color:var(--accent-2); }
+  ::selection{ background:var(--accent-soft); }
+  .wrap{ max-width:1080px; margin:0 auto; padding:0 24px; }
+
+  header.hero{
+    border-bottom:1px solid var(--border);
+    background:repeating-linear-gradient(180deg, var(--surface-2) 0 1px, var(--bg) 1px 28px);
+    padding:56px 0 40px;
+  }
+  .termbar{ display:flex; gap:6px; margin-bottom:20px; }
+  .termbar span{ width:11px; height:11px; border-radius:50%; background:var(--border); }
+  .eyebrow{ font-family:var(--mono); font-size:.8rem; color:var(--accent); }
+  .eyebrow::before{ content:"$ "; opacity:.7; }
+  h1{ font-family:var(--mono); font-weight:700; font-size:clamp(2rem,4vw,3rem); line-height:1.08; margin:.4em 0 .3em; text-wrap:balance; letter-spacing:-.01em; }
+  .hero p.lede{ max-width:62ch; font-size:1.1rem; color:var(--muted); margin:0 0 1.6em; }
+  .factrow{ display:flex; flex-wrap:wrap; gap:10px; }
+  .fact{ font-family:var(--mono); font-size:.78rem; background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:.5em .8em; display:flex; gap:.5em; }
+  .fact b{ color:var(--muted); font-weight:500; text-transform:uppercase; letter-spacing:.06em; font-size:.72rem; }
+
+  nav.index{ position:sticky; top:0; z-index:20; background:color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter:blur(8px); border-bottom:1px solid var(--border); }
+  nav.index .wrap{ display:flex; gap:4px; overflow-x:auto; padding:10px 24px; scrollbar-width:none; }
+  nav.index .wrap::-webkit-scrollbar{ display:none; }
+  nav.index a{ font-family:var(--mono); font-size:.82rem; text-decoration:none; color:var(--muted); padding:.5em .9em; border-radius:6px; white-space:nowrap; border:1px solid transparent; }
+  nav.index a:hover{ color:var(--text); border-color:var(--border); background:var(--surface); }
+
+  section{ padding:52px 0; border-bottom:1px solid var(--border); }
+  section:last-of-type{ border-bottom:none; }
+  .section-head{ margin-bottom:28px; max-width:70ch; }
+  .kicker{ font-family:var(--mono); font-size:.75rem; letter-spacing:.1em; text-transform:uppercase; color:var(--accent-2); margin:0 0 .5em; }
+  h2{ font-family:var(--mono); font-size:clamp(1.4rem,2.4vw,1.9rem); margin:0 0 .3em; text-wrap:balance; }
+  h3{ font-family:var(--mono); font-size:1.05rem; margin:1.6em 0 .5em; }
+  .section-head p{ color:var(--muted); margin:.4em 0 0; }
+
+  .obj-list{ display:grid; gap:12px; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); list-style:none; margin:0; padding:0; }
+  .obj-list li{ background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:16px 18px; box-shadow:var(--shadow); font-size:.95rem; }
+  .obj-list li::before{ content:"$"; color:var(--accent); font-family:var(--mono); margin-right:.6em; font-weight:700; }
+
+  .example{ background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px 22px; margin-bottom:16px; box-shadow:var(--shadow); }
+  .example h3{ font-family:var(--mono); font-size:1.02rem; margin:0 0 8px; }
+  .example .tag{ display:inline-block; font-family:var(--mono); font-size:.68rem; text-transform:uppercase; letter-spacing:.08em; color:var(--accent-2); background:var(--accent-2-soft); border-radius:5px; padding:.25em .6em; margin-bottom:10px; }
+  code.inline{ font-family:var(--mono); background:var(--surface-2); border-radius:4px; padding:.1em .4em; font-size:.92em; }
+  pre.term{ font-family:var(--mono); font-size:.85rem; background:var(--surface-2); border:1px solid var(--border); border-radius:8px; padding:12px 14px; overflow-x:auto; margin:10px 0; white-space:pre; }
+  details.solution{ margin-top:12px; }
+  details.solution summary{ cursor:pointer; font-family:var(--mono); font-size:.82rem; color:var(--accent); list-style:none; display:inline-flex; align-items:center; gap:.4em; }
+  details.solution summary::-webkit-details-marker{ display:none; }
+  details.solution summary::before{ content:"▸"; transition:transform .15s; }
+  details.solution[open] summary::before{ transform:rotate(90deg); }
+  details.solution .solbody{ margin-top:10px; padding:14px 16px; background:var(--surface-2); border-radius:8px; font-size:.92rem; }
+
+  table.blocks{ width:100%; border-collapse:collapse; font-size:.9rem; margin:10px 0 24px; }
+  table.blocks caption{ caption-side:top; text-align:left; font-family:var(--mono); font-size:.75rem; text-transform:uppercase; letter-spacing:.08em; color:var(--accent-2); margin-bottom:.5em; }
+  table.blocks th, table.blocks td{ border:1px solid var(--border); padding:.55em .8em; text-align:left; vertical-align:top; }
+  table.blocks th{ background:var(--surface-2); font-family:var(--mono); font-size:.78rem; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); white-space:nowrap; }
+  table.blocks td:first-child{ font-family:var(--mono); white-space:nowrap; color:var(--accent); }
+  table.blocks tbody tr:nth-child(odd){ background:var(--surface); }
+  table.blocks tbody tr:nth-child(even){ background:color-mix(in srgb, var(--surface) 60%, var(--surface-2)); }
+
+  .toolbar{ display:flex; gap:10px; align-items:center; margin-bottom:16px; flex-wrap:wrap; }
+  button.btn{ font-family:var(--mono); font-size:.82rem; background:var(--surface); color:var(--text); border:1px solid var(--border); border-radius:7px; padding:.6em 1em; cursor:pointer; }
+  button.btn:hover{ border-color:var(--accent); color:var(--accent); }
+  button.btn:focus-visible, a:focus-visible, input:focus-visible, .checklist li:focus-within{ outline:2px solid var(--accent); outline-offset:2px; }
+  #lab1Progress, #lab2Progress{ font-family:var(--mono); font-size:.8rem; color:var(--muted); }
+
+  ul.checklist{ list-style:none; margin:0 0 24px; padding:0; display:grid; gap:8px; }
+  ul.checklist li{ background:var(--surface); border:1px solid var(--border); border-radius:9px; box-shadow:var(--shadow); }
+  ul.checklist label{ display:flex; align-items:flex-start; gap:.7em; padding:.7em .9em; cursor:pointer; font-size:.94rem; }
+  ul.checklist input[type="checkbox"]{ margin-top:.25em; width:16px; height:16px; accent-color:var(--accent); flex:0 0 auto; }
+  ul.checklist li.checked label{ color:var(--muted); text-decoration:line-through; text-decoration-color:var(--accent-2); }
+  ul.checklist li.checked{ border-color:var(--accent-2); }
+
+  #glossarySearch{ width:100%; max-width:420px; font-family:var(--sans); font-size:.95rem; padding:.7em .9em; border-radius:8px; border:1px solid var(--border); background:var(--surface); color:var(--text); margin-bottom:16px; }
+  .alpha-nav{ display:flex; flex-wrap:wrap; gap:4px; margin-bottom:24px; }
+  .alpha-nav a{ font-family:var(--mono); font-size:.78rem; width:1.9em; height:1.9em; display:flex; align-items:center; justify-content:center; border:1px solid var(--border); border-radius:5px; text-decoration:none; color:var(--muted); }
+  .alpha-nav a.has{ color:var(--text); }
+  .alpha-nav a.has:hover{ border-color:var(--accent); color:var(--accent); }
+  .glossary-letter{ font-family:var(--mono); color:var(--accent); font-size:1.1rem; margin:22px 0 8px; }
+  dl.glossary{ margin:0; }
+  dl.glossary .gitem{ border-top:1px solid var(--border); padding:12px 0; }
+  dl.glossary dt{ font-family:var(--mono); font-weight:600; }
+  dl.glossary dd{ margin:.3em 0 0; color:var(--muted); font-size:.92rem; }
+  .gitem.hidden{ display:none; }
+
+  .callout{ border-left:3px solid var(--accent); background:var(--accent-soft); border-radius:0 8px 8px 0; padding:14px 18px; margin:10px 0 24px; font-size:.92rem; }
+  .callout b{ font-family:var(--mono); }
+
+  footer{ padding:32px 0 60px; }
+  footer p{ color:var(--muted); font-size:.85rem; font-family:var(--mono); }
+</style>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="termbar"><span></span><span></span><span></span></div>
+    <p class="eyebrow">IT251 · Weeks 1–2</p>
+    <h1>VM Setup &amp; Linux Basics</h1>
+    <p class="lede">Follow along step by step: build the personal VM you'll use for every lab this semester, turn on logging that proves your work automatically, then put it to use navigating a real filesystem.</p>
+    <div class="factrow">
+      <span class="fact"><b>Lab 1</b> Wed, Aug 26</span>
+      <span class="fact"><b>Lab 2</b> Wed, Sep 2</span>
+      <span class="fact"><b>Time</b> 2:30–3:45 PM</span>
+      <span class="fact"><b>Covers</b> VirtualBox, distro install, history logging, FHS navigation</span>
+    </div>
+  </div>
+</header>
+
+<nav class="index" aria-label="Section index">
+  <div class="wrap">
+    <a href="#overview">Overview</a>
+    <a href="#before-class">Before Class</a>
+    <a href="#lab1">Lab 1 · VM Setup</a>
+    <a href="#lab2">Lab 2 · Linux Basics</a>
+    <a href="#troubleshooting">Troubleshooting</a>
+    <a href="#glossary">Glossary</a>
+  </div>
+</nav>
+
+<main class="wrap">
+
+  <section id="overview">
+    <div class="section-head">
+      <p class="kicker">Overview</p>
+      <h2>What these two labs cover</h2>
+      <p>Lab 1 is infrastructure day — everything after it happens inside the VM you build here. Lab 2 is the first real content lab, applying Monday's FHS lecture with your hands on a keyboard instead of a slide.</p>
+    </div>
+    <ul class="obj-list">
+      <li>Create and configure a VM in VirtualBox</li>
+      <li>Install a Linux distribution of your choosing</li>
+      <li>Explain why network mode (NAT vs. Host-only) matters</li>
+      <li>Set up persistent, timestamped shell history logging</li>
+      <li>Navigate the filesystem with <code class="inline">pwd</code>/<code class="inline">cd</code>/<code class="inline">ls</code></li>
+      <li>Create, copy, move, and remove files and directories</li>
+      <li>Read a man page to figure out an unfamiliar command</li>
+      <li>Use redirection (<code class="inline">&gt;</code>, <code class="inline">&gt;&gt;</code>) and pipes (<code class="inline">|</code>)</li>
+    </ul>
+  </section>
+
+  <section id="before-class">
+    <div class="section-head">
+      <p class="kicker">Do this first</p>
+      <h2>Before Lab 1</h2>
+      <p>A full OS install inside a 75-minute class is tight if you start from zero. Do this ahead of time so class time goes to setup and logging, not a slow download.</p>
+    </div>
+    <ul class="checklist" id="prepChecklist">
+      <li><label><input type="checkbox" data-id="prep-vbox"> Install <a href="https://www.virtualbox.org/" target="_blank" rel="noopener">VirtualBox</a> (or confirm it's already on the lab desktop image)</label></li>
+      <li><label><input type="checkbox" data-id="prep-iso"> Pick a distro and download its installer ISO — see the recommended list below</label></li>
+      <li><label><input type="checkbox" data-id="prep-bring"> Bring the ISO already downloaded to class (laptop) or saved on the lab desktop</label></li>
+    </ul>
+    <div class="card-grid" style="display:grid; gap:16px; grid-template-columns:repeat(auto-fill,minmax(220px,1fr));">
+      <div class="example" style="margin-bottom:0;"><span class="tag">Safe default</span><h3>Ubuntu Desktop (LTS)</h3><p>Largest community, most tutorials — pick this if you're not sure.</p></div>
+      <div class="example" style="margin-bottom:0;"><span class="tag">Beginner friendly</span><h3>Linux Mint</h3><p>Ubuntu-based with friendlier defaults for first-timers.</p></div>
+      <div class="example" style="margin-bottom:0;"><span class="tag">RHEL family</span><h3>Fedora Workstation</h3><p>Modern, and useful since Linux+ covers both Debian and RHEL families.</p></div>
+      <div class="example" style="margin-bottom:0;"><span class="tag">Build-your-own</span><h3>Debian</h3><p>What Ubuntu/Mint are built on — a bit more manual setup.</p></div>
+    </div>
+    <p style="color:var(--muted); font-size:.92rem;">Anything else is fine with instructor sign-off — the point is a real distro, installed by hand.</p>
+  </section>
+
+  <section id="lab1">
+    <div class="section-head">
+      <p class="kicker">Wednesday · Hands-On</p>
+      <h2>Lab 1 — VirtualBox Setup, Linux Install &amp; Terminal Logging</h2>
+      <p>Everything for the rest of the semester happens inside this VM. Ground rule for today: keep the network mode on <b>NAT</b> — it only needs internet access to install packages and updates. Host-only/Internal Network modes matter later once vulnerable target VMs get involved.</p>
+    </div>
+
+    <table class="blocks">
+      <caption>Time blocks — 75 min</caption>
+      <thead><tr><th>Time</th><th>Block</th></tr></thead>
+      <tbody>
+        <tr><td>0:00–0:08</td><td>Why we're doing this; ground rules; distro check-in</td></tr>
+        <tr><td>0:08–0:15</td><td>Create the VM in VirtualBox</td></tr>
+        <tr><td>0:15–0:45</td><td>Install the distro (or finish/verify install started at home)</td></tr>
+        <tr><td>0:45–0:55</td><td>First boot, update, create snapshot</td></tr>
+        <tr><td>0:55–1:10</td><td>Set up persistent terminal history logging</td></tr>
+        <tr><td>1:10–1:15</td><td>Verify log output, submission instructions, wrap-up</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Create the VM</h3>
+    <p>In VirtualBox: <b>Machine → New</b></p>
+    <ul class="obj-list" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr));">
+      <li>Name: <code class="inline">IT251-&lt;yourname&gt;</code></li>
+      <li>Type/Version: match your distro (e.g., Linux / Ubuntu 64-bit)</li>
+      <li>Memory: <b>4096 MB</b> minimum (2048 MB floor if the host is low on RAM)</li>
+      <li>CPU: <b>2 cores</b></li>
+      <li>Disk: <b>25 GB</b>, dynamically allocated, VDI format</li>
+      <li>Attach the ISO under <b>Storage → Optical Drive</b></li>
+    </ul>
+
+    <h3>Install the distro</h3>
+    <p>Boot the VM and run the installer: language/keyboard, disk (use the whole virtual disk — no dual-boot risk, it's not real hardware), create a user account you'll remember all semester — this is what you'll be graded through.</p>
+
+    <h3>First boot, update, snapshot</h3>
+    <div class="example" style="margin-bottom:0;">
+      <span class="tag">Debian / Ubuntu / Mint</span>
+      <pre class="term">sudo apt update &amp;&amp; sudo apt upgrade -y</pre>
+    </div>
+    <div class="example" style="margin:16px 0;">
+      <span class="tag">Fedora</span>
+      <pre class="term">sudo dnf upgrade -y</pre>
+    </div>
+    <div class="callout"><b>Shut down, then snapshot:</b> Machine → Take Snapshot, name it <code class="inline">clean-install</code>. This is your safety net for the rest of the semester — break the VM later, roll back instead of reinstalling from scratch.</div>
+
+    <h3>Persistent terminal history logging</h3>
+    <p>This is the piece that makes every future lab auto-generate proof of work — run this once, and it keeps logging every session from here on. Open a terminal in your VM:</p>
+    <pre class="term">nano ~/it251-setup-logging.sh</pre>
+    <p>Paste this in, save, exit:</p>
+    <pre class="term">#!/usr/bin/env bash
+# IT251 - persistent terminal history logging setup. Run once.
+set -euo pipefail
+
+MARKER_START="# &gt;&gt;&gt; IT251 history logging &gt;&gt;&gt;"
+MARKER_END="# &lt;&lt;&lt; IT251 history logging &lt;&lt;&lt;"
+LOG_DIR="$HOME/IT251/logs"
+
+case "$SHELL" in
+  */zsh) RC_FILE="$HOME/.zshrc" ;;
+  *)     RC_FILE="$HOME/.bashrc" ;;
+esac
+
+mkdir -p "$LOG_DIR"
+
+if grep -qF "$MARKER_START" "$RC_FILE" 2&gt;/dev/null; then
+  echo "Logging block already present in $RC_FILE - nothing to do."
+else
+  {
+    echo ""
+    echo "$MARKER_START"
+    if [[ "$RC_FILE" == *zshrc ]]; then
+      cat &lt;&lt;'ZSH'
+HISTFILE="$HOME/.zsh_history"
+HISTSIZE=100000
+SAVEHIST=100000
+setopt INC_APPEND_HISTORY
+setopt EXTENDED_HISTORY
+ZSH
+    else
+      cat &lt;&lt;'BASH'
+export HISTTIMEFORMAT="%F %T  "
+export HISTSIZE=100000
+export HISTFILESIZE=100000
+shopt -s histappend
+PROMPT_COMMAND="history -a; history -c; history -r${PROMPT_COMMAND:+; $PROMPT_COMMAND}"
+BASH
+    fi
+    echo "$MARKER_END"
+  } &gt;&gt; "$RC_FILE"
+  echo "Added logging config to $RC_FILE."
+fi
+
+echo "Done. Run: source $RC_FILE   (or open a new terminal) then check with: history | tail"</pre>
+    <p>Run it and reload your shell:</p>
+    <pre class="term">bash ~/it251-setup-logging.sh
+source ~/.bashrc      # or: source ~/.zshrc</pre>
+    <details class="solution">
+      <summary>What does this actually do?</summary>
+      <div class="solbody">
+        <p>Every command gets a timestamp (<code class="inline">HISTTIMEFORMAT</code>). History writes to disk immediately after each command instead of only on exit, so a crash doesn't lose the log. History size is raised so a full semester of commands doesn't get silently truncated. The block is idempotent — running the script again won't duplicate it.</p>
+      </div>
+    </details>
+
+    <p>Second script — an export helper you'll reuse at the end of every future lab:</p>
+    <pre class="term">nano ~/it251-export-log.sh</pre>
+    <pre class="term">#!/usr/bin/env bash
+# IT251 - export current history to a timestamped file for lab submission.
+set -euo pipefail
+
+LOG_DIR="$HOME/IT251/logs"
+mkdir -p "$LOG_DIR"
+STAMP="$(date +%Y%m%d_%H%M%S)"
+OUT="$LOG_DIR/history_${STAMP}.txt"
+
+history -a   # flush current session's history to disk first
+cp "${HISTFILE:-$HOME/.bash_history}" "$OUT"
+
+echo "Exported history to: $OUT"
+echo "Submit this file (or the whole ~/IT251/logs folder) as lab proof."</pre>
+    <pre class="term">chmod +x ~/it251-export-log.sh</pre>
+
+    <h3>Verify &amp; submit</h3>
+    <div class="toolbar">
+      <button class="btn" id="resetLab1Btn">Reset progress</button>
+      <span id="lab1Progress"></span>
+    </div>
+    <ul class="checklist" id="lab1Checklist">
+      <li><label><input type="checkbox" data-id="l1-vm"> VM created (name, memory, CPU, disk, ISO attached)</label></li>
+      <li><label><input type="checkbox" data-id="l1-install"> Distro installed and boots to a login prompt</label></li>
+      <li><label><input type="checkbox" data-id="l1-update"> System updated (<code class="inline">apt upgrade</code> / <code class="inline">dnf upgrade</code>)</label></li>
+      <li><label><input type="checkbox" data-id="l1-snapshot"> <code class="inline">clean-install</code> snapshot taken</label></li>
+      <li><label><input type="checkbox" data-id="l1-logging"> Logging script run, <code class="inline">.bashrc</code>/<code class="inline">.zshrc</code> updated</label></li>
+      <li><label><input type="checkbox" data-id="l1-verify"> Ran a few commands, confirmed <code class="inline">history | tail</code> shows timestamps</label></li>
+      <li><label><input type="checkbox" data-id="l1-export"> Ran <code class="inline">~/it251-export-log.sh</code> and located the file in <code class="inline">~/IT251/logs/</code></label></li>
+      <li><label><input type="checkbox" data-id="l1-submit"> Submitted exported log file + snapshot screenshot per LMS instructions</label></li>
+    </ul>
+  </section>
+
+  <section id="lab2">
+    <div class="section-head">
+      <p class="kicker">Wednesday · Hands-On</p>
+      <h2>Lab 2 — Linux Basics: Day 1</h2>
+      <p><b>Prerequisite:</b> a working VM with Lab 1's logging already running. Confirm with <code class="inline">history | tail</code> before doing anything else — today's proof-of-work depends on it.</p>
+    </div>
+
+    <table class="blocks">
+      <caption>Time blocks — 75 min</caption>
+      <thead><tr><th>Time</th><th>Block</th></tr></thead>
+      <tbody>
+        <tr><td>0:00–0:10</td><td>Logging check-in; navigation together as a class</td></tr>
+        <tr><td>0:10–0:20</td><td>File &amp; directory operations, demo</td></tr>
+        <tr><td>0:20–0:30</td><td>Viewing files, redirection, <code class="inline">man</code>, demo</td></tr>
+        <tr><td>0:30–1:05</td><td>Independent/paired work: basics worksheet</td></tr>
+        <tr><td>1:05–1:15</td><td>Debrief, export log, submit</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Navigation</h3>
+    <pre class="term">pwd
+cd /
+ls
+cd /home
+ls
+cd ~
+pwd</pre>
+    <p style="color:var(--muted); font-size:.92rem;"><code class="inline">pwd</code> — where am I. <code class="inline">cd</code> — absolute vs. relative paths, <code class="inline">~</code>, <code class="inline">..</code>, <code class="inline">-</code> for "previous directory". <code class="inline">ls</code> vs <code class="inline">ls -l</code> vs <code class="inline">ls -la</code>.</p>
+
+    <h3>File &amp; directory operations</h3>
+    <pre class="term">mkdir ~/lab2-practice
+cd ~/lab2-practice
+touch notes.txt
+mkdir subdir
+cp notes.txt subdir/notes-copy.txt
+mv notes.txt renamed-notes.txt
+ls -l
+rm subdir/notes-copy.txt
+rmdir subdir      # only works if empty</pre>
+    <div class="callout"><b>No trash can:</b> <code class="inline">rm</code> deletes for real. <code class="inline">rmdir</code> only removes empty directories; <code class="inline">rm -r</code> is recursive and deletes contents too — double-check the target before hitting enter, especially with wildcards.</div>
+
+    <h3>Viewing files, redirection, <code class="inline">man</code></h3>
+    <pre class="term">echo "first line" &gt; notes.txt
+echo "second line" &gt;&gt; notes.txt
+cat notes.txt
+head -n 1 notes.txt
+tail -n 1 notes.txt
+less notes.txt        # q to quit
+man ls</pre>
+    <p style="color:var(--muted); font-size:.92rem;"><code class="inline">&gt;</code> overwrites, <code class="inline">&gt;&gt;</code> appends. <code class="inline">|</code> (pipe) sends one command's output into the next, e.g. <code class="inline">ls -la | less</code>. <code class="inline">man &lt;command&gt;</code> is the answer to "what does this flag do" for the rest of the semester.</p>
+
+    <h3>Worksheet — work at your own pace</h3>
+    <div class="toolbar">
+      <button class="btn" id="resetLab2Btn">Reset progress</button>
+      <span id="lab2Progress"></span>
+    </div>
+    <ul class="checklist" id="lab2Checklist">
+      <li><label><input type="checkbox" data-id="l2-1"> Create a folder called <code class="inline">it251-day1</code> in your home directory</label></li>
+      <li><label><input type="checkbox" data-id="l2-2"> Inside it, create three empty files: <code class="inline">alpha.txt</code>, <code class="inline">beta.txt</code>, <code class="inline">gamma.txt</code></label></li>
+      <li><label><input type="checkbox" data-id="l2-3"> Write your name into <code class="inline">alpha.txt</code> using <code class="inline">echo</code> and <code class="inline">&gt;</code> (not a text editor)</label></li>
+      <li><label><input type="checkbox" data-id="l2-4"> Append today's date into <code class="inline">alpha.txt</code> using <code class="inline">&gt;&gt;</code> — check with <code class="inline">cat</code></label></li>
+      <li><label><input type="checkbox" data-id="l2-5"> Copy <code class="inline">alpha.txt</code> to <code class="inline">alpha-backup.txt</code></label></li>
+      <li><label><input type="checkbox" data-id="l2-6"> Rename <code class="inline">beta.txt</code> to <code class="inline">beta-renamed.txt</code></label></li>
+      <li><label><input type="checkbox" data-id="l2-7"> Create a subdirectory <code class="inline">archive</code> and move <code class="inline">gamma.txt</code> into it</label></li>
+      <li><label><input type="checkbox" data-id="l2-8"> Run <code class="inline">ls -l</code> and identify: type/permissions, owner, group, size, modified date</label></li>
+      <li><label><input type="checkbox" data-id="l2-9"> Use <code class="inline">man chmod</code> to find the flag for "readable by everyone, writable only by owner" — write the command as a comment at the top of <code class="inline">alpha.txt</code></label></li>
+      <li><label><input type="checkbox" data-id="l2-10"> Use <code class="inline">find</code> to locate <code class="inline">gamma.txt</code> from your home directory without <code class="inline">cd</code>-ing into <code class="inline">archive</code> first</label></li>
+      <li><label><input type="checkbox" data-id="l2-11"> Pipe <code class="inline">ls -la</code> on your home directory into <code class="inline">less</code>, scroll through, quit without error</label></li>
+      <li><label><input type="checkbox" data-id="l2-12"> Delete <code class="inline">beta-renamed.txt</code> with <code class="inline">rm</code>, confirm it's gone with <code class="inline">ls</code></label></li>
+    </ul>
+    <details class="solution">
+      <summary>Stuck? Hints</summary>
+      <div class="solbody">
+        <p><b>#9:</b> look at <code class="inline">man chmod</code>'s numeric mode section — you want something like <code class="inline">644</code>.</p>
+        <p><b>#10:</b> try <code class="inline">find ~ -name gamma.txt</code>.</p>
+        <p>Finished early? Try one flag you haven't used from <code class="inline">man find</code> — <code class="inline">-mtime</code>, <code class="inline">-type d</code>, or <code class="inline">-iname</code> — against your home directory.</p>
+      </div>
+    </details>
+
+    <h3>Submit</h3>
+    <p>Run <code class="inline">~/it251-export-log.sh</code> (from Lab 1) and submit the resulting file from <code class="inline">~/IT251/logs/</code> per LMS instructions — this is the timestamped record of every command you ran today.</p>
+  </section>
+
+  <section id="troubleshooting">
+    <div class="section-head">
+      <p class="kicker">Reference</p>
+      <h2>Common snags</h2>
+      <p>Check here before raising a hand — most of these are quick fixes.</p>
+    </div>
+
+    <table class="blocks">
+      <caption>Lab 1 — VirtualBox &amp; logging</caption>
+      <thead><tr><th>Symptom</th><th>Likely cause / fix</th></tr></thead>
+      <tbody>
+        <tr><td>VM won't boot from ISO</td><td>ISO not attached in Storage settings, or boot order wrong — check <b>Settings → Storage</b> and <b>Settings → System → Boot Order</b></td></tr>
+        <tr><td>Install hangs at a black/garbled screen</td><td>Graphics/resolution issue — retry with the "safe graphics" or "compatibility" boot option in the ISO's boot menu</td></tr>
+        <tr><td><code class="inline">history</code> file stays empty after setup</td><td>Still in the old shell session — run <code class="inline">source ~/.bashrc</code> or open a fresh terminal, not just re-run the script</td></tr>
+        <tr><td><code class="inline">it251-export-log.sh: command not found</code></td><td>Forgot <code class="inline">chmod +x</code>, or ran the bare name instead of <code class="inline">~/it251-export-log.sh</code></td></tr>
+        <tr><td><code class="inline">.bashrc</code> edits didn't take effect</td><td>Some distros' default terminal reads <code class="inline">.bash_profile</code>/<code class="inline">.profile</code> instead — open a brand-new terminal window to be safe</td></tr>
+      </tbody>
+    </table>
+
+    <table class="blocks">
+      <caption>Lab 2 — Linux basics</caption>
+      <thead><tr><th>Symptom</th><th>Likely cause / fix</th></tr></thead>
+      <tbody>
+        <tr><td><code class="inline">rmdir</code> fails with "Directory not empty"</td><td>Expected — empty it first, or use <code class="inline">rm -r</code> (with care)</td></tr>
+        <tr><td><code class="inline">&gt;</code> wiped out a file's previous contents</td><td>That's what <code class="inline">&gt;</code> does — use <code class="inline">&gt;&gt;</code> to append instead; this is the lesson, not a bug</td></tr>
+        <tr><td><code class="inline">find ~ -name gamma.txt</code> finds nothing</td><td>Typo in filename, or wrong location — try <code class="inline">find ~ -iname "*gamma*"</code> to widen the net</td></tr>
+        <tr><td>Today's history log looks empty</td><td>Fresh boot didn't source <code class="inline">.bashrc</code>, or the marker block got edited out — re-run <code class="inline">bash ~/it251-setup-logging.sh</code> from Lab 1, it's safe to run again</td></tr>
+        <tr><td><code class="inline">less</code> seems to hang the terminal</td><td>Not hung — it's a pager. Press <code class="inline">q</code> to quit</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="glossary">
+    <div class="section-head">
+      <p class="kicker">Reference</p>
+      <h2>Glossary &amp; index</h2>
+      <p>Every term from these two labs, searchable and indexed A–Z.</p>
+    </div>
+    <input type="text" id="glossarySearch" placeholder="Search terms…" aria-label="Search glossary">
+    <div class="alpha-nav" id="alphaNav"></div>
+    <dl class="glossary" id="glossaryList"></dl>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>IT251 · Linux+ (XK0-006) · Weeks 1–2 follow-along — Lab 1 (VM setup + logging) and Lab 2 (Linux basics). Progress checkboxes save to this browser only.</p>
+  </div>
+</footer>
+
+<script>
+  const TERMS = [
+    {t:"VirtualBox", d:"Free desktop hypervisor used to create and run virtual machines on your host laptop or lab desktop."},
+    {t:"Guest OS / Host OS", d:"The guest OS is the system installed inside the VM (your chosen distro); the host OS is the real machine VirtualBox runs on."},
+    {t:"ISO", d:"A disk-image file containing an installer — attached to a VM's virtual optical drive to boot the install process."},
+    {t:"Dynamically allocated disk", d:"A virtual disk that starts small and grows on demand up to its set maximum, instead of reserving all the space up front."},
+    {t:"Snapshot", d:"A saved state of a VM you can roll back to — take one right after a clean install so a broken VM is a 2-minute fix, not a reinstall."},
+    {t:"NAT (networking)", d:"VirtualBox's default network mode — the VM reaches the internet through the host, but isn't directly reachable from the outside. Fine for updates and package installs."},
+    {t:"Host-only networking", d:"A network mode that isolates the VM (and other VMs) from the internet and campus network entirely — used once vulnerable target VMs are involved."},
+    {t:".bashrc / .zshrc", d:"Shell startup files that run every time a new interactive shell opens — where persistent settings like history logging get configured."},
+    {t:"HISTFILE", d:"The file a shell's command history is saved to — defaults to ~/.bash_history or ~/.zsh_history."},
+    {t:"HISTTIMEFORMAT", d:"A bash variable that adds a timestamp to each entry in the history log."},
+    {t:"HISTSIZE / HISTFILESIZE", d:"Control how many commands are kept in memory (HISTSIZE) versus written to the history file on disk (HISTFILESIZE)."},
+    {t:"PROMPT_COMMAND", d:"A bash variable holding commands to run before every prompt is displayed — used here to flush history to disk after every command instead of only at shell exit."},
+    {t:"histappend", d:"A bash shell option that appends to the history file instead of overwriting it, so multiple sessions don't clobber each other's history."},
+    {t:"Idempotent script", d:"A script safe to run more than once — running it twice produces the same result as running it once, instead of duplicating changes."},
+    {t:"pwd", d:"Prints the full path of the current working directory."},
+    {t:"cd", d:"Changes the current directory — supports absolute paths, relative paths, ~ (home), .. (parent), and - (previous directory)."},
+    {t:"ls / ls -l / ls -la", d:"Lists directory contents. -l adds a long format (permissions, owner, size, date); -a also shows hidden dotfiles."},
+    {t:"mkdir / rmdir", d:"mkdir creates a directory; rmdir removes one, but only if it's empty."},
+    {t:"touch", d:"Creates an empty file if it doesn't exist, or updates an existing file's modified timestamp."},
+    {t:"cp / mv / rm", d:"cp copies a file, mv moves or renames it, rm deletes it permanently — there is no trash can."},
+    {t:"cat / head / tail", d:"cat prints a whole file; head/tail print just the first or last lines (default 10, override with -n)."},
+    {t:"less", d:"A pager for viewing long files a screen at a time without loading the whole thing into the terminal — press q to quit."},
+    {t:"Redirection (> and >>)", d:"> sends a command's output to a file, overwriting it; >> appends to the end instead."},
+    {t:"Pipe (|)", d:"Sends the output of one command directly into the input of the next, e.g. ls -la | less."},
+    {t:"man", d:"Opens a command's manual page — the built-in reference for what a command does and what its flags mean."},
+    {t:"find", d:"Searches a directory tree for files matching criteria like name, type, size, or modification time."},
+    {t:"ls -l permission fields", d:"The long-format listing shows, in order: file type + permissions, link count, owner, group, size, and modified date."},
+  ];
+
+  const glossaryList = document.getElementById('glossaryList');
+  const alphaNav = document.getElementById('alphaNav');
+  const letters = [...new Set(TERMS.map(t => t.t[0].toUpperCase()))];
+  'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').forEach(L => {
+    const a = document.createElement('a');
+    a.textContent = L;
+    if (letters.includes(L)) { a.href = '#g-' + L; a.className = 'has'; }
+    else { a.href = 'javascript:void(0)'; }
+    alphaNav.appendChild(a);
+  });
+  let currentLetter = '';
+  TERMS.forEach(item => {
+    const L = item.t[0].toUpperCase();
+    if (L !== currentLetter) {
+      currentLetter = L;
+      const h = document.createElement('div');
+      h.className = 'glossary-letter'; h.id = 'g-' + L; h.textContent = L;
+      glossaryList.appendChild(h);
+    }
+    const wrap = document.createElement('div');
+    wrap.className = 'gitem';
+    wrap.innerHTML = `<dt>${item.t}</dt><dd>${item.d}</dd>`;
+    wrap.dataset.search = (item.t + ' ' + item.d).toLowerCase();
+    glossaryList.appendChild(wrap);
+  });
+  document.getElementById('glossarySearch').addEventListener('input', (e) => {
+    const q = e.target.value.toLowerCase().trim();
+    document.querySelectorAll('.gitem').forEach(el => {
+      el.classList.toggle('hidden', q && !el.dataset.search.includes(q));
+    });
+  });
+
+  // Checklist progress, saved per-browser via localStorage
+  function wireChecklist(listId, progressId, resetBtnId, storageKey){
+    const list = document.getElementById(listId);
+    if (!list) return;
+    const boxes = Array.from(list.querySelectorAll('input[type="checkbox"]'));
+    let saved = {};
+    try { saved = JSON.parse(localStorage.getItem(storageKey) || '{}'); } catch(e) { saved = {}; }
+    function save(){
+      try { localStorage.setItem(storageKey, JSON.stringify(saved)); } catch(e) {}
+    }
+    function updateProgress(){
+      const done = boxes.filter(b => b.checked).length;
+      const el = document.getElementById(progressId);
+      if (el) el.textContent = `${done} / ${boxes.length} complete`;
+    }
+    boxes.forEach(b => {
+      const id = b.dataset.id;
+      if (saved[id]) { b.checked = true; b.closest('li').classList.add('checked'); }
+      b.addEventListener('change', () => {
+        saved[id] = b.checked;
+        b.closest('li').classList.toggle('checked', b.checked);
+        save(); updateProgress();
+      });
+    });
+    updateProgress();
+    const resetBtn = document.getElementById(resetBtnId);
+    if (resetBtn) resetBtn.addEventListener('click', () => {
+      boxes.forEach(b => { b.checked = false; b.closest('li').classList.remove('checked'); });
+      saved = {}; save(); updateProgress();
+    });
+  }
+  wireChecklist('prepChecklist', null, null, 'it251_prep_checklist');
+  wireChecklist('lab1Checklist', 'lab1Progress', 'resetLab1Btn', 'it251_lab1_checklist');
+  wireChecklist('lab2Checklist', 'lab2Progress', 'resetLab2Btn', 'it251_lab2_checklist');
+</script>
