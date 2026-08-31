@@ -115,6 +115,9 @@
     text-decoration:none; color:var(--accent-2); border-bottom:1.5px solid var(--accent-2); padding-bottom:1px; }
   a.open-link:hover{ background:var(--accent-2-soft); }
   .cell-stack{ display:flex; flex-direction:column; gap:4px; align-items:flex-start; }
+  .seid{ font-family:var(--mono); font-size:.72rem; font-weight:600; color:var(--accent); background:var(--accent-soft);
+    border:1px solid var(--border); border-radius:4px; padding:1px 6px; letter-spacing:.02em; }
+  .selfstudy{ color:var(--muted); font-style:italic; font-size:.88rem; }
 
   footer{ padding:28px 0 60px; }
   footer p{ color:var(--muted); font-size:.8rem; font-family:var(--mono); letter-spacing:.01em; }
@@ -153,7 +156,7 @@
         <h1>IT251 &mdash; Table of Contents<span class="cursor">&nbsp;</span></h1>
         <p class="lede">Every weekly study page and hands-on lab follow-along for this course, filed in one place. Pages are added here as they're built &mdash; bookmark this page and start each week from it.</p>
         <div class="factrow">
-          <span class="fact"><b>Term</b> 16 weeks, Mon &amp; Wed</span>
+          <span class="fact"><b>Term</b> 16 weeks &middot; 2 sessions/wk</span>
           <span class="fact"><b>Meets</b> 2:30&ndash;3:45 PM, Room 250</span>
           <span class="fact"><b>Filed</b> Week 1&ndash;2 pages</span>
         </div>
@@ -175,7 +178,7 @@
     <div class="section-head">
       <p class="kicker">weekly-log</p>
       <h2>Week-by-week index</h2>
-      <p>Monday lecture and Wednesday hands-on lab, tracked separately &mdash; a week can have one filed and one still pending. Filed lecture pages open a full study page (concept diagrams, flashcards, a sample quiz, worked examples, glossary); filed lab pages open an interactive follow-along with step-by-step checklists.</p>
+      <p>Each week runs two sessions, numbered <code class="inline">N.1</code> (lecture) and <code class="inline">N.2</code> (lab), tracked separately &mdash; a week can have one filed and one still pending. Filed lecture pages open a full study page (concept diagrams, flashcards, a sample quiz, worked examples, glossary); filed lab pages open an interactive follow-along with step-by-step checklists. Weeks with no scheduled meeting are marked self-study rather than left blank.</p>
     </div>
 
     <div class="note-box">
@@ -186,20 +189,21 @@
     <div class="table-scroll">
       <table class="log">
         <thead>
-          <tr><th>Wk</th><th>Dates</th><th>Monday &mdash; Lecture</th><th>Wednesday &mdash; Lab</th></tr>
+          <tr><th>Wk</th><th>N.1 (Lecture)</th><th>N.2 (Lab)</th></tr>
         </thead>
         <tbody>
           <tr>
             <td class="num">01</td>
-            <td class="week">Aug 24&ndash;28</td>
             <td>
               <div class="cell-stack">
+                <span class="seid">1.1</span>
                 <span>Module 1 &mdash; System Management</span>
                 <span class="status filed"><a class="open-link" href="IT251_Study_Page.html">Open &rarr;</a></span>
               </div>
             </td>
             <td>
               <div class="cell-stack">
+                <span class="seid">1.2</span>
                 <span>VM Setup &amp; Terminal Logging</span>
                 <span class="status filed"><a class="open-link" href="IT251_Lab1-2_Follow_Along.html#lab1">Open &rarr;</a></span>
               </div>
@@ -207,15 +211,16 @@
           </tr>
           <tr>
             <td class="num">02</td>
-            <td class="week">Aug 31&ndash;Sep 4</td>
             <td>
               <div class="cell-stack">
+                <span class="seid">2.1</span>
                 <span>Module 2 &mdash; System Management II</span>
                 <span class="status pending">Pending</span>
               </div>
             </td>
             <td>
               <div class="cell-stack">
+                <span class="seid">2.2</span>
                 <span>Linux Basics Lab &mdash; Day 1</span>
                 <span class="status filed"><a class="open-link" href="IT251_Lab1-2_Follow_Along.html#lab2">Open &rarr;</a></span>
               </div>
@@ -223,14 +228,15 @@
           </tr>
           <tr>
             <td class="num">03</td>
-            <td class="week">Sep 7&ndash;11</td>
             <td>
               <div class="cell-stack">
-                <span>&mdash; <em>(Labor Day, no lecture)</em></span>
+                <span class="seid">3.1</span>
+                <span class="selfstudy">Self-Study &mdash; no scheduled meeting (Labor Day)</span>
               </div>
             </td>
             <td>
               <div class="cell-stack">
+                <span class="seid">3.2</span>
                 <span>FHS Scavenger Hunt &amp; Permissions</span>
                 <span class="status pending">Pending</span>
               </div>
@@ -238,15 +244,16 @@
           </tr>
           <tr>
             <td class="num">04</td>
-            <td class="week">Sep 14&ndash;18</td>
             <td>
               <div class="cell-stack">
+                <span class="seid">4.1</span>
                 <span>Module 3 &mdash; Services &amp; User Mgmt I</span>
                 <span class="status pending">Pending</span>
               </div>
             </td>
             <td>
               <div class="cell-stack">
+                <span class="seid">4.2</span>
                 <span>Pentest Tooling: Install or Build</span>
                 <span class="status pending">Pending</span>
               </div>
@@ -254,15 +261,16 @@
           </tr>
           <tr>
             <td class="num">05</td>
-            <td class="week">Sep 21&ndash;25</td>
             <td>
               <div class="cell-stack">
+                <span class="seid">5.1</span>
                 <span>Module 4 &mdash; Services &amp; User Mgmt II</span>
                 <span class="status pending">Pending</span>
               </div>
             </td>
             <td>
               <div class="cell-stack">
+                <span class="seid">5.2</span>
                 <span>Text Processing, File Typing &amp; Cron</span>
                 <span class="status pending">Pending</span>
               </div>
@@ -270,15 +278,16 @@
           </tr>
           <tr>
             <td class="num">06</td>
-            <td class="week">Sep 28&ndash;Oct 2</td>
             <td>
               <div class="cell-stack">
+                <span class="seid">6.1</span>
                 <span>Midterm Review (Modules 1&ndash;4)</span>
                 <span class="status pending">Pending</span>
               </div>
             </td>
             <td>
               <div class="cell-stack">
+                <span class="seid">6.2</span>
                 <span>Timed Practice Checkpoint</span>
                 <span class="status pending">Pending</span>
               </div>
@@ -286,15 +295,16 @@
           </tr>
           <tr>
             <td class="num">07</td>
-            <td class="week">Oct 5&ndash;9</td>
             <td>
               <div class="cell-stack">
+                <span class="seid">7.1</span>
                 <span>Midterm Review / Open Q&amp;A</span>
                 <span class="status pending">Pending</span>
               </div>
             </td>
             <td>
               <div class="cell-stack">
+                <span class="seid">7.2</span>
                 <span>Open Lab / Practice Review</span>
                 <span class="status pending">Pending</span>
               </div>
@@ -302,15 +312,16 @@
           </tr>
           <tr>
             <td class="num">08</td>
-            <td class="week">Oct 12&ndash;16</td>
             <td>
               <div class="cell-stack">
+                <span class="seid">8.1</span>
                 <span>Linux+ Midterm Exam (Modules 1&ndash;4)</span>
                 <span class="status pending">Pending</span>
               </div>
             </td>
             <td>
               <div class="cell-stack">
+                <span class="seid">8.2</span>
                 <span>Practical Midterm Checkpoint</span>
                 <span class="status pending">Pending</span>
               </div>
@@ -318,15 +329,16 @@
           </tr>
           <tr>
             <td class="num">09</td>
-            <td class="week">Oct 19&ndash;23</td>
             <td>
               <div class="cell-stack">
+                <span class="seid">9.1</span>
                 <span>Module 5 &mdash; Security I (AAA in Linux)</span>
                 <span class="status pending">Pending</span>
               </div>
             </td>
             <td>
               <div class="cell-stack">
+                <span class="seid">9.2</span>
                 <span>Free-Tier TryHackMe Room</span>
                 <span class="status pending">Pending</span>
               </div>
@@ -334,15 +346,16 @@
           </tr>
           <tr>
             <td class="num">10</td>
-            <td class="week">Oct 26&ndash;30</td>
             <td>
               <div class="cell-stack">
+                <span class="seid">10.1</span>
                 <span>Module 5 cont. &mdash; Firewalls &amp; OS Hardening</span>
                 <span class="status pending">Pending</span>
               </div>
             </td>
             <td>
               <div class="cell-stack">
+                <span class="seid">10.2</span>
                 <span>PwnLabs or THM Free Room</span>
                 <span class="status pending">Pending</span>
               </div>
@@ -350,15 +363,16 @@
           </tr>
           <tr>
             <td class="num">11</td>
-            <td class="week">Nov 2&ndash;6</td>
             <td>
               <div class="cell-stack">
+                <span class="seid">11.1</span>
                 <span>Module 6 &mdash; Security II</span>
                 <span class="status pending">Pending</span>
               </div>
             </td>
             <td>
               <div class="cell-stack">
+                <span class="seid">11.2</span>
                 <span>THM Free Room</span>
                 <span class="status pending">Pending</span>
               </div>
@@ -366,15 +380,16 @@
           </tr>
           <tr>
             <td class="num">12</td>
-            <td class="week">Nov 9&ndash;13</td>
             <td>
               <div class="cell-stack">
+                <span class="seid">12.1</span>
                 <span>Module 6 cont. &mdash; Compliance &amp; Audit</span>
                 <span class="status pending">Pending</span>
               </div>
             </td>
             <td>
               <div class="cell-stack">
+                <span class="seid">12.2</span>
                 <span>Kali VM + Vulnerable Target VM</span>
                 <span class="status pending">Pending</span>
               </div>
@@ -382,15 +397,16 @@
           </tr>
           <tr>
             <td class="num">13</td>
-            <td class="week">Nov 16&ndash;20</td>
             <td>
               <div class="cell-stack">
+                <span class="seid">13.1</span>
                 <span>Module 7 &mdash; Automation &amp; Scripting</span>
                 <span class="status pending">Pending</span>
               </div>
             </td>
             <td>
               <div class="cell-stack">
+                <span class="seid">13.2</span>
                 <span>Scripting Lab</span>
                 <span class="status pending">Pending</span>
               </div>
@@ -398,20 +414,31 @@
           </tr>
           <tr class="off">
             <td class="num">14</td>
-            <td class="week">Nov 23&ndash;27</td>
-            <td colspan="2">Thanksgiving Break &mdash; no classes</td>
+            <td>
+              <div class="cell-stack">
+                <span class="seid">14.1</span>
+                <span class="selfstudy">Self-Study &mdash; Thanksgiving Break, no scheduled meeting</span>
+              </div>
+            </td>
+            <td>
+              <div class="cell-stack">
+                <span class="seid">14.2</span>
+                <span class="selfstudy">Self-Study &mdash; Thanksgiving Break, no scheduled meeting</span>
+              </div>
+            </td>
           </tr>
           <tr>
             <td class="num">15</td>
-            <td class="week">Nov 30&ndash;Dec 4</td>
             <td>
               <div class="cell-stack">
+                <span class="seid">15.1</span>
                 <span>Module 7 cont.; Modules 8&ndash;9; Final Review</span>
                 <span class="status pending">Pending</span>
               </div>
             </td>
             <td>
               <div class="cell-stack">
+                <span class="seid">15.2</span>
                 <span>Capstone Mini-CTF</span>
                 <span class="status pending">Pending</span>
               </div>
@@ -419,8 +446,18 @@
           </tr>
           <tr class="off">
             <td class="num">16</td>
-            <td class="week">Dec 7&ndash;11</td>
-            <td colspan="2">Finals Week &mdash; exam per registrar's finals grid, no regular class meeting</td>
+            <td>
+              <div class="cell-stack">
+                <span class="seid">16.1</span>
+                <span class="selfstudy">Final Exam Period &mdash; administered per registrar's finals grid, separate from regular class time</span>
+              </div>
+            </td>
+            <td>
+              <div class="cell-stack">
+                <span class="seid">16.2</span>
+                <span class="selfstudy">Self-Study &mdash; no scheduled meeting</span>
+              </div>
+            </td>
           </tr>
         </tbody>
       </table>
@@ -431,7 +468,7 @@
     <div class="section-head">
       <p class="kicker">about</p>
       <h2>How this site works</h2>
-      <p>Monday lecture pages are self-contained study guides: concept diagrams, flashcards, a sample quiz, worked examples, and a glossary. Wednesday lab pages are interactive follow-alongs with step-by-step checklists your browser remembers as you check things off &mdash; nothing is submitted anywhere from this site itself. All of it runs as plain static HTML, no build step, no tracking.</p>
+      <p><code class="inline">N.1</code> lecture pages are self-contained study guides: concept diagrams, flashcards, a sample quiz, worked examples, and a glossary. <code class="inline">N.2</code> lab pages are interactive follow-alongs with step-by-step checklists your browser remembers as you check things off &mdash; nothing is submitted anywhere from this site itself. All of it runs as plain static HTML, no build step, no tracking.</p>
     </div>
   </section>
 
