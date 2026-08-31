@@ -80,6 +80,19 @@
   nav.index .wrap::-webkit-scrollbar{ display:none; }
   nav.index a{ font-family:var(--mono); font-size:.82rem; text-decoration:none; color:var(--muted); padding:.5em .9em; border-radius:6px; white-space:nowrap; border:1px solid transparent; }
   nav.index a:hover{ color:var(--text); border-color:var(--border); background:var(--surface); }
+  nav.index a.toc-link{ font-weight:600; color:var(--accent); border-right:1px solid var(--border); border-radius:0; margin-right:8px; padding-right:16px; }
+  nav.index a.toc-link:hover{ color:var(--accent); background:transparent; border-right-color:var(--border); }
+
+  .back-to-top{ position:fixed; bottom:22px; right:22px; z-index:40; width:46px; height:46px;
+    background:var(--surface); border:1px solid var(--border); border-radius:10px; box-shadow:var(--shadow);
+    font-family:var(--mono); font-size:1.15rem; color:var(--accent); line-height:1;
+    display:flex; align-items:center; justify-content:center; padding:0; cursor:pointer; text-decoration:none;
+    opacity:0; visibility:hidden; transform:translateY(10px);
+    transition:opacity .25s ease, transform .25s ease, visibility 0s .25s; }
+  .back-to-top.show{ opacity:1; visibility:visible; transform:translateY(0); transition:opacity .25s ease, transform .25s ease, visibility 0s; }
+  .back-to-top:hover{ background:var(--accent-soft); border-color:var(--accent); }
+  .back-to-top:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+  @media print{ nav.index, .back-to-top{ display:none; } }
 
   section{ padding:52px 0; border-bottom:1px solid var(--border); }
   section:last-of-type{ border-bottom:none; }
@@ -175,6 +188,7 @@
 
 <nav class="index" aria-label="Section index">
   <div class="wrap">
+    <a href="index.html" class="toc-link">&larr; Table of Contents</a>
     <a href="#overview">Overview</a>
     <a href="#diagrams">Concepts</a>
     <a href="#lab">Hands-On Lab</a>
@@ -404,7 +418,7 @@ modprobe -r usb_storage</pre>
 
 <footer>
   <div class="wrap">
-    <p>IT251 · Linux+ (XK0-006) · Monday lecture + Wednesday hands-on lab track (VM setup → FHS/text-processing labs → Kali/VirtualBox tooling → THM/HTB) · Week 1 reference — more weeks added as the course progresses.</p>
+    <p>IT251 · Linux+ (XK0-006) · Lecture + hands-on lab track (VM setup → FHS/text-processing labs → Kali/VirtualBox tooling → THM/HTB) · Week 1 reference — more weeks added as the course progresses.</p>
   </div>
 </footer>
 
@@ -595,4 +609,14 @@ modprobe -r usb_storage</pre>
       el.classList.toggle('hidden', q && !el.dataset.search.includes(q));
     });
   });
+</script>
+
+<button id="backToTop" class="back-to-top" aria-label="Back to top" title="Back to top">&uarr;</button>
+
+<script>
+  const backToTop = document.getElementById('backToTop');
+  function toggleBackToTop(){ backToTop.classList.toggle('show', window.scrollY > 480); }
+  window.addEventListener('scroll', toggleBackToTop, {passive:true});
+  toggleBackToTop();
+  backToTop.addEventListener('click', () => window.scrollTo({top:0, behavior:'smooth'}));
 </script>
