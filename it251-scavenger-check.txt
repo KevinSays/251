@@ -1,0 +1,71 @@
+#!/usr/bin/env bash
+# IT251 Lab 3 - self-check for the scavenger hunt. Not graded, not submitted -
+# just compares what you recorded against what's actually in your own
+# ~/IT251/scavenger tree right now, so you know what's correct before you submit.
+set -uo pipefail
+
+BASE="$HOME/IT251/scavenger"
+ANSWERS="${1:-$HOME/IT251/scavenger-answers.txt}"
+
+if [[ ! -d "$BASE" ]]; then
+  echo "Can't find $BASE - run it251-scavenger-setup.sh first."
+  exit 1
+fi
+
+if [[ ! -f "$ANSWERS" ]]; then
+  cat <<MSG
+Can't find your answers file at: $ANSWERS
+
+Create it with the six passwords you found, one per line, in level order
+(0 through 5):
+
+  nano $ANSWERS
+
+Then run this script again.
+MSG
+  exit 1
+fi
+
+mapfile -t LINES < "$ANSWERS"
+
+correct=0
+total=6
+
+check() {
+  local level="$1" expected_file="$2" got="$3" note="${4:-file not readable yet}"
+
+  if [[ ! -r "$expected_file" ]]; then
+    printf "  Level %s: SKIP  - %s\n" "$level" "$note"
+    return
+  fi
+
+  local expected
+  expected="$(cat "$expected_file")"
+  got="$(printf '%s' "$got" | sed -e 's/[[:space:]]*$//' -e 's/^[[:space:]]*//')"
+
+  if [[ "$got" == "$expected" ]]; then
+    printf "  Level %s: CORRECT\n" "$level"
+    correct=$((correct + 1))
+  else
+    printf "  Level %s: NOT YET - keep looking\n" "$level"
+  fi
+}
+
+echo "IT251 Lab 3 - Scavenger Hunt self-check"
+echo "Comparing $ANSWERS against your live ~/IT251/scavenger tree..."
+echo ""
+
+check 0 "$BASE/level0/.secret"                 "${LINES[0]:-}"
+check 1 "$BASE/level1/--not a flag--.txt"      "${LINES[1]:-}"
+check 2 "$BASE/level2/locked.txt"              "${LINES[2]:-}" "locked.txt still isn't readable - chmod it first"
+check 3 "$BASE/level3/needle.txt"              "${LINES[3]:-}"
+check 4 "$BASE/level4/deep/deeper/target.txt"  "${LINES[4]:-}"
+check 5 "$BASE/level5/real-answer.txt"         "${LINES[5]:-}"
+
+echo ""
+echo "Score: $correct / $total correct so far."
+if (( correct < total )); then
+  echo "Not done yet - that's fine, this is a self-check, not a grade. Keep going."
+else
+  echo "All six found. Export your log and submit per the lab instructions."
+fi

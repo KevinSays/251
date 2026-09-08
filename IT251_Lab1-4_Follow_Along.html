@@ -532,7 +532,7 @@ cat .secret</pre>
       <li><label><input type="checkbox" data-id="l3-3"> <b>Level 3:</b> isolate <code class="inline">needle.txt</code> among random-sized decoys using <code class="inline">find . -type f -size</code></label></li>
       <li><label><input type="checkbox" data-id="l3-4"> <b>Level 4:</b> locate <code class="inline">target.txt</code> buried several directories deep with <code class="inline">find</code> — no manual <code class="inline">cd</code> chain</label></li>
       <li><label><input type="checkbox" data-id="l3-5"> <b>Level 5:</b> follow a symlink named <code class="inline">shortcut</code> to its real target with <code class="inline">ls -l</code> / <code class="inline">readlink</code></label></li>
-      <li><label><input type="checkbox" data-id="l3-6"> Recorded all five passwords for submission</label></li>
+      <li><label><input type="checkbox" data-id="l3-6"> Recorded all six passwords for submission (including Level 0, from the demo)</label></li>
     </ul>
     <details class="solution">
       <summary>Stuck? Hints</summary>
@@ -544,8 +544,88 @@ cat .secret</pre>
       </div>
     </details>
 
+    <h3>Self-check (optional)</h3>
+    <p>Not graded, not submitted — just tells you what's actually correct so far, so you're not guessing before you submit. Write your six passwords into a file, one per line, in level order (0 through 5):</p>
+    <pre class="term">nano ~/IT251/scavenger-answers.txt</pre>
+    <p>Then get the checker — <a href="it251-scavenger-check.txt" download="it251-scavenger-check.sh">download it directly</a>, or paste it in yourself:</p>
+    <pre class="term">nano ~/it251-scavenger-check.sh</pre>
+    <pre class="term">#!/usr/bin/env bash
+# IT251 Lab 3 - self-check for the scavenger hunt. Not graded, not submitted -
+# just compares what you recorded against what's actually in your own
+# ~/IT251/scavenger tree right now, so you know what's correct before you submit.
+set -uo pipefail
+
+BASE="$HOME/IT251/scavenger"
+ANSWERS="${1:-$HOME/IT251/scavenger-answers.txt}"
+
+if [[ ! -d "$BASE" ]]; then
+  echo "Can't find $BASE - run it251-scavenger-setup.sh first."
+  exit 1
+fi
+
+if [[ ! -f "$ANSWERS" ]]; then
+  cat &lt;&lt;MSG
+Can't find your answers file at: $ANSWERS
+
+Create it with the six passwords you found, one per line, in level order
+(0 through 5):
+
+  nano $ANSWERS
+
+Then run this script again.
+MSG
+  exit 1
+fi
+
+mapfile -t LINES &lt; "$ANSWERS"
+
+correct=0
+total=6
+
+check() {
+  local level="$1" expected_file="$2" got="$3" note="${4:-file not readable yet}"
+
+  if [[ ! -r "$expected_file" ]]; then
+    printf "  Level %s: SKIP  - %s\n" "$level" "$note"
+    return
+  fi
+
+  local expected
+  expected="$(cat "$expected_file")"
+  got="$(printf '%s' "$got" | sed -e 's/[[:space:]]*$//' -e 's/^[[:space:]]*//')"
+
+  if [[ "$got" == "$expected" ]]; then
+    printf "  Level %s: CORRECT\n" "$level"
+    correct=$((correct + 1))
+  else
+    printf "  Level %s: NOT YET - keep looking\n" "$level"
+  fi
+}
+
+echo "IT251 Lab 3 - Scavenger Hunt self-check"
+echo "Comparing $ANSWERS against your live ~/IT251/scavenger tree..."
+echo ""
+
+check 0 "$BASE/level0/.secret"                 "${LINES[0]:-}"
+check 1 "$BASE/level1/--not a flag--.txt"      "${LINES[1]:-}"
+check 2 "$BASE/level2/locked.txt"              "${LINES[2]:-}" "locked.txt still isn't readable - chmod it first"
+check 3 "$BASE/level3/needle.txt"              "${LINES[3]:-}"
+check 4 "$BASE/level4/deep/deeper/target.txt"  "${LINES[4]:-}"
+check 5 "$BASE/level5/real-answer.txt"         "${LINES[5]:-}"
+
+echo ""
+echo "Score: $correct / $total correct so far."
+if (( correct &lt; total )); then
+  echo "Not done yet - that's fine, this is a self-check, not a grade. Keep going."
+else
+  echo "All six found. Export your log and submit per the lab instructions."
+fi</pre>
+    <p>Run it:</p>
+    <pre class="term">bash ~/it251-scavenger-check.sh</pre>
+    <p style="color:var(--muted); font-size:.92rem;">The comparison is exact (whitespace at the ends is trimmed, but the text itself must match exactly what's in the file) — a "NOT YET" doesn't mean you're wrong conceptually, it usually just means a typo. Level 2 shows <code class="inline">SKIP</code> instead of a flat fail until you've actually fixed its permissions, since the checker genuinely can't read a 000-permission file either.</p>
+
     <h3>Submit</h3>
-    <p>Run <code class="inline">~/it251-export-log.sh</code> and submit the exported log plus the five recorded passwords, per LMS instructions.</p>
+    <p>Run <code class="inline">~/it251-export-log.sh</code> and submit the exported log plus the six recorded passwords, per LMS instructions.</p>
   </section>
 
   <section id="lab4">
