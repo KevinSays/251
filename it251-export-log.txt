@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# IT251 - export current history to a timestamped file for lab submission.
+set -euo pipefail
+
+LOG_DIR="$HOME/IT251/logs"
+mkdir -p "$LOG_DIR"
+STAMP="$(date +%Y%m%d_%H%M%S)"
+OUT="$LOG_DIR/history_${STAMP}.txt"
+
+history -a   # flush current session's history to disk first
+cp "${HISTFILE:-$HOME/.bash_history}" "$OUT"
+
+echo "Exported history to: $OUT"
+echo "Submit this file (or the whole ~/IT251/logs folder) as lab proof."

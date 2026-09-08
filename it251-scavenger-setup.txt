@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+# IT251 Lab 3 - local FHS/permissions scavenger hunt. Run once.
+set -euo pipefail
+
+BASE="$HOME/IT251/scavenger"
+rm -rf "$BASE"
+mkdir -p "$BASE"/{level0,level1,level2,level3,level4/deep/deeper,level5}
+
+# Level 0: hidden dotfile
+echo "PASSWORD-0: you found a dotfile with ls -la" > "$BASE/level0/.secret"
+
+# Level 1: awkward filename (leading dash + spaces)
+echo "PASSWORD-1: quoting/escaping beats a filename that looks like a flag" > "$BASE/level1/--not a flag--.txt"
+
+# Level 2: unreadable until chmod'd
+echo "PASSWORD-2: chmod got you read access" > "$BASE/level2/locked.txt"
+chmod 000 "$BASE/level2/locked.txt"
+
+# Level 3: needle in decoys, findable by exact size
+echo -n "PASSWORD-3: found by exact size with find -size" > "$BASE/level3/needle.txt"
+for i in 1 2 3 4 5; do
+  head -c $((RANDOM % 500 + 10)) /dev/urandom | base64 > "$BASE/level3/decoy-$i.txt"
+done
+
+# Level 4: buried in a nested tree
+echo "PASSWORD-4: find from the top with -name, no manual cd chain needed" > "$BASE/level4/deep/deeper/target.txt"
+
+# Level 5: symlink to follow
+echo "PASSWORD-5: ls -l shows the arrow, readlink shows the target" > "$BASE/level5/real-answer.txt"
+ln -s "$BASE/level5/real-answer.txt" "$BASE/level5/shortcut"
+
+echo "Scavenger course built at $BASE"

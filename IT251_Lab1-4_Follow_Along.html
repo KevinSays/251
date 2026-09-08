@@ -280,7 +280,7 @@
     <h3>Persistent terminal history logging</h3>
     <p>This is the piece that makes every future lab auto-generate proof of work — run this once, and it keeps logging every session from here on. Open a terminal in your VM:</p>
     <pre class="term">nano ~/it251-setup-logging.sh</pre>
-    <p>Paste this in, save, exit:</p>
+    <p>Paste this in, save, exit — or skip the copy-paste and <a href="it251-setup-logging.txt" download="it251-setup-logging.sh">download the script directly</a> instead:</p>
     <pre class="term">#!/usr/bin/env bash
 # IT251 - persistent terminal history logging setup. Run once.
 set -euo pipefail
@@ -338,6 +338,7 @@ source ~/.bashrc      # or: source ~/.zshrc</pre>
 
     <p>Second script — an export helper you'll reuse at the end of every future lab:</p>
     <pre class="term">nano ~/it251-export-log.sh</pre>
+    <p><a href="it251-export-log.txt" download="it251-export-log.sh">Download this one directly</a> instead, if you'd rather not paste it in:</p>
     <pre class="term">#!/usr/bin/env bash
 # IT251 - export current history to a timestamped file for lab submission.
 set -euo pipefail
@@ -476,7 +477,7 @@ man ls</pre>
     <h3>Build your scavenger course</h3>
     <p>Create the setup script — it builds a personal <code class="inline">~/IT251/scavenger/level0</code> through <code class="inline">level5</code> tree, each level hiding a password behind one FHS/permissions trick. Open a terminal in your VM:</p>
     <pre class="term">nano ~/it251-scavenger-setup.sh</pre>
-    <p>Paste this in, save, exit:</p>
+    <p>Paste this in, save, exit — or skip the copy-paste and <a href="it251-scavenger-setup.txt" download="it251-scavenger-setup.sh">download the script directly</a> instead:</p>
     <pre class="term">#!/usr/bin/env bash
 # IT251 Lab 3 - local FHS/permissions scavenger hunt. Run once.
 set -euo pipefail
