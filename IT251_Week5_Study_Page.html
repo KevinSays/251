@@ -111,6 +111,14 @@
   .diagram-grid{ display:grid; gap:32px; grid-template-columns:1fr; }
   @media(min-width:860px){ .diagram-grid{ grid-template-columns:1fr 1.05fr; } }
 
+  table.blocks{ width:100%; border-collapse:collapse; font-size:.9rem; margin:22px 0 24px; }
+  table.blocks caption{ caption-side:top; text-align:left; font-family:var(--mono); font-size:.75rem; text-transform:uppercase; letter-spacing:.08em; color:var(--accent-2); margin-bottom:.5em; }
+  table.blocks th, table.blocks td{ border:1px solid var(--border); padding:.6em .85em; text-align:left; vertical-align:top; }
+  table.blocks th{ background:var(--surface-2); font-family:var(--mono); font-size:.78rem; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); }
+  table.blocks td:first-child{ font-family:var(--mono); font-weight:600; color:var(--accent); white-space:nowrap; }
+  table.blocks tbody tr:nth-child(odd){ background:var(--surface); }
+  table.blocks tbody tr:nth-child(even){ background:color-mix(in srgb, var(--surface) 60%, var(--surface-2)); }
+
   .toolbar{ display:flex; gap:10px; align-items:center; margin-bottom:20px; flex-wrap:wrap; }
   button.btn{ font-family:var(--mono); font-size:.82rem; background:var(--surface); color:var(--text); border:1px solid var(--border); border-radius:7px; padding:.6em 1em; cursor:pointer; }
   button.btn:hover{ border-color:var(--accent); color:var(--accent); }
@@ -224,7 +232,7 @@
     <div class="section-head">
       <p class="kicker">Concepts</p>
       <h2>Two ways to see it</h2>
-      <p>Package managers show <em>which tool for which distro family</em>. The systemd state diagram shows <em>why "active" and "enabled" are two separate questions</em> — a favorite exam trap.</p>
+      <p>Package managers show <em>which tool for which distro family</em>. The systemd state diagram shows <em>why "active" and "enabled" are two separate questions</em> — a favorite exam trap. The container diagram shows <em>what actually persists</em> when a container is removed.</p>
     </div>
     <div class="diagram-grid">
       <figure>
@@ -275,6 +283,52 @@
         <figcaption>Enabled/disabled controls boot-time startup; active/inactive/failed is the state right now — independent questions.</figcaption>
       </figure>
     </div>
+
+    <figure>
+      <svg viewBox="0 0 660 200" role="img" aria-label="An image is pulled or built, then run as a container. The container's writable layer is discarded on removal, but a mounted volume persists data outside the container's lifecycle.">
+        <defs>
+          <marker id="arrow251w5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+          </marker>
+        </defs>
+        <g font-family="JetBrains Mono" font-size="12" font-weight="600">
+          <rect x="10" y="70" width="140" height="50" rx="6" fill="none" stroke="currentColor"/>
+          <text x="80" y="92" text-anchor="middle" fill="currentColor">Image</text>
+          <text x="80" y="108" text-anchor="middle" fill="var(--muted)" font-size="10" font-weight="400">immutable template</text>
+
+          <rect x="220" y="70" width="160" height="50" rx="6" fill="var(--accent-soft)" stroke="var(--accent)"/>
+          <text x="300" y="92" text-anchor="middle" fill="var(--accent)">Container</text>
+          <text x="300" y="108" text-anchor="middle" fill="var(--accent)" font-size="10" font-weight="400">running instance</text>
+
+          <rect x="450" y="20" width="180" height="44" rx="6" fill="var(--danger-soft)" stroke="var(--danger)"/>
+          <text x="540" y="47" text-anchor="middle" fill="var(--danger)" font-size="11">Writable layer</text>
+
+          <rect x="450" y="130" width="180" height="50" rx="6" fill="var(--accent-2-soft)" stroke="var(--accent-2)"/>
+          <text x="540" y="152" text-anchor="middle" fill="var(--accent-2)">Volume / bind mount</text>
+          <text x="540" y="168" text-anchor="middle" fill="var(--accent-2)" font-size="10" font-weight="400">persists outside container</text>
+        </g>
+        <line x1="150" y1="95" x2="218" y2="95" stroke="currentColor" marker-end="url(#arrow251w5)"/>
+        <text x="185" y="85" font-family="IBM Plex Sans" font-size="10" fill="var(--muted)" text-anchor="middle">run</text>
+        <line x1="380" y1="85" x2="450" y2="55" stroke="var(--danger)" marker-end="url(#arrow251w5)"/>
+        <line x1="380" y1="105" x2="450" y2="150" stroke="var(--accent-2)" marker-end="url(#arrow251w5)"/>
+        <text x="450" y="80" font-family="IBM Plex Sans" font-size="10" fill="var(--danger)">discarded on rm</text>
+        <text x="450" y="195" font-family="IBM Plex Sans" font-size="10" fill="var(--accent-2)">survives docker rm</text>
+      </svg>
+      <figcaption>Anything written only to a container's writable layer disappears when the container is removed — a volume or bind mount is the only way data outlives the container itself.</figcaption>
+    </figure>
+
+    <table class="blocks">
+      <caption>Systemd unit types</caption>
+      <thead><tr><th>Unit type</th><th>Manages</th></tr></thead>
+      <tbody>
+        <tr><td>.service</td><td>A managed background process — the most common unit type</td></tr>
+        <tr><td>.target</td><td>A grouping/synchronization point — replaces legacy SysV runlevels</td></tr>
+        <tr><td>.socket</td><td>Activates a service on first connection (socket-activated startup)</td></tr>
+        <tr><td>.timer</td><td>Schedules another unit to run — the modern alternative to cron</td></tr>
+        <tr><td>.mount</td><td>Manages a filesystem mount point</td></tr>
+        <tr><td>.path</td><td>Triggers a unit when a watched file/directory changes</td></tr>
+      </tbody>
+    </table>
   </section>
 
   <section id="lab">
@@ -362,6 +416,46 @@
         </div>
       </details>
     </div>
+
+    <div class="example">
+      <span class="tag">Repository management</span>
+      <h3>apt update fails with a signature error</h3>
+      <p>After adding a new third-party repository, <code class="inline">sudo apt update</code> fails with something like "NO_PUBKEY" or "signatures couldn't be verified."</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <p><strong>Diagnosis:</strong> the repo's GPG signing key hasn't been imported yet — <code class="inline">apt</code> refuses to trust packages it can't cryptographically verify came from that repo, which is the whole point of repo signing.</p>
+          <p><strong>Fix:</strong> import the repository's public key (the exact command is provided by whoever publishes the repo, typically an <code class="inline">apt-key add</code> or a key file dropped into <code class="inline">/etc/apt/trusted.gpg.d/</code> on modern Debian/Ubuntu), then re-run <code class="inline">apt update</code>. Never work around this by disabling signature checks — that defeats the entire protection.</p>
+        </div>
+      </details>
+    </div>
+
+    <div class="example">
+      <span class="tag">update-alternatives</span>
+      <h3>Two Python versions, one command</h3>
+      <p>A system has both Python 3.9 and 3.11 installed. Running <code class="inline">python3</code> always launches 3.9, but a script needs 3.11's features.</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <pre class="term">sudo update-alternatives --config python3</pre>
+          <p>This lists every registered alternative for <code class="inline">python3</code> and lets you pick which one <code class="inline">/usr/bin/python3</code> actually symlinks to — without uninstalling either version or touching <code class="inline">$PATH</code> manually.</p>
+        </div>
+      </details>
+    </div>
+
+    <div class="example">
+      <span class="tag">Container networking</span>
+      <h3>Can't reach the container from outside</h3>
+      <p>A web app is running fine inside a container (confirmed with <code class="inline">docker exec ... curl localhost:8080</code>), but the host machine's browser can't reach it at all.</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <p><strong>Diagnosis:</strong> the container's port was never published to the host — by default, a container's ports are only reachable from inside the container's own network namespace.</p>
+          <pre class="term">docker run -p 8080:8080 myimage</pre>
+          <p><code class="inline">-p host:container</code> maps a host port to the container's port — without it, the app is running but genuinely unreachable from outside, which is different from a firewall or crash problem.</p>
+        </div>
+      </details>
+    </div>
   </section>
 
   <section id="glossary">
@@ -412,6 +506,10 @@
     {t:"Volume (named vs. bind mount)", d:"Storage that persists outside a container's writable layer — a named volume is managed by the runtime; a bind mount maps a specific host path."},
     {t:"Container networking / port publishing", d:"Containers on a shared user-defined network can reach each other by name; -p host:container exposes a container's port to the host."},
     {t:"Privileged vs. unprivileged/rootless", d:"--privileged grants near-host-level access — a real security boundary, not a convenience flag. Unprivileged/rootless is the safer default posture."},
+    {t:"GPG repository signing", d:"Package repositories sign their packages with a GPG key; the package manager refuses to install anything it can't verify against a trusted, imported key — the mechanism that stops a compromised mirror from silently serving malicious packages."},
+    {t:"update-alternatives --config", d:"Interactively lists every registered alternative for a command and lets you choose which one the symlinked command actually resolves to."},
+    {t:".service unit file location", d:"/usr/lib/systemd/system/ holds package-provided units; /etc/systemd/system/ holds local overrides and wins when both define the same unit."},
+    {t:"Port publishing (-p host:container)", d:"Maps a host port to a container's internal port. Without it, a container's service is only reachable from inside its own network namespace, not from the host or outside."},
   ];
 
   const QUIZ = [
@@ -471,6 +569,24 @@
       ],
       correct:1,
       explain:"Privileged containers get broad host access — the safer default for anything internet-facing is unprivileged/rootless."
+    },
+    {
+      q:"apt update fails with a GPG/NO_PUBKEY error after adding a new repository. What's happening?",
+      choices:["The repository is offline","The repo's signing key hasn't been imported, so apt won't trust its packages","The internet connection is down","apt is out of date and needs reinstalling"],
+      correct:1,
+      explain:"apt refuses to install packages it can't cryptographically verify — importing the repo's GPG key is the fix, not disabling signature checks."
+    },
+    {
+      q:"A container's app works when tested from inside the container, but the host can't reach it at all. What's missing?",
+      choices:["A running process inside the container","Port publishing (-p host:container)","A Dockerfile","More container CPU"],
+      correct:1,
+      explain:"Without -p host:container, a container's ports are only reachable from inside its own network namespace — the app is genuinely unreachable from the host until the port is published."
+    },
+    {
+      q:"Where do local overrides to a systemd unit file live, taking precedence over the package-provided version?",
+      choices:["/usr/lib/systemd/system/","/etc/systemd/system/","/var/lib/systemd/","/boot/systemd/"],
+      correct:1,
+      explain:"/etc/systemd/system/ holds local overrides and wins over the package-provided unit in /usr/lib/systemd/system/ when both define the same unit."
     },
   ];
 

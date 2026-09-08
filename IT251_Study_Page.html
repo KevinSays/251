@@ -118,6 +118,14 @@
   .diagram-grid{ display:grid; gap:32px; grid-template-columns:1fr; }
   @media(min-width:860px){ .diagram-grid{ grid-template-columns:1.3fr 1fr; } }
 
+  table.blocks{ width:100%; border-collapse:collapse; font-size:.9rem; margin:22px 0 24px; }
+  table.blocks caption{ caption-side:top; text-align:left; font-family:var(--mono); font-size:.75rem; text-transform:uppercase; letter-spacing:.08em; color:var(--accent-2); margin-bottom:.5em; }
+  table.blocks th, table.blocks td{ border:1px solid var(--border); padding:.6em .85em; text-align:left; vertical-align:top; }
+  table.blocks th{ background:var(--surface-2); font-family:var(--mono); font-size:.78rem; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); }
+  table.blocks td:first-child{ font-family:var(--mono); font-weight:600; color:var(--accent); white-space:nowrap; }
+  table.blocks tbody tr:nth-child(odd){ background:var(--surface); }
+  table.blocks tbody tr:nth-child(even){ background:color-mix(in srgb, var(--surface) 60%, var(--surface-2)); }
+
   .toolbar{ display:flex; gap:10px; align-items:center; margin-bottom:20px; flex-wrap:wrap; }
   button.btn{ font-family:var(--mono); font-size:.82rem; background:var(--surface); color:var(--text); border:1px solid var(--border); border-radius:7px; padding:.6em 1em; cursor:pointer; }
   button.btn:hover{ border-color:var(--accent); color:var(--accent); }
@@ -228,7 +236,7 @@
     <div class="section-head">
       <p class="kicker">Concepts</p>
       <h2>Two ways to see it</h2>
-      <p>The boot sequence shows <em>what happens in order</em>. The FHS shows <em>where things live once you're up</em>.</p>
+      <p>The boot sequence shows <em>what happens in order</em>. The FHS shows <em>where things live once you're up</em>. The storage stack shows <em>what's underneath a mount point</em>.</p>
     </div>
     <div class="diagram-grid">
       <figure>
@@ -291,6 +299,54 @@
         <figcaption><code class="inline">/proc</code> and <code class="inline">/sys</code> aren't real files on disk — they're live windows into the kernel.</figcaption>
       </figure>
     </div>
+
+    <figure>
+      <svg viewBox="0 0 680 210" role="img" aria-label="Storage stack: a physical disk is partitioned, LVM organizes partitions into a physical volume, volume group, and logical volume, a filesystem is written on top, and the result is mounted at a path.">
+        <defs>
+          <marker id="arrow251b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+          </marker>
+        </defs>
+        <g font-family="JetBrains Mono" font-size="12" font-weight="600">
+          <rect x="10" y="20" width="120" height="50" rx="6" fill="none" stroke="currentColor"/>
+          <text x="70" y="42" text-anchor="middle" fill="currentColor">Disk</text>
+          <text x="70" y="58" text-anchor="middle" fill="var(--muted)" font-size="10" font-weight="400">/dev/sda</text>
+
+          <rect x="170" y="20" width="130" height="50" rx="6" fill="none" stroke="currentColor"/>
+          <text x="235" y="42" text-anchor="middle" fill="currentColor">Partition</text>
+          <text x="235" y="58" text-anchor="middle" fill="var(--muted)" font-size="10" font-weight="400">MBR or GPT</text>
+
+          <rect x="340" y="20" width="160" height="50" rx="6" fill="none" stroke="currentColor"/>
+          <text x="420" y="42" text-anchor="middle" fill="currentColor" font-size="11">LVM: PV &#8594; VG &#8594; LV</text>
+          <text x="420" y="58" text-anchor="middle" fill="var(--muted)" font-size="10" font-weight="400">optional layer</text>
+
+          <rect x="540" y="20" width="130" height="50" rx="6" fill="none" stroke="currentColor"/>
+          <text x="605" y="42" text-anchor="middle" fill="currentColor" font-size="11">Filesystem</text>
+          <text x="605" y="58" text-anchor="middle" fill="var(--muted)" font-size="10" font-weight="400">ext4/XFS/Btrfs</text>
+
+          <rect x="240" y="140" width="220" height="50" rx="6" fill="var(--accent-soft)" stroke="var(--accent)"/>
+          <text x="350" y="163" text-anchor="middle" fill="var(--accent)">Mounted at a path</text>
+          <text x="350" y="178" text-anchor="middle" fill="var(--accent)" font-size="10" font-weight="400">/, /home, /var, ...</text>
+        </g>
+        <line x1="130" y1="45" x2="170" y2="45" stroke="currentColor" marker-end="url(#arrow251b)"/>
+        <line x1="300" y1="45" x2="340" y2="45" stroke="currentColor" marker-end="url(#arrow251b)"/>
+        <line x1="500" y1="45" x2="540" y2="45" stroke="currentColor" marker-end="url(#arrow251b)"/>
+        <line x1="605" y1="70" x2="380" y2="140" stroke="var(--accent)" marker-end="url(#arrow251b)"/>
+        <text x="500" y="105" font-family="IBM Plex Sans" font-size="10" fill="var(--muted)" text-anchor="middle">mount</text>
+      </svg>
+      <figcaption>LVM is optional — a partition can go straight to a filesystem — but PV &#8594; VG &#8594; LV is what lets you resize storage later without repartitioning.</figcaption>
+    </figure>
+
+    <table class="blocks">
+      <caption>Distribution families — same concepts, different tools</caption>
+      <thead><tr><th>Family</th><th>Package format</th><th>Package manager</th><th>Examples</th></tr></thead>
+      <tbody>
+        <tr><td>Debian</td><td><code class="inline">.deb</code></td><td><code class="inline">apt</code>/<code class="inline">apt-get</code>/<code class="inline">dpkg</code></td><td>Debian, Ubuntu, Linux Mint</td></tr>
+        <tr><td>RHEL</td><td><code class="inline">.rpm</code></td><td><code class="inline">dnf</code>/<code class="inline">yum</code>/<code class="inline">rpm</code></td><td>RHEL, Rocky Linux, AlmaLinux, Fedora</td></tr>
+        <tr><td>Arch</td><td><code class="inline">.pkg.tar.zst</code></td><td><code class="inline">pacman</code></td><td>Arch Linux (rolling release)</td></tr>
+        <tr><td>SUSE</td><td><code class="inline">.rpm</code></td><td><code class="inline">zypper</code></td><td>openSUSE, SLES</td></tr>
+      </tbody>
+    </table>
   </section>
 
   <section id="lab">
@@ -300,7 +356,7 @@
       <p>Every week's second session is lab time, not lecture. Today is infrastructure day: build the personal VM you'll use for every lab going forward, and set up persistent shell-history logging so proof-of-work is automatic from here on. No new Linux content yet — that starts next week.</p>
     </div>
 
-    <p style="color:var(--muted); font-size:.92rem; max-width:65ch;">Keep a running notes file as you go all semester (grab <a href="https://obsidian.md/" target="_blank" rel="noopener">Obsidian</a> or <a href="https://www.giaccone.me/cherrytree/" target="_blank" rel="noopener">CherryTree</a> if you don't already have a note-taking habit — both are free). Full step-by-step walkthrough, including the logging setup script, lives in <code class="inline">IT251_Lab1_VM_Setup_Logging.md</code>.</p>
+    <p style="color:var(--muted); font-size:.92rem; max-width:65ch;">Keep a running notes file as you go all semester (grab <a href="https://obsidian.md/" target="_blank" rel="noopener">Obsidian</a> or <a href="https://www.giaccone.me/cherrytree/" target="_blank" rel="noopener">CherryTree</a> if you don't already have a note-taking habit — both are free). Full step-by-step walkthrough, including the logging setup script (downloadable, not just copy-paste), lives on the <a href="IT251_Lab1-4_Follow_Along.html#lab1">Lab 1 Follow-Along page</a>. A one-page visual summary of this whole workflow is also filed in <a href="IT251_Graphics.html">Graphics &amp; Diagrams</a>.</p>
 
     <div class="card-grid" style="margin-top:24px; grid-template-columns:repeat(auto-fill,minmax(260px,1fr));">
       <div class="example" style="margin-bottom:0;">
@@ -408,6 +464,46 @@ modprobe -r usb_storage</pre>
         </div>
       </details>
     </div>
+
+    <div class="example">
+      <span class="tag">Partitioning</span>
+      <h3>Why won't the old drive show all its space?</h3>
+      <p>A 4 TB external drive, partitioned years ago on an old system, only shows 2 TB of usable space no matter what tool you check with.</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <p><strong>Diagnosis:</strong> the drive is almost certainly partitioned with <strong>MBR</strong>, which caps a partition (and the whole addressable disk in most legacy contexts) at 2 TB — a hard limit of the scheme itself, not the drive's actual hardware capacity.</p>
+          <p><strong>Fix:</strong> back up the data, then repartition the drive with <strong>GPT</strong>, which removes the 2 TB ceiling and the old 4-primary-partition limit. This isn't a settings tweak — the whole partition table has to be rebuilt.</p>
+        </div>
+      </details>
+    </div>
+
+    <div class="example">
+      <span class="tag">LVM</span>
+      <h3>The disk is full — now what?</h3>
+      <p>A logical volume mounted at <code class="inline">/var</code> has run out of space, but the volume group it belongs to still has 200 GB of free space sitting unused.</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <p><strong>This is exactly what LVM is for.</strong> Extend the logical volume into the volume group's free space, then grow the filesystem to match — no repartitioning, no downtime for a reboot.</p>
+          <pre class="term">lvextend -L +50G /dev/vg_data/lv_var
+resize2fs /dev/vg_data/lv_var   # ext4; use xfs_growfs for XFS</pre>
+          <p>A plain partition can't do this without unmounting and repartitioning — the whole reason LVM exists is to make this a five-second operation instead of a maintenance window.</p>
+        </div>
+      </details>
+    </div>
+
+    <div class="example">
+      <span class="tag">Distros</span>
+      <h3>Which family is this?</h3>
+      <p>You SSH into an unfamiliar server for the first time. Running <code class="inline">apt update</code> returns "command not found," but <code class="inline">dnf update</code> works fine.</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <p><strong>RHEL family</strong> — RHEL, Rocky Linux, AlmaLinux, or Fedora. <code class="inline">dnf</code> (or its predecessor <code class="inline">yum</code>) is the package manager for that family; <code class="inline">apt</code> belongs to the Debian family (Debian, Ubuntu, Mint) and won't exist on a RHEL-based box at all. Package manager presence is one of the fastest ways to fingerprint a distro family on an unfamiliar system.</p>
+        </div>
+      </details>
+    </div>
   </section>
 
   <section id="glossary">
@@ -434,6 +530,7 @@ modprobe -r usb_storage</pre>
     {t:"BIOS / UEFI", d:"The firmware that runs first at power-on. BIOS is legacy (works with MBR disks); UEFI is modern (works with GPT, supports Secure Boot)."},
     {t:"Block device", d:"A device that reads/writes data in fixed-size blocks — disks (/dev/sda). Contrast with character devices."},
     {t:"Bootloader (GRUB2)", d:"Loads the kernel and initramfs into memory and hands off execution. Presents the boot menu for kernel/OS selection."},
+    {t:"Btrfs", d:"A copy-on-write Linux filesystem with built-in snapshotting and volume management — an alternative to ext4/XFS on distros that support it by default (e.g., openSUSE, some Fedora spins)."},
     {t:"Character device", d:"A device that reads/writes a continuous stream of data, one character at a time — e.g., a serial port (/dev/tty)."},
     {t:"Distribution (distro)", d:"A packaged version of Linux with a chosen package manager, defaults, and release model — e.g., Ubuntu (Debian family) or Rocky Linux (RHEL family)."},
     {t:"dracut / update-initramfs", d:"Tools used to rebuild the initramfs — needed after adding a driver required at boot time. dracut is common on RHEL family, update-initramfs on Debian family."},
@@ -441,15 +538,20 @@ modprobe -r usb_storage</pre>
     {t:"FHS (Filesystem Hierarchy Standard)", d:"The standard that defines what each top-level Linux directory is for, so software behaves predictably across distros."},
     {t:"GPT", d:"GUID Partition Table — modern partitioning scheme, supports many partitions and disks larger than 2TB, pairs with UEFI."},
     {t:"GPL", d:"GNU General Public License — a 'copyleft' open source license requiring derivative works to also be released under the GPL."},
+    {t:"inode", d:"The on-disk data structure holding a file's metadata (permissions, owner, timestamps, data-block pointers) — separate from the filename, which just points to an inode."},
     {t:"initramfs (initrd)", d:"A temporary root filesystem loaded into RAM at boot, containing just enough drivers to find and mount the real root filesystem — critical when root lives on LVM, RAID, or encrypted storage."},
     {t:"Kernel", d:"The core of the OS — manages hardware, memory, processes, and provides the interface everything else runs on top of."},
     {t:"Kernel module", d:"A piece of kernel code (often a driver) that can be loaded or unloaded without rebooting."},
+    {t:"lvextend / resize2fs", d:"lvextend grows a logical volume into a volume group's free space; resize2fs then grows the ext4 filesystem to fill it (xfs_growfs for XFS). Together, the standard no-downtime disk-full fix under LVM."},
     {t:"LVM (PV/VG/LV)", d:"Logical Volume Manager — abstracts storage as Physical Volume → Volume Group → Logical Volume, letting you resize storage without repartitioning."},
     {t:"lsmod / modprobe", d:"lsmod lists currently loaded kernel modules. modprobe loads or unloads (-r) a module and its dependencies."},
     {t:"MBR", d:"Master Boot Record — legacy partitioning scheme, limited to 4 primary partitions and 2TB disks."},
-    {t:"Package manager", d:"Tool that installs, updates, and removes software and resolves dependencies — apt/dpkg (Debian family), dnf/rpm (RHEL family), pacman (Arch)."},
+    {t:"Mount point", d:"A directory a filesystem is attached to, making its contents accessible at that path — e.g., a separate /home filesystem mounted at the /home directory."},
+    {t:"pacman / zypper", d:"pacman is Arch Linux's package manager (rolling release, .pkg.tar.zst packages). zypper is SUSE's (openSUSE/SLES), managing .rpm packages — a third and fourth tool alongside apt and dnf."},
+    {t:"Package manager", d:"Tool that installs, updates, and removes software and resolves dependencies — apt/dpkg (Debian family), dnf/rpm (RHEL family), pacman (Arch), zypper (SUSE)."},
     {t:"POST", d:"Power-On Self-Test — the firmware's hardware check that runs before handing off to the bootloader."},
     {t:"/proc", d:"A pseudo-filesystem exposing live kernel and process information — not real files on disk."},
+    {t:"RAID", d:"Redundant Array of Independent Disks — combines multiple physical disks for redundancy (mirroring), performance (striping), or both. Full levels/utilities covered in Ascend 1.3.5, survey-level here."},
     {t:"Runlevel / Target", d:"A defined system state (e.g., multi-user, graphical). systemd calls these 'targets'; legacy SysV init called them 'runlevels.'"},
     {t:"systemd", d:"The init system (PID 1) used by virtually all modern distros — starts services in parallel based on dependency ordering, replacing legacy SysV init."},
     {t:"/sys", d:"A pseudo-filesystem exposing the kernel's live view of devices and drivers."},
@@ -514,6 +616,29 @@ modprobe -r usb_storage</pre>
       choices:["MIT","Apache 2.0","GPL","BSD"],
       correct:2,
       explain:"That 'copyleft' requirement is the defining trait of the GPL — MIT/Apache/BSD are permissive and don't require it."
+    },
+    {
+      q:"A logical volume is full, but its volume group still has free space. What's the fix?",
+      choices:["Reformat the disk from scratch","lvextend the LV, then resize2fs/xfs_growfs the filesystem","There's no fix without a reboot","Delete the volume group"],
+      correct:1,
+      explain:"This is exactly the scenario LVM solves — extend the LV into the VG's free space, then grow the filesystem to match, with no repartitioning or downtime."
+    },
+    {
+      q:"You SSH into an unfamiliar box and `apt` doesn't exist, but `dnf` works fine. What distro family is this?",
+      choices:["Debian family","RHEL family","Arch","macOS"],
+      correct:1,
+      explain:"dnf (and its predecessor yum) is the RHEL-family package manager — RHEL, Rocky Linux, AlmaLinux, or Fedora. apt belongs to the Debian family instead."
+    },
+    {
+      q:"What does LVM's Volume Group (VG) actually represent?",
+      choices:[
+        "A single physical disk",
+        "A pool of storage combining one or more Physical Volumes, which Logical Volumes are then carved from",
+        "A backup copy of a Logical Volume",
+        "A filesystem type like ext4 or XFS"
+      ],
+      correct:1,
+      explain:"PV → VG → LV: Physical Volumes are pooled into a Volume Group, and Logical Volumes are then created from that pooled space — which is what makes resizing across the pool possible."
     },
   ];
 

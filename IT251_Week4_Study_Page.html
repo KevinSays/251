@@ -111,6 +111,14 @@
   .diagram-grid{ display:grid; gap:32px; grid-template-columns:1fr; }
   @media(min-width:860px){ .diagram-grid{ grid-template-columns:1.15fr 1fr; } }
 
+  table.blocks{ width:100%; border-collapse:collapse; font-size:.9rem; margin:22px 0 24px; }
+  table.blocks caption{ caption-side:top; text-align:left; font-family:var(--mono); font-size:.75rem; text-transform:uppercase; letter-spacing:.08em; color:var(--accent-2); margin-bottom:.5em; }
+  table.blocks th, table.blocks td{ border:1px solid var(--border); padding:.6em .85em; text-align:left; vertical-align:top; }
+  table.blocks th{ background:var(--surface-2); font-family:var(--mono); font-size:.78rem; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); }
+  table.blocks td:first-child{ font-family:var(--mono); font-weight:600; color:var(--accent); white-space:nowrap; }
+  table.blocks tbody tr:nth-child(odd){ background:var(--surface); }
+  table.blocks tbody tr:nth-child(even){ background:color-mix(in srgb, var(--surface) 60%, var(--surface-2)); }
+
   .toolbar{ display:flex; gap:10px; align-items:center; margin-bottom:20px; flex-wrap:wrap; }
   button.btn{ font-family:var(--mono); font-size:.82rem; background:var(--surface); color:var(--text); border:1px solid var(--border); border-radius:7px; padding:.6em 1em; cursor:pointer; }
   button.btn:hover{ border-color:var(--accent); color:var(--accent); }
@@ -224,7 +232,7 @@
     <div class="section-head">
       <p class="kicker">Concepts</p>
       <h2>Two ways to see it</h2>
-      <p>The account lifecycle shows <em>what stage a user is in</em>. Process states show <em>what a running process is doing right now</em>.</p>
+      <p>The account lifecycle shows <em>what stage a user is in</em>. Process states show <em>what a running process is doing right now</em>. Inodes and links show <em>why a filename isn't the same thing as the file</em>.</p>
     </div>
     <div class="diagram-grid">
       <figure>
@@ -284,6 +292,43 @@
         <figcaption>A zombie isn't consuming CPU or memory for real work — it's just an exit status waiting on its parent.</figcaption>
       </figure>
     </div>
+
+    <figure>
+      <svg viewBox="0 0 640 190" role="img" aria-label="Two filenames, report.txt and report-backup.txt, both point to the same inode 88213 which holds the actual data. A symlink named shortcut instead points to the path report.txt, not the inode directly." >
+        <g font-family="JetBrains Mono" font-size="12" font-weight="600">
+          <rect x="10" y="15" width="160" height="40" rx="6" fill="none" stroke="currentColor"/>
+          <text x="90" y="40" text-anchor="middle" fill="currentColor">report.txt</text>
+          <rect x="10" y="65" width="160" height="40" rx="6" fill="none" stroke="currentColor"/>
+          <text x="90" y="90" text-anchor="middle" fill="currentColor">report-backup.txt</text>
+          <rect x="10" y="115" width="160" height="40" rx="6" fill="none" stroke="var(--accent-2)"/>
+          <text x="90" y="140" text-anchor="middle" fill="var(--accent-2)">shortcut (symlink)</text>
+
+          <rect x="330" y="55" width="180" height="50" rx="6" fill="var(--accent-soft)" stroke="var(--accent)"/>
+          <text x="420" y="77" text-anchor="middle" fill="var(--accent)">inode 88213</text>
+          <text x="420" y="93" text-anchor="middle" fill="var(--accent)" font-size="10">actual data + metadata</text>
+        </g>
+        <line x1="170" y1="35" x2="328" y2="70" stroke="currentColor"/>
+        <line x1="170" y1="85" x2="328" y2="82" stroke="currentColor"/>
+        <line x1="170" y1="135" x2="90" y2="55" stroke="var(--accent-2)" stroke-dasharray="4 3"/>
+        <text x="230" y="145" font-family="IBM Plex Sans" font-size="10.5" fill="var(--muted)">hard links — direct inode pointers, same data</text>
+        <text x="230" y="170" font-family="IBM Plex Sans" font-size="10.5" fill="var(--accent-2)">symlink — points at a path, not the inode</text>
+      </svg>
+      <figcaption>Delete <code class="inline">report.txt</code>: the hard link <code class="inline">report-backup.txt</code> still works (same inode). The symlink <code class="inline">shortcut</code> breaks (it only knew the old path).</figcaption>
+    </figure>
+
+    <table class="blocks">
+      <caption>Anatomy of an /etc/passwd entry</caption>
+      <thead><tr><th>Field</th><th>Example</th><th>Meaning</th></tr></thead>
+      <tbody>
+        <tr><td>Username</td><td><code class="inline">jsmith</code></td><td>Login name</td></tr>
+        <tr><td>Password placeholder</td><td><code class="inline">x</code></td><td>Real hash lives in /etc/shadow, not here</td></tr>
+        <tr><td>UID</td><td><code class="inline">1000</code></td><td>Numeric user ID — 0 is root, 1000+ is a regular user on most distros</td></tr>
+        <tr><td>GID</td><td><code class="inline">1000</code></td><td>Primary group ID</td></tr>
+        <tr><td>GECOS</td><td><code class="inline">John Smith</code></td><td>Comment field — usually full name, sometimes empty</td></tr>
+        <tr><td>Home directory</td><td><code class="inline">/home/jsmith</code></td><td>Default working directory on login</td></tr>
+        <tr><td>Shell</td><td><code class="inline">/bin/bash</code></td><td>Program run on login — <code class="inline">/usr/sbin/nologin</code> for service accounts</td></tr>
+      </tbody>
+    </table>
   </section>
 
   <section id="lab">
@@ -373,6 +418,42 @@ kill -SIGKILL &lt;pid&gt;   # force — no cleanup, last resort</pre>
         </div>
       </details>
     </div>
+
+    <div class="example">
+      <span class="tag">/etc/passwd</span>
+      <h3>Read the fields</h3>
+      <p>A line in <code class="inline">/etc/passwd</code> reads: <code class="inline">svc_backup:x:998:998:Backup Service:/var/lib/backup:/usr/sbin/nologin</code>. Is this a regular user, and could someone SSH in as this account?</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <p><strong>Not a regular user.</strong> UID/GID 998 falls in the system-account range on most distros (well below the 1000+ regular-user range), and the shell field is <code class="inline">/usr/sbin/nologin</code> — this account exists to run a service, not for a person to log into. Nobody can get an interactive shell as <code class="inline">svc_backup</code> even with the right password, because <code class="inline">nologin</code> immediately rejects the login attempt.</p>
+        </div>
+      </details>
+    </div>
+
+    <div class="example">
+      <span class="tag">Device types</span>
+      <h3>Block or character?</h3>
+      <p><code class="inline">ls -l /dev</code> shows two entries: <code class="inline">brw-rw---- ... sda</code> and <code class="inline">crw-rw-rw- ... null</code>. What does the leading <code class="inline">b</code> vs. <code class="inline">c</code> actually tell you?</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <p><strong><code class="inline">b</code> = block device</strong> (<code class="inline">/dev/sda</code>) — addressable in fixed-size chunks, the category disks fall into. <strong><code class="inline">c</code> = character device</strong> (<code class="inline">/dev/null</code>) — a continuous stream, read/written one byte at a time, the category serial ports, terminals, and pseudo-devices like <code class="inline">/dev/null</code>/<code class="inline">/dev/random</code> fall into. It's the same first-column position where a regular file shows <code class="inline">-</code> and a directory shows <code class="inline">d</code>.</p>
+        </div>
+      </details>
+    </div>
+
+    <div class="example">
+      <span class="tag">Process states</span>
+      <h3>Is this a problem?</h3>
+      <p><code class="inline">ps aux</code> shows a process with <code class="inline">STAT</code> = <code class="inline">Z</code> that's been sitting there for an hour. Should you <code class="inline">kill -9</code> it?</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <p><strong>You can't kill a zombie</strong> — it's already dead; <code class="inline">kill</code> has nothing left to signal. A zombie lingers because its <strong>parent</strong> hasn't called <code class="inline">wait()</code> to collect its exit status yet. The real fix targets the parent: if it's still running, it has a bug (not reaping children); if the parent itself is gone, the zombie gets reparented to <code class="inline">init</code>/<code class="inline">systemd</code>, which reaps it automatically. Either way, a lingering zombie isn't consuming real CPU/memory — it's mostly a diagnostic signal, not an emergency.</p>
+        </div>
+      </details>
+    </div>
   </section>
 
   <section id="glossary">
@@ -418,6 +499,8 @@ kill -SIGKILL &lt;pid&gt;   # force — no cleanup, last resort</pre>
     {t:"pstree / top / htop", d:"pstree shows the parent/child process tree visually; top/htop show a live, sortable process view."},
     {t:"PID / PPID", d:"Process ID and Parent Process ID — every process except PID 1 (systemd) has a parent that spawned it."},
     {t:"Process states (R/S/D/T/Z)", d:"Running, Sleeping (interruptible), uninterruptible sleep (D, usually I/O wait), sTopped, Zombie (finished, not yet reaped) — shown in ps's STAT column."},
+    {t:"Reaping / wait()", d:"The parent process calling wait() to collect a finished child's exit status — until this happens, the child lingers as a zombie. If the parent dies first, the child is reparented to init/systemd, which reaps it automatically."},
+    {t:"GECOS field", d:"The comment field in /etc/passwd — conventionally the account's full name, sometimes left blank or repurposed for other info."},
     {t:"nice / renice", d:"Set or change a process's scheduling priority, from -20 (highest) to 19 (lowest)."},
     {t:"ulimit", d:"Sets per-shell resource limits — e.g. max open files, max processes."},
     {t:"jobs / fg / bg", d:"jobs lists background/suspended jobs in the current shell; fg brings one to the foreground, bg resumes one in the background."},
@@ -480,6 +563,24 @@ kill -SIGKILL &lt;pid&gt;   # force — no cleanup, last resort</pre>
       ],
       correct:1,
       explain:"Cron's five fields are always: minute, hour, day-of-month, month, day-of-week — a favorite exam detail to get backwards."
+    },
+    {
+      q:"An /etc/passwd entry has UID 998 and shell /usr/sbin/nologin. What kind of account is this?",
+      choices:["A regular human user","A system/service account, not meant for interactive login","An expired account","A root-equivalent account"],
+      correct:1,
+      explain:"UID 998 falls below the regular-user range (typically 1000+), and nologin blocks interactive shell access — the signature of a system or service account."
+    },
+    {
+      q:"A ps aux listing shows a process stuck in STAT = Z for an hour. What's the correct fix?",
+      choices:["kill -9 the zombie directly","Nothing to kill — fix or restart its parent process so it reaps the child","Reboot the system","Increase its priority with renice"],
+      correct:1,
+      explain:"A zombie is already dead — kill has nothing to signal. The real problem is the parent not calling wait() to reap it; fixing or restarting the parent resolves it."
+    },
+    {
+      q:"In `ls -l /dev`, what does a leading `b` vs `c` in the permissions column indicate?",
+      choices:["Whether the file is a backup or config file","Block device vs. character device","Whether the device is built-in or USB","Big-endian vs. little-endian"],
+      correct:1,
+      explain:"b marks a block device (fixed-size chunks, like a disk); c marks a character device (continuous stream, like a serial port or /dev/null)."
     },
   ];
 

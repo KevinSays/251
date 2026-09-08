@@ -111,6 +111,14 @@
   .diagram-grid{ display:grid; gap:32px; grid-template-columns:1fr; }
   @media(min-width:860px){ .diagram-grid{ grid-template-columns:1fr 1fr; } }
 
+  table.blocks{ width:100%; border-collapse:collapse; font-size:.9rem; margin:22px 0 24px; }
+  table.blocks caption{ caption-side:top; text-align:left; font-family:var(--mono); font-size:.75rem; text-transform:uppercase; letter-spacing:.08em; color:var(--accent-2); margin-bottom:.5em; }
+  table.blocks th, table.blocks td{ border:1px solid var(--border); padding:.6em .85em; text-align:left; vertical-align:top; }
+  table.blocks th{ background:var(--surface-2); font-family:var(--mono); font-size:.78rem; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); }
+  table.blocks td:first-child{ font-family:var(--mono); font-weight:600; color:var(--accent); white-space:nowrap; }
+  table.blocks tbody tr:nth-child(odd){ background:var(--surface); }
+  table.blocks tbody tr:nth-child(even){ background:color-mix(in srgb, var(--surface) 60%, var(--surface-2)); }
+
   .toolbar{ display:flex; gap:10px; align-items:center; margin-bottom:20px; flex-wrap:wrap; }
   button.btn{ font-family:var(--mono); font-size:.82rem; background:var(--surface); color:var(--text); border:1px solid var(--border); border-radius:7px; padding:.6em 1em; cursor:pointer; }
   button.btn:hover{ border-color:var(--accent); color:var(--accent); }
@@ -224,7 +232,7 @@
     <div class="section-head">
       <p class="kicker">Concepts</p>
       <h2>Two ways to see it</h2>
-      <p>Shell config files show <em>which file wins</em> depending on how a shell was started. Hypervisor types show <em>where the virtualization layer sits</em> relative to real hardware.</p>
+      <p>Shell config files show <em>which file wins</em> depending on how a shell was started. Hypervisor types show <em>where the virtualization layer sits</em> relative to real hardware. Redirection shows <em>where a command's output actually goes</em>.</p>
     </div>
     <div class="diagram-grid">
       <figure>
@@ -282,6 +290,42 @@
         <figcaption>VirtualBox (your Lab 1 VM) is Type 2 — it needs a host OS underneath it, unlike a data center's Type 1 hypervisor.</figcaption>
       </figure>
     </div>
+
+    <figure>
+      <svg viewBox="0 0 640 190" role="img" aria-label="A command has three standard streams: stdin feeds in, stdout and stderr flow out separately. A pipe connects one command's stdout to the next command's stdin.">
+        <defs>
+          <marker id="arrow251w2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+          </marker>
+        </defs>
+        <g font-family="JetBrains Mono" font-size="12" font-weight="600">
+          <rect x="230" y="55" width="140" height="60" rx="6" fill="var(--accent-soft)" stroke="var(--accent)"/>
+          <text x="300" y="90" text-anchor="middle" fill="var(--accent)">command</text>
+
+          <text x="150" y="90" text-anchor="end" fill="currentColor" font-size="11">stdin (0)</text>
+          <text x="500" y="72" fill="currentColor" font-size="11">stdout (1)</text>
+          <text x="500" y="105" fill="var(--accent-2)" font-size="11">stderr (2)</text>
+        </g>
+        <line x1="160" y1="85" x2="228" y2="85" stroke="currentColor" marker-end="url(#arrow251w2)"/>
+        <line x1="372" y1="70" x2="495" y2="70" stroke="currentColor" marker-end="url(#arrow251w2)"/>
+        <line x1="372" y1="100" x2="495" y2="100" stroke="var(--accent-2)" marker-end="url(#arrow251w2)"/>
+        <text x="230" y="30" font-family="IBM Plex Sans" font-size="10.5" fill="var(--muted)">&lt; file (redirect input)</text>
+        <text x="500" y="55" font-family="IBM Plex Sans" font-size="10.5" fill="var(--muted)">&gt; / &gt;&gt; file, or | next command</text>
+        <text x="500" y="130" font-family="IBM Plex Sans" font-size="10.5" fill="var(--muted)">2&gt;&amp;1 merges this into stdout</text>
+      </svg>
+      <figcaption>stdout and stderr are separate streams by default — a pipe (<code class="inline">|</code>) only carries stdout, which is why an error message can still print to your screen even when you've piped a command's normal output somewhere else.</figcaption>
+    </figure>
+
+    <table class="blocks">
+      <caption>Compression tools — speed vs. ratio tradeoff</caption>
+      <thead><tr><th>Tool</th><th>Speed</th><th>Compression ratio</th><th>Typical use</th></tr></thead>
+      <tbody>
+        <tr><td>gzip</td><td>Fastest</td><td>Lowest</td><td>Default choice — logs, quick archives</td></tr>
+        <tr><td>bzip2</td><td>Medium</td><td>Medium</td><td>Better ratio when time isn't critical</td></tr>
+        <tr><td>xz</td><td>Slowest</td><td>Highest</td><td>Distribution archives, long-term storage</td></tr>
+        <tr><td>zip</td><td>Fast</td><td>Low–medium</td><td>Cross-platform sharing (Windows/macOS friendly)</td></tr>
+      </tbody>
+    </table>
   </section>
 
   <section id="lab">
@@ -368,6 +412,44 @@
         </div>
       </details>
     </div>
+
+    <div class="example">
+      <span class="tag">PATH</span>
+      <h3>The wrong version keeps running</h3>
+      <p>A student installed a newer Python version, but typing <code class="inline">python3</code> still launches the old one. <code class="inline">which python3</code> shows a path in <code class="inline">/usr/bin</code>, but the new install lives in <code class="inline">/usr/local/bin</code>.</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <p><strong>Diagnosis:</strong> both versions exist, but <code class="inline">PATH</code> is an ordered list, and the shell uses the <em>first</em> match it finds. If <code class="inline">/usr/bin</code> appears before <code class="inline">/usr/local/bin</code> in <code class="inline">$PATH</code>, the old version wins every time.</p>
+          <p><strong>Fix:</strong> reorder <code class="inline">PATH</code> so <code class="inline">/usr/local/bin</code> comes first (edit the export line in <code class="inline">~/.bashrc</code>), or call the new binary by its full path to confirm the theory before making it permanent.</p>
+        </div>
+      </details>
+    </div>
+
+    <div class="example">
+      <span class="tag">Redirection</span>
+      <h3>Where did the error message go?</h3>
+      <p>A student runs <code class="inline">grep pattern *.log &gt; results.txt</code> and expects a clean, empty terminal. Instead, a "No such file or directory" error still prints to the screen, even though the redirect looked correct.</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <p><strong>Why:</strong> <code class="inline">&gt;</code> only redirects <strong>stdout</strong> (file descriptor 1). Error messages go to <strong>stderr</strong> (file descriptor 2), a separate stream that isn't touched by a plain <code class="inline">&gt;</code>.</p>
+          <p><strong>Fix:</strong> <code class="inline">grep pattern *.log &gt; results.txt 2&gt;&amp;1</code> merges stderr into the same redirect, or <code class="inline">2&gt;/dev/null</code> to discard errors specifically while keeping real output in the file.</p>
+        </div>
+      </details>
+    </div>
+
+    <div class="example">
+      <span class="tag">Virtualization</span>
+      <h3>Which network mode for this VM?</h3>
+      <p>You're about to import a vulnerable target VM to practice against alongside your Kali VM. Both need to talk to each other, but neither should be reachable from the campus network.</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <p><strong>Host-only or Internal Network</strong> for both VMs — this isolates their traffic from the internet and the campus network entirely, while still letting them reach each other. NAT would let each VM reach the internet individually but wouldn't guarantee they can see each other on the same isolated segment; Bridged would expose them directly on the physical LAN, which is exactly what you don't want with a vulnerable target running.</p>
+        </div>
+      </details>
+    </div>
   </section>
 
   <section id="glossary">
@@ -404,6 +486,8 @@
     {t:"which / type", d:"Show where a command name actually resolves from on the current PATH."},
     {t:"Login vs. interactive shell", d:"A login shell (e.g. SSH) reads /etc/profile then ~/.bash_profile. An interactive non-login shell (e.g. a new terminal tab) reads ~/.bashrc instead."},
     {t:"Redirection (>, >>, <, 2>&1)", d:"> overwrites a file with output, >> appends, < feeds a file in as input, 2>&1 merges stderr into stdout."},
+    {t:"stdin / stdout / stderr", d:"The three standard I/O streams every command has: stdin (0, input), stdout (1, normal output), stderr (2, error output) — stdout and stderr are separate, which is why a redirect can miss error messages if it only targets stdout."},
+    {t:"Pipe (|)", d:"Connects one command's stdout directly to the next command's stdin — only carries stdout, not stderr, unless explicitly redirected first."},
     {t:"vi / vim modes", d:"Insert mode (i) for typing, command mode (Esc) for commands — :wq saves and quits, :q! quits without saving. Often the only editor on a minimal server install."},
     {t:"tar", d:"Bundles files into a single archive without compressing on its own — combines with gzip/bzip2/xz via flags. tar -czvf archive.tar.gz dir/ is the pattern to know cold."},
     {t:"gzip / bzip2 / xz", d:"Compression tools with a speed-vs-ratio tradeoff: gzip is fastest, xz compresses best but slowest, bzip2 sits in between."},
@@ -414,6 +498,8 @@
     {t:"VM snapshot", d:"A saved point-in-time VM state you can roll back to — the mechanism behind Lab 1's clean-install snapshot."},
     {t:"NAT vs. Bridged vs. Host-only networking", d:"NAT: outbound internet only, not directly reachable. Bridged: VM appears as its own device on the physical LAN. Host-only/Internal: isolated from outside networks entirely — required once a vulnerable target VM is involved."},
     {t:"Guest Additions / libvirt", d:"Guest Additions improve VirtualBox guest integration (clipboard, folders, resolution). libvirt/virt-manager is the GUI/API layer commonly used over KVM on Linux hosts."},
+    {t:"zip / unzip", d:"Cross-platform archive/compression format — the safest choice when sharing a file with someone on Windows or macOS who may not have tar/gzip tools readily available."},
+    {t:"VM clone", d:"A full copy of a VM's disk and configuration — unlike a snapshot (a rollback point on the same VM), a clone is an independent VM you can run alongside the original."},
   ];
 
   const QUIZ = [
@@ -473,6 +559,24 @@
       ],
       correct:1,
       explain:"> overwrites a file's contents with a command's output; >> appends to the end instead — mixing these up is one of the most common early mistakes."
+    },
+    {
+      q:"A command's error message still prints to the screen even though you redirected with `cmd > out.txt`. Why?",
+      choices:["The redirect syntax is wrong","> only redirects stdout, not stderr","Error messages can't be redirected at all","The file didn't have write permission"],
+      correct:1,
+      explain:"stdout and stderr are separate streams. > only catches stdout (fd 1) — stderr (fd 2) still goes to the screen unless you add 2>&1 or redirect it separately."
+    },
+    {
+      q:"Which compression tool gives the best compression ratio, at the cost of being the slowest?",
+      choices:["gzip","zip","xz","bzip2"],
+      correct:2,
+      explain:"xz compresses the most but takes the longest — the classic speed-vs-ratio tradeoff, with gzip at the fast/low end and bzip2 in the middle."
+    },
+    {
+      q:"You're running a vulnerable target VM alongside a Kali VM and need them to reach each other without touching the campus network. Which VirtualBox network mode fits?",
+      choices:["NAT","Bridged","Host-only or Internal Network","No networking at all"],
+      correct:2,
+      explain:"Host-only/Internal Network isolates the VMs from the internet and campus network while still letting them communicate with each other on the same isolated segment."
     },
   ];
 
