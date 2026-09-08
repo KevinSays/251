@@ -473,9 +473,44 @@ man ls</pre>
     </table>
 
     <h3>Build your scavenger course</h3>
-    <p>Run the setup script your instructor provides (or paste it in if given directly) — it builds a personal <code class="inline">~/IT251/scavenger/level0</code> through <code class="inline">level5</code> tree, each level hiding a password behind one FHS/permissions trick:</p>
+    <p>Create the setup script — it builds a personal <code class="inline">~/IT251/scavenger/level0</code> through <code class="inline">level5</code> tree, each level hiding a password behind one FHS/permissions trick. Open a terminal in your VM:</p>
+    <pre class="term">nano ~/it251-scavenger-setup.sh</pre>
+    <p>Paste this in, save, exit:</p>
+    <pre class="term">#!/usr/bin/env bash
+# IT251 Lab 3 - local FHS/permissions scavenger hunt. Run once.
+set -euo pipefail
+
+BASE="$HOME/IT251/scavenger"
+rm -rf "$BASE"
+mkdir -p "$BASE"/{level0,level1,level2,level3,level4/deep/deeper,level5}
+
+# Level 0: hidden dotfile
+echo "PASSWORD-0: you found a dotfile with ls -la" &gt; "$BASE/level0/.secret"
+
+# Level 1: awkward filename (leading dash + spaces)
+echo "PASSWORD-1: quoting/escaping beats a filename that looks like a flag" &gt; "$BASE/level1/--not a flag--.txt"
+
+# Level 2: unreadable until chmod'd
+echo "PASSWORD-2: chmod got you read access" &gt; "$BASE/level2/locked.txt"
+chmod 000 "$BASE/level2/locked.txt"
+
+# Level 3: needle in decoys, findable by exact size
+echo -n "PASSWORD-3: found by exact size with find -size" &gt; "$BASE/level3/needle.txt"
+for i in 1 2 3 4 5; do
+  head -c $((RANDOM % 500 + 10)) /dev/urandom | base64 &gt; "$BASE/level3/decoy-$i.txt"
+done
+
+# Level 4: buried in a nested tree
+echo "PASSWORD-4: find from the top with -name, no manual cd chain needed" &gt; "$BASE/level4/deep/deeper/target.txt"
+
+# Level 5: symlink to follow
+echo "PASSWORD-5: ls -l shows the arrow, readlink shows the target" &gt; "$BASE/level5/real-answer.txt"
+ln -s "$BASE/level5/real-answer.txt" "$BASE/level5/shortcut"
+
+echo "Scavenger course built at $BASE"</pre>
+    <p>Run it:</p>
     <pre class="term">bash ~/it251-scavenger-setup.sh</pre>
-    <div class="callout"><b>Same loop as OverTheWire Bandit</b> — find the trick, read the password, move to the next level — just running entirely inside your own VM instead of over SSH. (Bandit itself is still there as optional extra practice if you want more reps — see the LMS.)</div>
+    <div class="callout"><b>Same loop as OverTheWire Bandit</b> — find the trick, read the password, move to the next level — just running entirely inside your own VM instead of over SSH. (Bandit itself is still there as optional extra practice if you want more reps — see the LMS.) The script is idempotent — re-running it (e.g. before Week 6's timed checkpoint) rebuilds a fresh course, safe to run more than once.</div>
 
     <h3>Demo: Level 0 (hidden files)</h3>
     <pre class="term">cd ~/IT251/scavenger/level0
