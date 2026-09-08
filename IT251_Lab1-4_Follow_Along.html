@@ -304,7 +304,7 @@ else
     echo "$MARKER_START"
     if [[ "$RC_FILE" == *zshrc ]]; then
       cat &lt;&lt;'ZSH'
-HISTFILE="$HOME/.zsh_history"
+export HISTFILE="$HOME/.zsh_history"
 HISTSIZE=100000
 SAVEHIST=100000
 setopt INC_APPEND_HISTORY
@@ -312,6 +312,7 @@ setopt EXTENDED_HISTORY
 ZSH
     else
       cat &lt;&lt;'BASH'
+export HISTFILE="$HOME/.bash_history"
 export HISTTIMEFORMAT="%F %T  "
 export HISTSIZE=100000
 export HISTFILESIZE=100000
@@ -331,7 +332,7 @@ source ~/.bashrc      # or: source ~/.zshrc</pre>
     <details class="solution">
       <summary>What does this actually do?</summary>
       <div class="solbody">
-        <p>Every command gets a timestamp (<code class="inline">HISTTIMEFORMAT</code>). History writes to disk immediately after each command instead of only on exit, so a crash doesn't lose the log. History size is raised so a full semester of commands doesn't get silently truncated. The block is idempotent — running the script again won't duplicate it.</p>
+        <p>Every command gets a timestamp (<code class="inline">HISTTIMEFORMAT</code>). History writes to disk immediately after each command instead of only on exit, so a crash doesn't lose the log. History size is raised so a full semester of commands doesn't get silently truncated. <code class="inline">HISTFILE</code> is explicitly exported so the export script below (which runs as its own process) can actually see it — without this, the export script fails on the very first run. The block is idempotent — running the script again won't duplicate it.</p>
       </div>
     </details>
 
@@ -628,6 +629,7 @@ file ~/it251-export-log.sh</pre>
         <tr><td>Install hangs at a black/garbled screen</td><td>Graphics/resolution issue — retry with the "safe graphics" or "compatibility" boot option in the ISO's boot menu</td></tr>
         <tr><td><code class="inline">history</code> file stays empty after setup</td><td>Still in the old shell session — run <code class="inline">source ~/.bashrc</code> or open a fresh terminal, not just re-run the script</td></tr>
         <tr><td><code class="inline">it251-export-log.sh: command not found</code></td><td>Forgot <code class="inline">chmod +x</code>, or ran the bare name instead of <code class="inline">~/it251-export-log.sh</code></td></tr>
+        <tr><td><code class="inline">it251-export-log.sh</code> dies with <code class="inline">HISTFILE: parameter null or not set</code></td><td>Your <code class="inline">.bashrc</code>/<code class="inline">.zshrc</code> has an older version of the logging block without <code class="inline">export HISTFILE=...</code>. Fix: open it in <code class="inline">nano</code>, add <code class="inline">export HISTFILE="$HOME/.bash_history"</code> (or <code class="inline">.zsh_history</code> for zsh) right above the <code class="inline">HISTTIMEFORMAT</code>/<code class="inline">HISTSIZE</code> lines inside the IT251 marker block, save, <code class="inline">source ~/.bashrc</code>, then re-run the export script</td></tr>
         <tr><td><code class="inline">.bashrc</code> edits didn't take effect</td><td>Some distros' default terminal reads <code class="inline">.bash_profile</code>/<code class="inline">.profile</code> instead — open a brand-new terminal window to be safe</td></tr>
       </tbody>
     </table>
