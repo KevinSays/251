@@ -1,0 +1,586 @@
+<title>Software, Systemd &amp; Containers</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --bg:#f2f6f4;
+    --surface:#ffffff;
+    --surface-2:#e6efec;
+    --text:#0c1a15;
+    --muted:#51655d;
+    --border:#cddcd5;
+    --accent:#0f7a5c;
+    --accent-soft:#dcf1e7;
+    --accent-2:#0e7490;
+    --accent-2-soft:#dbeff4;
+    --danger:#b3261e;
+    --danger-soft:#f8dcd9;
+    --correct:#0f7a5c;
+    --correct-soft:#dcf1e7;
+    --shadow: 0 1px 2px rgba(12,26,21,.06), 0 8px 24px rgba(12,26,21,.07);
+    --mono:'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    --sans:'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0a0f0d; --surface:#0f1613; --surface-2:#131c18;
+      --text:#d9f5e8; --muted:#82a99a; --border:#1e2b26;
+      --accent:#3ddc97; --accent-soft:#123024;
+      --accent-2:#22d3ee; --accent-2-soft:#0c2b30;
+      --danger:#ff7a68; --danger-soft:#33150f;
+      --correct:#3ddc97; --correct-soft:#123024;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 12px 32px rgba(0,0,0,.45);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0a0f0d; --surface:#0f1613; --surface-2:#131c18;
+    --text:#d9f5e8; --muted:#82a99a; --border:#1e2b26;
+    --accent:#3ddc97; --accent-soft:#123024;
+    --accent-2:#22d3ee; --accent-2-soft:#0c2b30;
+    --danger:#ff7a68; --danger-soft:#33150f;
+    --correct:#3ddc97; --correct-soft:#123024;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 12px 32px rgba(0,0,0,.45);
+  }
+
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto;} *{animation-duration:.001ms !important; transition-duration:.001ms !important;} }
+  body{ margin:0; background:var(--bg); color:var(--text); font-family:var(--sans); line-height:1.55; -webkit-font-smoothing:antialiased; }
+  a{ color:var(--accent-2); }
+  ::selection{ background:var(--accent-soft); }
+  .wrap{ max-width:1080px; margin:0 auto; padding:0 24px; }
+
+  header.hero{
+    border-bottom:1px solid var(--border);
+    background:repeating-linear-gradient(180deg, var(--surface-2) 0 1px, var(--bg) 1px 28px);
+    padding:56px 0 40px;
+  }
+  .termbar{ display:flex; gap:6px; margin-bottom:20px; }
+  .termbar span{ width:11px; height:11px; border-radius:50%; }
+  .termbar span:nth-child(1){ background:#ff5f57; }
+  .termbar span:nth-child(2){ background:#febc2e; }
+  .termbar span:nth-child(3){ background:#28c840; }
+  .eyebrow{ font-family:var(--mono); font-size:.8rem; color:var(--accent); }
+  .eyebrow::before{ content:"$ "; opacity:.7; }
+  h1{ font-family:var(--mono); font-weight:700; font-size:clamp(2rem,4vw,3rem); line-height:1.08; margin:.4em 0 .3em; text-wrap:balance; letter-spacing:-.01em; }
+  h1 .cursor{ display:inline-block; width:.5ch; background:var(--accent); margin-left:.15em; animation:blink 1.1s steps(1) infinite; }
+  @keyframes blink{ 50%{ opacity:0; } }
+  .hero p.lede{ max-width:62ch; font-size:1.1rem; color:var(--muted); margin:0 0 1.6em; }
+  .factrow{ display:flex; flex-wrap:wrap; gap:10px; }
+  .fact{ font-family:var(--mono); font-size:.78rem; background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:.5em .8em; display:flex; gap:.5em; }
+  .fact b{ color:var(--muted); font-weight:500; text-transform:uppercase; letter-spacing:.06em; font-size:.72rem; }
+
+  nav.index{ position:sticky; top:0; z-index:20; background:color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter:blur(8px); border-bottom:1px solid var(--border); }
+  nav.index .wrap{ display:flex; gap:4px; overflow-x:auto; padding:10px 24px; scrollbar-width:none; }
+  nav.index .wrap::-webkit-scrollbar{ display:none; }
+  nav.index a{ font-family:var(--mono); font-size:.82rem; text-decoration:none; color:var(--muted); padding:.5em .9em; border-radius:6px; white-space:nowrap; border:1px solid transparent; }
+  nav.index a:hover{ color:var(--text); border-color:var(--border); background:var(--surface); }
+  nav.index a.toc-link{ font-weight:600; color:var(--accent); border-right:1px solid var(--border); border-radius:0; margin-right:8px; padding-right:16px; }
+  nav.index a.toc-link:hover{ color:var(--accent); background:transparent; border-right-color:var(--border); }
+  nav.index a:not(.toc-link)::before{ content:'#'; opacity:.5; margin-right:.3em; }
+
+  .back-to-top{ position:fixed; bottom:22px; right:22px; z-index:40; width:46px; height:46px;
+    background:var(--surface); border:1px solid var(--border); border-radius:10px; box-shadow:var(--shadow);
+    font-family:var(--mono); font-size:1.15rem; color:var(--accent); line-height:1;
+    display:flex; align-items:center; justify-content:center; padding:0; cursor:pointer; text-decoration:none;
+    opacity:0; visibility:hidden; transform:translateY(10px);
+    transition:opacity .25s ease, transform .25s ease, visibility 0s .25s; }
+  .back-to-top.show{ opacity:1; visibility:visible; transform:translateY(0); transition:opacity .25s ease, transform .25s ease, visibility 0s; }
+  .back-to-top:hover{ background:var(--accent-soft); border-color:var(--accent); }
+  .back-to-top:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+  @media print{ nav.index, .back-to-top{ display:none; } }
+
+  section{ padding:52px 0; border-bottom:1px solid var(--border); }
+  section:last-of-type{ border-bottom:none; }
+  .section-head{ margin-bottom:28px; max-width:70ch; }
+  .kicker{ font-family:var(--mono); font-size:.75rem; letter-spacing:.1em; text-transform:uppercase; color:var(--accent-2); margin:0 0 .5em; }
+  .kicker::before{ content:"// "; opacity:.6; }
+  h2{ font-family:var(--mono); font-size:clamp(1.4rem,2.4vw,1.9rem); margin:0 0 .3em; text-wrap:balance; }
+  .section-head p{ color:var(--muted); margin:.4em 0 0; }
+
+  .obj-list{ display:grid; gap:12px; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); list-style:none; margin:0; padding:0; }
+  .obj-list li{ background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:16px 18px; box-shadow:var(--shadow); font-size:.95rem; }
+  .obj-list li::before{ content:"$"; color:var(--accent); font-family:var(--mono); margin-right:.6em; font-weight:700; }
+
+  figure{ margin:36px 0 0; }
+  figure svg{ width:100%; height:auto; display:block; background:var(--surface); border:1px solid var(--border); border-radius:12px; }
+  figcaption{ font-size:.85rem; color:var(--muted); margin-top:.6em; }
+  .diagram-grid{ display:grid; gap:32px; grid-template-columns:1fr; }
+  @media(min-width:860px){ .diagram-grid{ grid-template-columns:1fr 1.05fr; } }
+
+  .toolbar{ display:flex; gap:10px; align-items:center; margin-bottom:20px; flex-wrap:wrap; }
+  button.btn{ font-family:var(--mono); font-size:.82rem; background:var(--surface); color:var(--text); border:1px solid var(--border); border-radius:7px; padding:.6em 1em; cursor:pointer; }
+  button.btn:hover{ border-color:var(--accent); color:var(--accent); }
+  button.btn:focus-visible, a:focus-visible, .flashcard:focus-visible, input:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+  #cardProgress{ font-family:var(--mono); font-size:.8rem; color:var(--muted); }
+
+  .card-grid{ display:grid; gap:16px; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); }
+  .flashcard{ perspective:1200px; height:150px; cursor:pointer; border:none; background:none; padding:0; font-family:inherit; text-align:left; width:100%; }
+  .flashcard-inner{ position:relative; width:100%; height:100%; transition:transform .5s cubic-bezier(.4,.2,.2,1); transform-style:preserve-3d; }
+  .flashcard.flipped .flashcard-inner{ transform:rotateY(180deg); }
+  .flashcard-face{ position:absolute; inset:0; backface-visibility:hidden; border-radius:10px; border:1px solid var(--border); box-shadow:var(--shadow); padding:16px; display:flex; flex-direction:column; justify-content:center; }
+  .flashcard-face.front{ background:var(--surface); }
+  .flashcard-face.back{ background:var(--accent-soft); transform:rotateY(180deg); overflow-y:auto; }
+  .flashcard-face .lbl{ font-family:var(--mono); font-size:.68rem; text-transform:uppercase; letter-spacing:.1em; color:var(--muted); margin-bottom:.5em; }
+  .flashcard-face.front .term{ font-family:var(--mono); font-weight:600; font-size:1.02rem; }
+  .flashcard-face.back .def{ font-size:.88rem; }
+  .flashcard.known .flashcard-face.front{ border-color:var(--correct); }
+
+  .quiz-q{ background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px 22px; margin-bottom:18px; box-shadow:var(--shadow); }
+  .quiz-q .qtext{ font-weight:600; margin:0 0 14px; }
+  .quiz-q .qnum{ font-family:var(--mono); color:var(--accent); margin-right:.5em; }
+  .choices{ display:grid; gap:8px; }
+  .choice{ text-align:left; font-family:var(--sans); font-size:.95rem; background:var(--surface-2); border:1px solid var(--border); border-radius:8px; padding:.7em .9em; cursor:pointer; color:var(--text); }
+  .choice:hover{ border-color:var(--accent); }
+  .choice.correct{ background:var(--correct-soft); border-color:var(--correct); }
+  .choice.incorrect{ background:var(--danger-soft); border-color:var(--danger); }
+  .choice[disabled]{ cursor:default; }
+  .explain{ margin-top:12px; font-size:.88rem; color:var(--muted); border-left:3px solid var(--accent-2); padding-left:12px; display:none; }
+  .explain.show{ display:block; }
+  #quizScore{ font-family:var(--mono); font-size:.85rem; color:var(--muted); margin-bottom:16px; }
+
+  .example{ background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px 22px; margin-bottom:16px; box-shadow:var(--shadow); }
+  .example h3{ font-family:var(--mono); font-size:1.02rem; margin:0 0 8px; }
+  .example .tag{ display:inline-block; font-family:var(--mono); font-size:.68rem; text-transform:uppercase; letter-spacing:.08em; color:var(--accent-2); background:var(--accent-2-soft); border-radius:5px; padding:.25em .6em; margin-bottom:10px; }
+  code.inline{ font-family:var(--mono); background:var(--surface-2); border-radius:4px; padding:.1em .4em; font-size:.92em; }
+  pre.term{ font-family:var(--mono); font-size:.85rem; background:var(--surface-2); border:1px solid var(--border); border-radius:8px; padding:12px 14px; overflow-x:auto; margin:10px 0; }
+  details.solution{ margin-top:12px; }
+  details.solution summary{ cursor:pointer; font-family:var(--mono); font-size:.82rem; color:var(--accent); list-style:none; display:inline-flex; align-items:center; gap:.4em; }
+  details.solution summary::-webkit-details-marker{ display:none; }
+  details.solution summary::before{ content:"▸"; transition:transform .15s; }
+  details.solution[open] summary::before{ transform:rotate(90deg); }
+  details.solution .solbody{ margin-top:10px; padding:14px 16px; background:var(--surface-2); border-radius:8px; font-size:.92rem; }
+
+  #glossarySearch{ width:100%; max-width:420px; font-family:var(--sans); font-size:.95rem; padding:.7em .9em; border-radius:8px; border:1px solid var(--border); background:var(--surface); color:var(--text); margin-bottom:16px; }
+  .alpha-nav{ display:flex; flex-wrap:wrap; gap:4px; margin-bottom:24px; }
+  .alpha-nav a{ font-family:var(--mono); font-size:.78rem; width:1.9em; height:1.9em; display:flex; align-items:center; justify-content:center; border:1px solid var(--border); border-radius:5px; text-decoration:none; color:var(--muted); }
+  .alpha-nav a.has{ color:var(--text); }
+  .alpha-nav a.has:hover{ border-color:var(--accent); color:var(--accent); }
+  .glossary-letter{ font-family:var(--mono); color:var(--accent); font-size:1.1rem; margin:22px 0 8px; }
+  dl.glossary{ margin:0; }
+  dl.glossary .gitem{ border-top:1px solid var(--border); padding:12px 0; }
+  dl.glossary dt{ font-family:var(--mono); font-weight:600; }
+  dl.glossary dd{ margin:.3em 0 0; color:var(--muted); font-size:.92rem; }
+  .gitem.hidden{ display:none; }
+
+  .callout{ border-left:3px solid var(--accent); background:var(--accent-soft); border-radius:0 8px 8px 0; padding:14px 18px; margin:10px 0 24px; font-size:.92rem; }
+  .callout b{ font-family:var(--mono); }
+
+  footer{ padding:32px 0 60px; }
+  footer p{ color:var(--muted); font-size:.85rem; font-family:var(--mono); }
+</style>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="termbar"><span></span><span></span><span></span></div>
+    <p class="eyebrow">IT251 · Week 5</p>
+    <h1>Software, Systemd &amp; Containers<span class="cursor">&nbsp;</span></h1>
+    <p class="lede">The last new lecture content before Midterm Review: managing software across distro families, controlling services with systemd, and the container fundamentals that round out Module 4.</p>
+    <div class="factrow">
+      <span class="fact"><b>5.1</b> Lecture</span>
+      <span class="fact"><b>5.2</b> Lab</span>
+      <span class="fact"><b>Covers</b> Module 4: Services &amp; User Management II</span>
+      <span class="fact"><b>Lab</b> Text Processing, File Typing &amp; Cron</span>
+      <span class="fact"><b>Midterm</b> Week 8 — Modules 1&ndash;4 complete after today</span>
+    </div>
+  </div>
+</header>
+
+<nav class="index" aria-label="Section index">
+  <div class="wrap">
+    <a href="index.html" class="toc-link">&larr; Table of Contents</a>
+    <a href="#overview">Overview</a>
+    <a href="#diagrams">Concepts</a>
+    <a href="#lab">Hands-On Lab</a>
+    <a href="#flashcards">Flashcards</a>
+    <a href="#quiz">Quiz</a>
+    <a href="#examples">Examples</a>
+    <a href="#glossary">Glossary</a>
+  </div>
+</nav>
+
+<main class="wrap">
+
+  <section id="overview">
+    <div class="section-head">
+      <p class="kicker">Overview</p>
+      <h2>What Week 5 covers</h2>
+      <p>Three sub-modules: installing/managing software across both major distro families, systemd's unit types and how to control them, and container fundamentals. After today, Modules 1–4 are complete — that's the full scope of Week 6's Midterm Review and Week 8's written Midterm.</p>
+    </div>
+    <ul class="obj-list">
+      <li>Install, update, and remove software across both <code class="inline">apt</code>- and <code class="inline">dnf</code>-based distros</li>
+      <li>Manage package repositories and use <code class="inline">update-alternatives</code></li>
+      <li>Identify systemd unit types and manage unit state with <code class="inline">systemctl</code></li>
+      <li>Read logs with <code class="inline">journalctl</code></li>
+      <li>Describe container runtimes and the basic image/container/volume/network operation set</li>
+      <li>Apply <code class="inline">grep</code>/<code class="inline">sort</code>/<code class="inline">diff</code>/<code class="inline">file</code>/cron hands-on against real data (this week's lab)</li>
+    </ul>
+  </section>
+
+  <section id="diagrams">
+    <div class="section-head">
+      <p class="kicker">Concepts</p>
+      <h2>Two ways to see it</h2>
+      <p>Package managers show <em>which tool for which distro family</em>. The systemd state diagram shows <em>why "active" and "enabled" are two separate questions</em> — a favorite exam trap.</p>
+    </div>
+    <div class="diagram-grid">
+      <figure>
+        <svg viewBox="0 0 460 200" role="img" aria-label="Debian family uses apt and dpkg with .deb packages; RHEL family uses dnf and rpm with .rpm packages.">
+          <g font-family="JetBrains Mono" font-size="12" font-weight="600">
+            <text x="10" y="26" fill="currentColor">Debian family</text>
+            <rect x="10" y="40" width="200" height="36" rx="6" fill="var(--accent-soft)" stroke="var(--accent)"/>
+            <text x="110" y="63" text-anchor="middle" fill="var(--accent)">apt / apt-get</text>
+            <rect x="10" y="86" width="200" height="36" rx="6" fill="none" stroke="currentColor" opacity=".8"/>
+            <text x="110" y="109" text-anchor="middle" fill="currentColor" font-size="11">dpkg (.deb packages)</text>
+
+            <text x="250" y="26" fill="currentColor">RHEL family</text>
+            <rect x="250" y="40" width="200" height="36" rx="6" fill="var(--accent-2-soft)" stroke="var(--accent-2)"/>
+            <text x="350" y="63" text-anchor="middle" fill="var(--accent-2)">dnf</text>
+            <rect x="250" y="86" width="200" height="36" rx="6" fill="none" stroke="currentColor" opacity=".8"/>
+            <text x="350" y="109" text-anchor="middle" fill="currentColor" font-size="11">rpm (.rpm packages)</text>
+          </g>
+          <text x="10" y="150" font-family="IBM Plex Sans" font-size="10.5" fill="var(--muted)">Ubuntu, Debian, Mint</text>
+          <text x="250" y="150" font-family="IBM Plex Sans" font-size="10.5" fill="var(--muted)">RHEL, Rocky, AlmaLinux, Fedora</text>
+          <text x="10" y="175" font-family="IBM Plex Sans" font-size="10.5" fill="var(--muted)">Commands differ by family; dependency-resolution concepts transfer.</text>
+        </svg>
+        <figcaption>Same job, different tools — the exam expects you to know both sides.</figcaption>
+      </figure>
+
+      <figure>
+        <svg viewBox="0 0 420 230" role="img" aria-label="Systemd unit state is two independent axes: active/inactive/failed describes right now, enabled/disabled describes boot-time behavior.">
+          <g font-family="JetBrains Mono" font-size="12" font-weight="600" fill="currentColor">
+            <text x="10" y="25">Right now (systemctl status)</text>
+          </g>
+          <rect x="10" y="38" width="110" height="36" rx="6" fill="var(--accent-soft)" stroke="var(--accent)"/>
+          <text x="65" y="60" text-anchor="middle" fill="var(--accent)" font-family="JetBrains Mono" font-size="11">active</text>
+          <rect x="130" y="38" width="110" height="36" rx="6" fill="none" stroke="currentColor"/>
+          <text x="185" y="60" text-anchor="middle" font-family="JetBrains Mono" font-size="11">inactive</text>
+          <rect x="250" y="38" width="110" height="36" rx="6" fill="var(--danger-soft)" stroke="var(--danger)"/>
+          <text x="305" y="60" text-anchor="middle" fill="var(--danger)" font-family="JetBrains Mono" font-size="11">failed</text>
+
+          <g font-family="JetBrains Mono" font-size="12" font-weight="600" fill="currentColor">
+            <text x="10" y="115">At boot (systemctl enable/disable)</text>
+          </g>
+          <rect x="10" y="128" width="170" height="36" rx="6" fill="var(--accent-2-soft)" stroke="var(--accent-2)"/>
+          <text x="95" y="150" text-anchor="middle" fill="var(--accent-2)" font-family="JetBrains Mono" font-size="11">enabled</text>
+          <rect x="190" y="128" width="170" height="36" rx="6" fill="none" stroke="currentColor"/>
+          <text x="275" y="150" text-anchor="middle" font-family="JetBrains Mono" font-size="11">disabled</text>
+
+          <text x="10" y="200" font-family="IBM Plex Sans" font-size="10.5" fill="var(--muted)">A unit can be active + disabled (started manually,</text>
+          <text x="10" y="216" font-family="IBM Plex Sans" font-size="10.5" fill="var(--muted)">won't survive reboot) — two independent axes, not one.</text>
+        </svg>
+        <figcaption>Enabled/disabled controls boot-time startup; active/inactive/failed is the state right now — independent questions.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section id="lab">
+    <div class="section-head">
+      <p class="kicker">5.2 · Hands-On</p>
+      <h2>Lab: Text Processing, File Typing &amp; Cron</h2>
+      <p><code class="inline">grep</code>/<code class="inline">sort</code>/<code class="inline">diff</code> against your own accumulated log files, the <code class="inline">file</code> command on mystery files, and writing a real cron job — direct hands-on follow-through on last week's scheduling material.</p>
+    </div>
+    <div class="example">
+      <span class="tag">Full step-by-step</span>
+      <h3>Open the interactive follow-along</h3>
+      <p>Checklists, demo commands, a worksheet, and common-snags reference all live on the lab follow-along page.</p>
+      <p><a href="IT251_Lab1-4_Follow_Along.html#lab4">Open Lab 4 — Text Processing, File Typing &amp; Cron &rarr;</a></p>
+    </div>
+  </section>
+
+  <section id="flashcards">
+    <div class="section-head">
+      <p class="kicker">Study</p>
+      <h2>Flashcards</h2>
+      <p>Click a card to flip it. Double-click to mark it known once you've got it cold.</p>
+    </div>
+    <div class="toolbar">
+      <button class="btn" id="shuffleBtn">Shuffle</button>
+      <button class="btn" id="resetKnownBtn">Reset progress</button>
+      <span id="cardProgress"></span>
+    </div>
+    <div class="card-grid" id="cardGrid"></div>
+  </section>
+
+  <section id="quiz">
+    <div class="section-head">
+      <p class="kicker">Check yourself</p>
+      <h2>Sample questions</h2>
+      <p>Pick an answer to see if you're right — same style as the checkpoint quizzes.</p>
+    </div>
+    <div id="quizScore"></div>
+    <div id="quizList"></div>
+    <button class="btn" id="resetQuizBtn">Reset quiz</button>
+  </section>
+
+  <section id="examples">
+    <div class="section-head">
+      <p class="kicker">Applied</p>
+      <h2>Worked examples</h2>
+      <p>Think it through before you expand the answer.</p>
+    </div>
+
+    <div class="example">
+      <span class="tag">Package management</span>
+      <h3>Remove it, but keep the config</h3>
+      <p>You want to uninstall a package on a Debian-family system but keep its configuration files in case you reinstall it later.</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <pre class="term">sudo apt remove packagename</pre>
+          <p><code class="inline">remove</code> uninstalls the package but leaves config files behind; <code class="inline">purge</code> removes those too. Use <code class="inline">purge</code> only when you want a truly clean slate.</p>
+        </div>
+      </details>
+    </div>
+
+    <div class="example">
+      <span class="tag">Systemd</span>
+      <h3>Started, but won't survive a reboot</h3>
+      <p>A service is running right now (<code class="inline">systemctl status</code> shows active) but after a reboot, it's gone.</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <p><strong>Diagnosis:</strong> it was started manually but never enabled — active/inactive (now) and enabled/disabled (boot-time) are independent.</p>
+          <pre class="term">sudo systemctl enable servicename</pre>
+        </div>
+      </details>
+    </div>
+
+    <div class="example">
+      <span class="tag">Containers</span>
+      <h3>Data disappeared after removing a container</h3>
+      <p>A container was writing to a file inside itself. After <code class="inline">docker rm</code>, that data is gone.</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <p><strong>Why:</strong> a container's writable layer is discarded when it's removed — anything not stored outside the container doesn't survive.</p>
+          <pre class="term">docker run -v mydata:/app/data myimage</pre>
+          <p>A named volume (or bind mount) persists data outside the container's lifecycle — the fix is to mount one <em>before</em> the data matters, not after.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section id="glossary">
+    <div class="section-head">
+      <p class="kicker">Reference</p>
+      <h2>Glossary &amp; index</h2>
+      <p>Every term from this week, searchable and indexed A–Z.</p>
+    </div>
+    <input type="text" id="glossarySearch" placeholder="Search terms…" aria-label="Search glossary">
+    <div class="alpha-nav" id="alphaNav"></div>
+    <dl class="glossary" id="glossaryList"></dl>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>IT251 · Linux+ (XK0-006) · Software/systemd/containers + hands-on lab track · Week 5 reference — more weeks added as the course progresses.</p>
+  </div>
+</footer>
+
+<script>
+  const TERMS = [
+    {t:"apt install / remove / purge", d:"apt install adds a package; remove uninstalls it but keeps config files; purge also removes those config files."},
+    {t:"apt update vs. apt upgrade", d:"update refreshes the local package index from repositories; upgrade actually installs newer versions of packages."},
+    {t:"dnf install / remove / update", d:"RHEL-family equivalents of apt's install/remove/upgrade — same job, different tool."},
+    {t:"rpm", d:"The lower-level package tool underneath dnf on RHEL-family systems — install (-i), erase (-e), query (-q)."},
+    {t:"/etc/apt/sources.list", d:"Debian-family repository source list; /etc/apt/sources.list.d/ holds additional per-repo files."},
+    {t:"/etc/yum.repos.d/", d:"RHEL-family directory of .repo files defining package repositories."},
+    {t:"add-apt-repository", d:"Adds a new APT repository source — a repo entry is just a text file, treat it that way."},
+    {t:"update-alternatives", d:"Manages multiple installed versions of the same command (e.g. multiple Python versions) and which one a bare command name resolves to."},
+    {t:"Flatpak / Snap / AppImage", d:"Universal Linux packaging formats that trade some system integration for cross-distro portability, as an alternative to native packages."},
+    {t:"Systemd unit", d:"A managed object systemd controls — types include .service, .target, .socket, .timer, .mount, .path."},
+    {t:".service unit", d:"Defines a managed background process — the most common systemd unit type."},
+    {t:".target unit", d:"A synchronization/grouping point — the systemd replacement for legacy SysV runlevels (e.g. multi-user.target ≈ runlevel 3)."},
+    {t:".timer unit", d:"The modern systemd alternative to a cron job — schedules another unit to run."},
+    {t:"/etc/systemd/system/", d:"Local override location for unit files — takes precedence over package-provided units in /usr/lib/systemd/system/."},
+    {t:"systemctl start/stop/restart/status", d:"Control and inspect a unit's current running state."},
+    {t:"systemctl enable/disable", d:"Control whether a unit starts automatically at boot — independent of whether it's running right now."},
+    {t:"systemctl mask", d:"Hard-blocks a unit from starting at all, even manually — stronger than disable."},
+    {t:"journalctl", d:"The systemd-native log viewer. -u <unit> scopes to one service's logs; -f follows live."},
+    {t:"systemd-analyze", d:"Reports a breakdown of how long boot took, unit by unit."},
+    {t:"active/inactive/failed vs. enabled/disabled", d:"Two independent axes: current running state vs. boot-time startup behavior. A unit can be active and disabled at the same time."},
+    {t:"Wants= / Requires=", d:"Systemd dependency directives — Wants is a soft suggestion, Requires is a hard dependency that blocks the unit if not met."},
+    {t:"Docker vs. Podman", d:"Docker is daemon-based and the most common runtime; Podman is daemonless and rootless-friendly. Both use the same OCI image format."},
+    {t:"Image vs. container", d:"An image is an immutable template; a container is a running (or stopped) instance of one."},
+    {t:"docker pull/build/run/ps/rm", d:"pull fetches an image, build creates one from a Dockerfile, run starts a container, ps lists running containers, rm removes one."},
+    {t:"Volume (named vs. bind mount)", d:"Storage that persists outside a container's writable layer — a named volume is managed by the runtime; a bind mount maps a specific host path."},
+    {t:"Container networking / port publishing", d:"Containers on a shared user-defined network can reach each other by name; -p host:container exposes a container's port to the host."},
+    {t:"Privileged vs. unprivileged/rootless", d:"--privileged grants near-host-level access — a real security boundary, not a convenience flag. Unprivileged/rootless is the safer default posture."},
+  ];
+
+  const QUIZ = [
+    {
+      q:"On a Debian-family system, which command removes a package but keeps its config files?",
+      choices:["apt purge packagename","apt remove packagename","apt autoremove packagename","apt clean packagename"],
+      correct:1,
+      explain:"remove uninstalls the package but leaves configuration files behind; purge also removes those."
+    },
+    {
+      q:"A service is active right now but disappears after a reboot. What's the fix?",
+      choices:["systemctl restart the service","systemctl enable the service","systemctl mask the service","Reinstall the package"],
+      correct:1,
+      explain:"Active/inactive (now) and enabled/disabled (boot-time) are independent — it was started manually but never enabled for boot."
+    },
+    {
+      q:"Which systemd unit type is the modern alternative to a cron job?",
+      choices:[".service",".socket",".timer",".mount"],
+      correct:2,
+      explain:".timer units schedule another unit to run — systemd's built-in replacement for cron-style scheduling."
+    },
+    {
+      q:"Where do local overrides to a systemd unit file take precedence over the package-provided version?",
+      choices:["/usr/lib/systemd/system/","/etc/systemd/system/","/var/lib/systemd/","/boot/systemd/"],
+      correct:1,
+      explain:"/etc/systemd/system/ is the local override location and wins over package-provided units in /usr/lib/systemd/system/."
+    },
+    {
+      q:"After docker rm on a container that wrote data only inside itself, the data is gone. Why?",
+      choices:[
+        "Docker automatically backs up all container data",
+        "A container's writable layer is discarded when it's removed",
+        "The data moved to the image automatically",
+        "This should never happen and indicates a bug"
+      ],
+      correct:1,
+      explain:"Anything written inside a container's own writable layer is discarded on removal — persistent data needs a volume or bind mount outside the container's lifecycle."
+    },
+    {
+      q:"What's the key difference between Wants= and Requires= in a systemd unit?",
+      choices:[
+        "They're identical, just different syntax",
+        "Wants= is a hard dependency, Requires= is optional",
+        "Wants= is a soft suggestion, Requires= is a hard dependency that blocks the unit if unmet",
+        "Wants= only applies to .timer units"
+      ],
+      correct:2,
+      explain:"Requires= creates a hard dependency — if it fails, the dependent unit fails too. Wants= is advisory and doesn't block on failure."
+    },
+    {
+      q:"What does --privileged do to a container, and why does it matter?",
+      choices:[
+        "Nothing — it's a deprecated legacy flag",
+        "Grants near-host-level access — a real security boundary, not a convenience option",
+        "Only affects logging verbosity",
+        "Only allows the container to use more CPU"
+      ],
+      correct:1,
+      explain:"Privileged containers get broad host access — the safer default for anything internet-facing is unprivileged/rootless."
+    },
+  ];
+
+  const grid = document.getElementById('cardGrid');
+  TERMS.forEach((item, i) => {
+    const card = document.createElement('button');
+    card.className = 'flashcard';
+    card.setAttribute('aria-label', 'Flashcard: ' + item.t + '. Press to flip.');
+    card.dataset.i = i;
+    card.innerHTML = `
+      <div class="flashcard-inner">
+        <div class="flashcard-face front"><div class="lbl">Term</div><div class="term">${item.t}</div></div>
+        <div class="flashcard-face back"><div class="lbl">Definition</div><div class="def">${item.d}</div></div>
+      </div>`;
+    card.addEventListener('click', () => card.classList.toggle('flipped'));
+    card.addEventListener('dblclick', () => { card.classList.toggle('known'); updateProgress(); });
+    grid.appendChild(card);
+  });
+  function updateProgress(){
+    const known = document.querySelectorAll('.flashcard.known').length;
+    document.getElementById('cardProgress').textContent = `${known} / ${TERMS.length} marked known (double-click a card to mark it)`;
+  }
+  updateProgress();
+  document.getElementById('shuffleBtn').addEventListener('click', () => {
+    const cards = Array.from(grid.children);
+    cards.sort(() => Math.random() - 0.5);
+    cards.forEach(c => { c.classList.remove('flipped'); grid.appendChild(c); });
+  });
+  document.getElementById('resetKnownBtn').addEventListener('click', () => {
+    document.querySelectorAll('.flashcard.known').forEach(c => c.classList.remove('known'));
+    updateProgress();
+  });
+
+  const quizList = document.getElementById('quizList');
+  let score = 0, answered = 0;
+  function renderQuiz(){
+    quizList.innerHTML = ''; score = 0; answered = 0;
+    QUIZ.forEach((item, qi) => {
+      const box = document.createElement('div');
+      box.className = 'quiz-q';
+      box.innerHTML = `<p class="qtext"><span class="qnum">Q${qi+1}.</span>${item.q}</p><div class="choices"></div><p class="explain"></p>`;
+      const choicesEl = box.querySelector('.choices');
+      item.choices.forEach((c, ci) => {
+        const b = document.createElement('button');
+        b.className = 'choice'; b.textContent = c;
+        b.addEventListener('click', () => {
+          if (box.dataset.done) return;
+          box.dataset.done = '1'; answered++;
+          if (ci === item.correct) score++;
+          Array.from(choicesEl.children).forEach((el, ei) => {
+            el.disabled = true;
+            if (ei === item.correct) el.classList.add('correct');
+            else if (ei === ci) el.classList.add('incorrect');
+          });
+          box.querySelector('.explain').textContent = item.explain;
+          box.querySelector('.explain').classList.add('show');
+          updateScore();
+        });
+        choicesEl.appendChild(b);
+      });
+      quizList.appendChild(box);
+    });
+    updateScore();
+  }
+  function updateScore(){
+    document.getElementById('quizScore').textContent =
+      answered === 0 ? `${QUIZ.length} questions — click an answer to check yourself` : `Score: ${score} / ${answered} answered`;
+  }
+  renderQuiz();
+  document.getElementById('resetQuizBtn').addEventListener('click', renderQuiz);
+
+  const glossaryList = document.getElementById('glossaryList');
+  const alphaNav = document.getElementById('alphaNav');
+  const letters = [...new Set(TERMS.map(t => t.t[0].toUpperCase()))];
+  'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').forEach(L => {
+    const a = document.createElement('a');
+    a.textContent = L;
+    if (letters.includes(L)) { a.href = '#g-' + L; a.className = 'has'; }
+    else { a.href = 'javascript:void(0)'; }
+    alphaNav.appendChild(a);
+  });
+  let currentLetter = '';
+  TERMS.forEach(item => {
+    const L = item.t[0].toUpperCase();
+    if (L !== currentLetter) {
+      currentLetter = L;
+      const h = document.createElement('div');
+      h.className = 'glossary-letter'; h.id = 'g-' + L; h.textContent = L;
+      glossaryList.appendChild(h);
+    }
+    const wrap = document.createElement('div');
+    wrap.className = 'gitem';
+    wrap.innerHTML = `<dt>${item.t}</dt><dd>${item.d}</dd>`;
+    wrap.dataset.search = (item.t + ' ' + item.d).toLowerCase();
+    glossaryList.appendChild(wrap);
+  });
+  document.getElementById('glossarySearch').addEventListener('input', (e) => {
+    const q = e.target.value.toLowerCase().trim();
+    document.querySelectorAll('.gitem').forEach(el => {
+      el.classList.toggle('hidden', q && !el.dataset.search.includes(q));
+    });
+  });
+</script>
+
+<button id="backToTop" class="back-to-top" aria-label="Back to top" title="Back to top">&uarr;</button>
+
+<script>
+  const backToTop = document.getElementById('backToTop');
+  function toggleBackToTop(){ backToTop.classList.toggle('show', window.scrollY > 480); }
+  window.addEventListener('scroll', toggleBackToTop, {passive:true});
+  toggleBackToTop();
+  backToTop.addEventListener('click', () => window.scrollTo({top:0, behavior:'smooth'}));
+</script>

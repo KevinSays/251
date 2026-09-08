@@ -1,0 +1,595 @@
+<title>Files, Accounts &amp; Processes</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --bg:#f2f6f4;
+    --surface:#ffffff;
+    --surface-2:#e6efec;
+    --text:#0c1a15;
+    --muted:#51655d;
+    --border:#cddcd5;
+    --accent:#0f7a5c;
+    --accent-soft:#dcf1e7;
+    --accent-2:#0e7490;
+    --accent-2-soft:#dbeff4;
+    --danger:#b3261e;
+    --danger-soft:#f8dcd9;
+    --correct:#0f7a5c;
+    --correct-soft:#dcf1e7;
+    --shadow: 0 1px 2px rgba(12,26,21,.06), 0 8px 24px rgba(12,26,21,.07);
+    --mono:'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    --sans:'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0a0f0d; --surface:#0f1613; --surface-2:#131c18;
+      --text:#d9f5e8; --muted:#82a99a; --border:#1e2b26;
+      --accent:#3ddc97; --accent-soft:#123024;
+      --accent-2:#22d3ee; --accent-2-soft:#0c2b30;
+      --danger:#ff7a68; --danger-soft:#33150f;
+      --correct:#3ddc97; --correct-soft:#123024;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 12px 32px rgba(0,0,0,.45);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0a0f0d; --surface:#0f1613; --surface-2:#131c18;
+    --text:#d9f5e8; --muted:#82a99a; --border:#1e2b26;
+    --accent:#3ddc97; --accent-soft:#123024;
+    --accent-2:#22d3ee; --accent-2-soft:#0c2b30;
+    --danger:#ff7a68; --danger-soft:#33150f;
+    --correct:#3ddc97; --correct-soft:#123024;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 12px 32px rgba(0,0,0,.45);
+  }
+
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto;} *{animation-duration:.001ms !important; transition-duration:.001ms !important;} }
+  body{ margin:0; background:var(--bg); color:var(--text); font-family:var(--sans); line-height:1.55; -webkit-font-smoothing:antialiased; }
+  a{ color:var(--accent-2); }
+  ::selection{ background:var(--accent-soft); }
+  .wrap{ max-width:1080px; margin:0 auto; padding:0 24px; }
+
+  header.hero{
+    border-bottom:1px solid var(--border);
+    background:repeating-linear-gradient(180deg, var(--surface-2) 0 1px, var(--bg) 1px 28px);
+    padding:56px 0 40px;
+  }
+  .termbar{ display:flex; gap:6px; margin-bottom:20px; }
+  .termbar span{ width:11px; height:11px; border-radius:50%; }
+  .termbar span:nth-child(1){ background:#ff5f57; }
+  .termbar span:nth-child(2){ background:#febc2e; }
+  .termbar span:nth-child(3){ background:#28c840; }
+  .eyebrow{ font-family:var(--mono); font-size:.8rem; color:var(--accent); }
+  .eyebrow::before{ content:"$ "; opacity:.7; }
+  h1{ font-family:var(--mono); font-weight:700; font-size:clamp(2rem,4vw,3rem); line-height:1.08; margin:.4em 0 .3em; text-wrap:balance; letter-spacing:-.01em; }
+  h1 .cursor{ display:inline-block; width:.5ch; background:var(--accent); margin-left:.15em; animation:blink 1.1s steps(1) infinite; }
+  @keyframes blink{ 50%{ opacity:0; } }
+  .hero p.lede{ max-width:62ch; font-size:1.1rem; color:var(--muted); margin:0 0 1.6em; }
+  .factrow{ display:flex; flex-wrap:wrap; gap:10px; }
+  .fact{ font-family:var(--mono); font-size:.78rem; background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:.5em .8em; display:flex; gap:.5em; }
+  .fact b{ color:var(--muted); font-weight:500; text-transform:uppercase; letter-spacing:.06em; font-size:.72rem; }
+
+  nav.index{ position:sticky; top:0; z-index:20; background:color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter:blur(8px); border-bottom:1px solid var(--border); }
+  nav.index .wrap{ display:flex; gap:4px; overflow-x:auto; padding:10px 24px; scrollbar-width:none; }
+  nav.index .wrap::-webkit-scrollbar{ display:none; }
+  nav.index a{ font-family:var(--mono); font-size:.82rem; text-decoration:none; color:var(--muted); padding:.5em .9em; border-radius:6px; white-space:nowrap; border:1px solid transparent; }
+  nav.index a:hover{ color:var(--text); border-color:var(--border); background:var(--surface); }
+  nav.index a.toc-link{ font-weight:600; color:var(--accent); border-right:1px solid var(--border); border-radius:0; margin-right:8px; padding-right:16px; }
+  nav.index a.toc-link:hover{ color:var(--accent); background:transparent; border-right-color:var(--border); }
+  nav.index a:not(.toc-link)::before{ content:'#'; opacity:.5; margin-right:.3em; }
+
+  .back-to-top{ position:fixed; bottom:22px; right:22px; z-index:40; width:46px; height:46px;
+    background:var(--surface); border:1px solid var(--border); border-radius:10px; box-shadow:var(--shadow);
+    font-family:var(--mono); font-size:1.15rem; color:var(--accent); line-height:1;
+    display:flex; align-items:center; justify-content:center; padding:0; cursor:pointer; text-decoration:none;
+    opacity:0; visibility:hidden; transform:translateY(10px);
+    transition:opacity .25s ease, transform .25s ease, visibility 0s .25s; }
+  .back-to-top.show{ opacity:1; visibility:visible; transform:translateY(0); transition:opacity .25s ease, transform .25s ease, visibility 0s; }
+  .back-to-top:hover{ background:var(--accent-soft); border-color:var(--accent); }
+  .back-to-top:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+  @media print{ nav.index, .back-to-top{ display:none; } }
+
+  section{ padding:52px 0; border-bottom:1px solid var(--border); }
+  section:last-of-type{ border-bottom:none; }
+  .section-head{ margin-bottom:28px; max-width:70ch; }
+  .kicker{ font-family:var(--mono); font-size:.75rem; letter-spacing:.1em; text-transform:uppercase; color:var(--accent-2); margin:0 0 .5em; }
+  .kicker::before{ content:"// "; opacity:.6; }
+  h2{ font-family:var(--mono); font-size:clamp(1.4rem,2.4vw,1.9rem); margin:0 0 .3em; text-wrap:balance; }
+  .section-head p{ color:var(--muted); margin:.4em 0 0; }
+
+  .obj-list{ display:grid; gap:12px; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); list-style:none; margin:0; padding:0; }
+  .obj-list li{ background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:16px 18px; box-shadow:var(--shadow); font-size:.95rem; }
+  .obj-list li::before{ content:"$"; color:var(--accent); font-family:var(--mono); margin-right:.6em; font-weight:700; }
+
+  figure{ margin:36px 0 0; }
+  figure svg{ width:100%; height:auto; display:block; background:var(--surface); border:1px solid var(--border); border-radius:12px; }
+  figcaption{ font-size:.85rem; color:var(--muted); margin-top:.6em; }
+  .diagram-grid{ display:grid; gap:32px; grid-template-columns:1fr; }
+  @media(min-width:860px){ .diagram-grid{ grid-template-columns:1.15fr 1fr; } }
+
+  .toolbar{ display:flex; gap:10px; align-items:center; margin-bottom:20px; flex-wrap:wrap; }
+  button.btn{ font-family:var(--mono); font-size:.82rem; background:var(--surface); color:var(--text); border:1px solid var(--border); border-radius:7px; padding:.6em 1em; cursor:pointer; }
+  button.btn:hover{ border-color:var(--accent); color:var(--accent); }
+  button.btn:focus-visible, a:focus-visible, .flashcard:focus-visible, input:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+  #cardProgress{ font-family:var(--mono); font-size:.8rem; color:var(--muted); }
+
+  .card-grid{ display:grid; gap:16px; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); }
+  .flashcard{ perspective:1200px; height:150px; cursor:pointer; border:none; background:none; padding:0; font-family:inherit; text-align:left; width:100%; }
+  .flashcard-inner{ position:relative; width:100%; height:100%; transition:transform .5s cubic-bezier(.4,.2,.2,1); transform-style:preserve-3d; }
+  .flashcard.flipped .flashcard-inner{ transform:rotateY(180deg); }
+  .flashcard-face{ position:absolute; inset:0; backface-visibility:hidden; border-radius:10px; border:1px solid var(--border); box-shadow:var(--shadow); padding:16px; display:flex; flex-direction:column; justify-content:center; }
+  .flashcard-face.front{ background:var(--surface); }
+  .flashcard-face.back{ background:var(--accent-soft); transform:rotateY(180deg); overflow-y:auto; }
+  .flashcard-face .lbl{ font-family:var(--mono); font-size:.68rem; text-transform:uppercase; letter-spacing:.1em; color:var(--muted); margin-bottom:.5em; }
+  .flashcard-face.front .term{ font-family:var(--mono); font-weight:600; font-size:1.02rem; }
+  .flashcard-face.back .def{ font-size:.88rem; }
+  .flashcard.known .flashcard-face.front{ border-color:var(--correct); }
+
+  .quiz-q{ background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px 22px; margin-bottom:18px; box-shadow:var(--shadow); }
+  .quiz-q .qtext{ font-weight:600; margin:0 0 14px; }
+  .quiz-q .qnum{ font-family:var(--mono); color:var(--accent); margin-right:.5em; }
+  .choices{ display:grid; gap:8px; }
+  .choice{ text-align:left; font-family:var(--sans); font-size:.95rem; background:var(--surface-2); border:1px solid var(--border); border-radius:8px; padding:.7em .9em; cursor:pointer; color:var(--text); }
+  .choice:hover{ border-color:var(--accent); }
+  .choice.correct{ background:var(--correct-soft); border-color:var(--correct); }
+  .choice.incorrect{ background:var(--danger-soft); border-color:var(--danger); }
+  .choice[disabled]{ cursor:default; }
+  .explain{ margin-top:12px; font-size:.88rem; color:var(--muted); border-left:3px solid var(--accent-2); padding-left:12px; display:none; }
+  .explain.show{ display:block; }
+  #quizScore{ font-family:var(--mono); font-size:.85rem; color:var(--muted); margin-bottom:16px; }
+
+  .example{ background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px 22px; margin-bottom:16px; box-shadow:var(--shadow); }
+  .example h3{ font-family:var(--mono); font-size:1.02rem; margin:0 0 8px; }
+  .example .tag{ display:inline-block; font-family:var(--mono); font-size:.68rem; text-transform:uppercase; letter-spacing:.08em; color:var(--accent-2); background:var(--accent-2-soft); border-radius:5px; padding:.25em .6em; margin-bottom:10px; }
+  code.inline{ font-family:var(--mono); background:var(--surface-2); border-radius:4px; padding:.1em .4em; font-size:.92em; }
+  pre.term{ font-family:var(--mono); font-size:.85rem; background:var(--surface-2); border:1px solid var(--border); border-radius:8px; padding:12px 14px; overflow-x:auto; margin:10px 0; }
+  details.solution{ margin-top:12px; }
+  details.solution summary{ cursor:pointer; font-family:var(--mono); font-size:.82rem; color:var(--accent); list-style:none; display:inline-flex; align-items:center; gap:.4em; }
+  details.solution summary::-webkit-details-marker{ display:none; }
+  details.solution summary::before{ content:"▸"; transition:transform .15s; }
+  details.solution[open] summary::before{ transform:rotate(90deg); }
+  details.solution .solbody{ margin-top:10px; padding:14px 16px; background:var(--surface-2); border-radius:8px; font-size:.92rem; }
+
+  #glossarySearch{ width:100%; max-width:420px; font-family:var(--sans); font-size:.95rem; padding:.7em .9em; border-radius:8px; border:1px solid var(--border); background:var(--surface); color:var(--text); margin-bottom:16px; }
+  .alpha-nav{ display:flex; flex-wrap:wrap; gap:4px; margin-bottom:24px; }
+  .alpha-nav a{ font-family:var(--mono); font-size:.78rem; width:1.9em; height:1.9em; display:flex; align-items:center; justify-content:center; border:1px solid var(--border); border-radius:5px; text-decoration:none; color:var(--muted); }
+  .alpha-nav a.has{ color:var(--text); }
+  .alpha-nav a.has:hover{ border-color:var(--accent); color:var(--accent); }
+  .glossary-letter{ font-family:var(--mono); color:var(--accent); font-size:1.1rem; margin:22px 0 8px; }
+  dl.glossary{ margin:0; }
+  dl.glossary .gitem{ border-top:1px solid var(--border); padding:12px 0; }
+  dl.glossary dt{ font-family:var(--mono); font-weight:600; }
+  dl.glossary dd{ margin:.3em 0 0; color:var(--muted); font-size:.92rem; }
+  .gitem.hidden{ display:none; }
+
+  .callout{ border-left:3px solid var(--accent); background:var(--accent-soft); border-radius:0 8px 8px 0; padding:14px 18px; margin:10px 0 24px; font-size:.92rem; }
+  .callout b{ font-family:var(--mono); }
+
+  footer{ padding:32px 0 60px; }
+  footer p{ color:var(--muted); font-size:.85rem; font-family:var(--mono); }
+</style>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="termbar"><span></span><span></span><span></span></div>
+    <p class="eyebrow">IT251 · Week 4</p>
+    <h1>Files, Accounts &amp; Processes<span class="cursor">&nbsp;</span></h1>
+    <p class="lede">The shift from "the system" to "the people and processes running on it": links and device files, the full local-account lifecycle, and how to read, control, and schedule what's actually running.</p>
+    <div class="factrow">
+      <span class="fact"><b>4.1</b> Lecture</span>
+      <span class="fact"><b>4.2</b> Lab</span>
+      <span class="fact"><b>Covers</b> Module 3: Services &amp; User Management I</span>
+      <span class="fact"><b>Lab</b> Pentest Tooling — Install or Build</span>
+      <span class="fact"><b>Midterm</b> Week 8</span>
+    </div>
+  </div>
+</header>
+
+<nav class="index" aria-label="Section index">
+  <div class="wrap">
+    <a href="index.html" class="toc-link">&larr; Table of Contents</a>
+    <a href="#overview">Overview</a>
+    <a href="#diagrams">Concepts</a>
+    <a href="#lab">Hands-On Lab</a>
+    <a href="#flashcards">Flashcards</a>
+    <a href="#quiz">Quiz</a>
+    <a href="#examples">Examples</a>
+    <a href="#glossary">Glossary</a>
+  </div>
+</nav>
+
+<main class="wrap">
+
+  <section id="overview">
+    <div class="section-head">
+      <p class="kicker">Overview</p>
+      <h2>What Week 4 covers</h2>
+      <p>Three sub-modules: file/directory utilities and links, the full lifecycle of a local user account (add, modify, lock, list), and process/job management — verifying what's running, controlling it, and scheduling work with cron. This is also the material Week 5's lab drills directly, one week later.</p>
+    </div>
+    <ul class="obj-list">
+      <li>Use core file/directory utilities and distinguish hard vs. symbolic links</li>
+      <li>Identify block vs. character device files in <code class="inline">/dev</code></li>
+      <li>Create, modify, lock, and list local user accounts</li>
+      <li>Explain the difference between user, system, and service accounts</li>
+      <li>Verify running processes and read process state output</li>
+      <li>Manage jobs/processes and schedule recurring work with cron</li>
+    </ul>
+  </section>
+
+  <section id="diagrams">
+    <div class="section-head">
+      <p class="kicker">Concepts</p>
+      <h2>Two ways to see it</h2>
+      <p>The account lifecycle shows <em>what stage a user is in</em>. Process states show <em>what a running process is doing right now</em>.</p>
+    </div>
+    <div class="diagram-grid">
+      <figure>
+        <svg viewBox="0 0 620 190" role="img" aria-label="Local account lifecycle: useradd creates an account, usermod/chage modify it, passwd -l or usermod -L locks it, userdel removes it.">
+          <defs>
+            <marker id="arrow251w4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+            </marker>
+          </defs>
+          <g font-family="JetBrains Mono" font-size="11.5" font-weight="600">
+            <rect x="10" y="60" width="130" height="50" rx="6" fill="var(--accent-soft)" stroke="var(--accent)"/>
+            <text x="75" y="82" text-anchor="middle" fill="var(--accent)">Add</text>
+            <text x="75" y="98" text-anchor="middle" fill="var(--accent)" font-size="10">useradd/adduser</text>
+
+            <rect x="170" y="60" width="130" height="50" rx="6" fill="none" stroke="currentColor"/>
+            <text x="235" y="82" text-anchor="middle" fill="currentColor">Modify</text>
+            <text x="235" y="98" text-anchor="middle" fill="currentColor" font-size="10">usermod/chage</text>
+
+            <rect x="330" y="60" width="130" height="50" rx="6" fill="var(--danger-soft)" stroke="var(--danger)"/>
+            <text x="395" y="82" text-anchor="middle" fill="var(--danger)">Lock</text>
+            <text x="395" y="98" text-anchor="middle" fill="var(--danger)" font-size="10">passwd -l/usermod -L</text>
+
+            <rect x="490" y="60" width="120" height="50" rx="6" fill="none" stroke="currentColor" opacity=".7"/>
+            <text x="550" y="82" text-anchor="middle" fill="currentColor">Delete</text>
+            <text x="550" y="98" text-anchor="middle" fill="currentColor" font-size="10">userdel -r</text>
+          </g>
+          <line x1="140" y1="85" x2="170" y2="85" stroke="currentColor" marker-end="url(#arrow251w4)"/>
+          <line x1="300" y1="85" x2="330" y2="85" stroke="currentColor" marker-end="url(#arrow251w4)"/>
+          <line x1="460" y1="85" x2="490" y2="85" stroke="currentColor" marker-end="url(#arrow251w4)"/>
+          <text x="75" y="140" text-anchor="middle" font-family="IBM Plex Sans" font-size="10.5" fill="var(--muted)">getent/id/groups list it at any stage</text>
+        </svg>
+        <figcaption>Locking (a temporary block) is a different operation from deleting (permanent) — a common exam distinction.</figcaption>
+      </figure>
+
+      <figure>
+        <svg viewBox="0 0 380 260" role="img" aria-label="Process states: Running, Sleeping, Uninterruptible sleep, Stopped, and Zombie, as seen in ps STAT column.">
+          <g font-family="JetBrains Mono" font-size="12" font-weight="600" fill="currentColor">
+            <rect x="10" y="10" width="150" height="40" rx="6" fill="var(--accent-soft)" stroke="var(--accent)"/>
+            <text x="85" y="35" text-anchor="middle" fill="var(--accent)">R — Running</text>
+
+            <rect x="10" y="65" width="150" height="40" rx="6" fill="none" stroke="currentColor"/>
+            <text x="85" y="90" text-anchor="middle">S — Sleeping</text>
+
+            <rect x="10" y="120" width="150" height="40" rx="6" fill="none" stroke="currentColor" opacity=".8"/>
+            <text x="85" y="140" text-anchor="middle" font-size="10.5">D — Uninterruptible</text>
+            <text x="85" y="153" text-anchor="middle" font-size="10.5">sleep (I/O wait)</text>
+
+            <rect x="10" y="175" width="150" height="40" rx="6" fill="none" stroke="currentColor" opacity=".8"/>
+            <text x="85" y="200" text-anchor="middle">T — Stopped</text>
+
+            <rect x="200" y="65" width="160" height="40" rx="6" fill="var(--danger-soft)" stroke="var(--danger)"/>
+            <text x="280" y="86" text-anchor="middle" fill="var(--danger)">Z — Zombie</text>
+            <text x="280" y="99" text-anchor="middle" fill="var(--danger)" font-size="9.5">finished, not yet reaped</text>
+          </g>
+          <text x="10" y="245" font-family="IBM Plex Sans" font-size="10.5" fill="var(--muted)">Visible in the STAT column of ps aux / ps -ef.</text>
+        </svg>
+        <figcaption>A zombie isn't consuming CPU or memory for real work — it's just an exit status waiting on its parent.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section id="lab">
+    <div class="section-head">
+      <p class="kicker">4.2 · Hands-On</p>
+      <h2>Lab: Pentest Tooling — Install or Build</h2>
+      <p>No new lecture content — a working session where you either install pentest tooling onto your VM or start building your own, using this week's process/account material as background for what those tools actually run as.</p>
+    </div>
+    <div class="example">
+      <span class="tag">Full session details</span>
+      <h3>Open the lab page</h3>
+      <p>Authorized-use rules, the install-vs-build choice, and submission instructions all live on their own page.</p>
+      <p><a href="IT251_Week4_Pentest_Tooling.html">Open the Pentest Tooling lab &rarr;</a></p>
+    </div>
+  </section>
+
+  <section id="flashcards">
+    <div class="section-head">
+      <p class="kicker">Study</p>
+      <h2>Flashcards</h2>
+      <p>Click a card to flip it. Double-click to mark it known once you've got it cold.</p>
+    </div>
+    <div class="toolbar">
+      <button class="btn" id="shuffleBtn">Shuffle</button>
+      <button class="btn" id="resetKnownBtn">Reset progress</button>
+      <span id="cardProgress"></span>
+    </div>
+    <div class="card-grid" id="cardGrid"></div>
+  </section>
+
+  <section id="quiz">
+    <div class="section-head">
+      <p class="kicker">Check yourself</p>
+      <h2>Sample questions</h2>
+      <p>Pick an answer to see if you're right — same style as the checkpoint quizzes.</p>
+    </div>
+    <div id="quizScore"></div>
+    <div id="quizList"></div>
+    <button class="btn" id="resetQuizBtn">Reset quiz</button>
+  </section>
+
+  <section id="examples">
+    <div class="section-head">
+      <p class="kicker">Applied</p>
+      <h2>Worked examples</h2>
+      <p>Think it through before you expand the answer.</p>
+    </div>
+
+    <div class="example">
+      <span class="tag">Links</span>
+      <h3>Which link survives?</h3>
+      <p>You create a hard link and a symbolic link to the same file, then delete the original file. What happens to each link?</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <p><strong>Hard link:</strong> still works — it shares the same inode as the original, so the data is still there under the link's name.</p>
+          <p><strong>Symbolic link:</strong> broken — it only stored a path to the original filename, which no longer exists.</p>
+        </div>
+      </details>
+    </div>
+
+    <div class="example">
+      <span class="tag">Accounts</span>
+      <h3>Temporarily disable, don't delete</h3>
+      <p>A user is going on leave for a month. You need to prevent login without losing their account, files, or group memberships.</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <pre class="term">sudo passwd -l theirusername
+# or: sudo usermod -L theirusername</pre>
+          <p>This locks the password (prefixes the hash) instead of deleting the account — <code class="inline">userdel</code> would be permanent and wrong here.</p>
+        </div>
+      </details>
+    </div>
+
+    <div class="example">
+      <span class="tag">Process management</span>
+      <h3>Kill it, but nicely first</h3>
+      <p>A process is hung and needs to stop. What's the right order of signals to try?</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <pre class="term">kill -SIGTERM &lt;pid&gt;   # ask nicely — lets it clean up
+# still stuck?
+kill -SIGKILL &lt;pid&gt;   # force — no cleanup, last resort</pre>
+          <p><code class="inline">SIGTERM</code> (15) gives the process a chance to close files/save state; <code class="inline">SIGKILL</code> (9) can't be caught or ignored, but skips any cleanup — reach for it only after SIGTERM fails.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section id="glossary">
+    <div class="section-head">
+      <p class="kicker">Reference</p>
+      <h2>Glossary &amp; index</h2>
+      <p>Every term from this week, searchable and indexed A–Z.</p>
+    </div>
+    <input type="text" id="glossarySearch" placeholder="Search terms…" aria-label="Search glossary">
+    <div class="alpha-nav" id="alphaNav"></div>
+    <dl class="glossary" id="glossaryList"></dl>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>IT251 · Linux+ (XK0-006) · Files/accounts/processes + hands-on lab track · Week 4 reference — more weeks added as the course progresses.</p>
+  </div>
+</footer>
+
+<script>
+  const TERMS = [
+    {t:"stat", d:"Shows detailed file metadata — inode number, timestamps, and permissions in both octal and symbolic form."},
+    {t:"find / locate", d:"find searches a directory tree live by criteria (name, type, time). locate uses a pre-built index (updatedb) — faster, but can be stale."},
+    {t:"xargs", d:"Feeds a list of items (often from find) as arguments into another command."},
+    {t:"Hard link", d:"A second directory entry pointing at the same inode as the original — shares the same data, survives the original name being deleted, can't cross filesystems or link directories."},
+    {t:"Symbolic link (symlink)", d:"A separate file that stores a path to another file — can cross filesystems and link directories, but breaks if the target moves or is deleted."},
+    {t:"inode", d:"The data structure holding a file's metadata and data-block pointers — what a hard link actually points to, independent of any one filename."},
+    {t:"Block device", d:"A device addressable in fixed-size chunks — e.g. /dev/sda, a disk."},
+    {t:"Character device", d:"A device that streams data byte-by-byte — e.g. /dev/tty, /dev/null, /dev/random."},
+    {t:"useradd / adduser", d:"Create a new user account. adduser is a friendlier Debian-family wrapper around the lower-level useradd."},
+    {t:"userdel -r", d:"Deletes a user account; -r also removes their home directory."},
+    {t:"usermod", d:"Modifies an existing account — shell, group memberships, home directory, lock status."},
+    {t:"chage", d:"Manages password aging — max/min days between changes, warning period, account expiration date."},
+    {t:"passwd -l / usermod -L", d:"Lock an account by prefixing its password hash — reversible, doesn't delete anything. Contrast with a hard chage -E expiration."},
+    {t:"getent", d:"Looks up account/group info through whatever backend is configured (local files, LDAP, etc.) — not just /etc/passwd directly."},
+    {t:"/etc/passwd, /etc/shadow, /etc/group", d:"Local account data files: passwd holds account info, shadow holds password hashes, group holds group membership."},
+    {t:"/etc/skel", d:"Template directory copied into a new user's home directory when the account is created."},
+    {t:"UID/GID ranges", d:"Policy, not law — check /etc/login.defs for a given distro's UID_MIN/UID_MAX cutoffs between system and regular user accounts."},
+    {t:"User vs. system vs. service account", d:"Regular users typically start at UID 1000+. System accounts live in a low UID range. Service accounts are system accounts by convention, usually shell-less (nologin)."},
+    {t:"ps aux / ps -ef", d:"Two different flag styles for listing running processes — same underlying process data either way."},
+    {t:"pstree / top / htop", d:"pstree shows the parent/child process tree visually; top/htop show a live, sortable process view."},
+    {t:"PID / PPID", d:"Process ID and Parent Process ID — every process except PID 1 (systemd) has a parent that spawned it."},
+    {t:"Process states (R/S/D/T/Z)", d:"Running, Sleeping (interruptible), uninterruptible sleep (D, usually I/O wait), sTopped, Zombie (finished, not yet reaped) — shown in ps's STAT column."},
+    {t:"nice / renice", d:"Set or change a process's scheduling priority, from -20 (highest) to 19 (lowest)."},
+    {t:"ulimit", d:"Sets per-shell resource limits — e.g. max open files, max processes."},
+    {t:"jobs / fg / bg", d:"jobs lists background/suspended jobs in the current shell; fg brings one to the foreground, bg resumes one in the background."},
+    {t:"kill / killall / pkill", d:"Send a signal to a process by PID (kill), by exact name (killall), or by pattern (pkill)."},
+    {t:"SIGTERM / SIGKILL / SIGHUP", d:"SIGTERM (15) asks a process to exit cleanly. SIGKILL (9) forces termination immediately, no cleanup. SIGHUP (1) traditionally signals a reload/hangup."},
+    {t:"crontab -e / -l / -r", d:"Edit, list, or remove all of the current user's scheduled cron jobs."},
+    {t:"cron 5-field syntax", d:"minute hour day-of-month month day-of-week, before the command — each * means 'every'."},
+    {t:"at", d:"Schedules a one-shot job to run once at a specific time, unlike cron's recurring schedule."},
+  ];
+
+  const QUIZ = [
+    {
+      q:"You delete the original file after making both a hard link and a symbolic link to it. What happens?",
+      choices:["Both links break","The hard link still works, the symlink breaks","The symlink still works, the hard link breaks","Both links still work identically"],
+      correct:1,
+      explain:"A hard link shares the same inode as the data, so it survives. A symlink only stores a path to the old filename, so it breaks."
+    },
+    {
+      q:"A user is going on a month of leave. What's the correct way to prevent login without deleting anything?",
+      choices:["userdel -r username","passwd -l username (or usermod -L)","rm -rf /home/username","chmod 000 /home/username"],
+      correct:1,
+      explain:"Locking the password is reversible and doesn't touch the account, files, or group memberships — userdel would be permanent and wrong here."
+    },
+    {
+      q:"In ps aux output, what does STAT = Z mean?",
+      choices:["The process is running at high priority","The process is a system account","The process has finished but hasn't been reaped by its parent yet","The process is uninterruptible, waiting on disk I/O"],
+      correct:2,
+      explain:"Z is a zombie — the process has already exited; it's just an exit status waiting for its parent to collect it."
+    },
+    {
+      q:"What's the practical difference between /etc/passwd and getent passwd?",
+      choices:[
+        "There is no difference",
+        "getent only works for root",
+        "getent queries whatever backend is configured (local files, LDAP, etc.), not just the local file directly",
+        "/etc/passwd is deprecated and unused on modern systems"
+      ],
+      correct:2,
+      explain:"getent goes through the configured name service (which might be local files, LDAP, SSSD, etc.) — reading /etc/passwd directly only sees local accounts."
+    },
+    {
+      q:"Which signal should you try FIRST to stop a hung process?",
+      choices:["SIGKILL (9)","SIGTERM (15)","SIGHUP (1)","SIGSTOP"],
+      correct:1,
+      explain:"SIGTERM asks the process to exit cleanly and lets it clean up. SIGKILL is the forceful last resort when SIGTERM doesn't work."
+    },
+    {
+      q:"A service account for a database daemon typically has which shell?",
+      choices:["/bin/bash","/bin/zsh","/usr/sbin/nologin","No shell field is ever set"],
+      correct:2,
+      explain:"Service accounts are system accounts by convention and are usually shell-less (nologin or /bin/false) since no one should interactively log in as them."
+    },
+    {
+      q:"What's the correct 5-field order for a crontab entry, before the command?",
+      choices:[
+        "hour minute day-of-week month day-of-month",
+        "minute hour day-of-month month day-of-week",
+        "month day hour minute day-of-week",
+        "second minute hour day month"
+      ],
+      correct:1,
+      explain:"Cron's five fields are always: minute, hour, day-of-month, month, day-of-week — a favorite exam detail to get backwards."
+    },
+  ];
+
+  const grid = document.getElementById('cardGrid');
+  TERMS.forEach((item, i) => {
+    const card = document.createElement('button');
+    card.className = 'flashcard';
+    card.setAttribute('aria-label', 'Flashcard: ' + item.t + '. Press to flip.');
+    card.dataset.i = i;
+    card.innerHTML = `
+      <div class="flashcard-inner">
+        <div class="flashcard-face front"><div class="lbl">Term</div><div class="term">${item.t}</div></div>
+        <div class="flashcard-face back"><div class="lbl">Definition</div><div class="def">${item.d}</div></div>
+      </div>`;
+    card.addEventListener('click', () => card.classList.toggle('flipped'));
+    card.addEventListener('dblclick', () => { card.classList.toggle('known'); updateProgress(); });
+    grid.appendChild(card);
+  });
+  function updateProgress(){
+    const known = document.querySelectorAll('.flashcard.known').length;
+    document.getElementById('cardProgress').textContent = `${known} / ${TERMS.length} marked known (double-click a card to mark it)`;
+  }
+  updateProgress();
+  document.getElementById('shuffleBtn').addEventListener('click', () => {
+    const cards = Array.from(grid.children);
+    cards.sort(() => Math.random() - 0.5);
+    cards.forEach(c => { c.classList.remove('flipped'); grid.appendChild(c); });
+  });
+  document.getElementById('resetKnownBtn').addEventListener('click', () => {
+    document.querySelectorAll('.flashcard.known').forEach(c => c.classList.remove('known'));
+    updateProgress();
+  });
+
+  const quizList = document.getElementById('quizList');
+  let score = 0, answered = 0;
+  function renderQuiz(){
+    quizList.innerHTML = ''; score = 0; answered = 0;
+    QUIZ.forEach((item, qi) => {
+      const box = document.createElement('div');
+      box.className = 'quiz-q';
+      box.innerHTML = `<p class="qtext"><span class="qnum">Q${qi+1}.</span>${item.q}</p><div class="choices"></div><p class="explain"></p>`;
+      const choicesEl = box.querySelector('.choices');
+      item.choices.forEach((c, ci) => {
+        const b = document.createElement('button');
+        b.className = 'choice'; b.textContent = c;
+        b.addEventListener('click', () => {
+          if (box.dataset.done) return;
+          box.dataset.done = '1'; answered++;
+          if (ci === item.correct) score++;
+          Array.from(choicesEl.children).forEach((el, ei) => {
+            el.disabled = true;
+            if (ei === item.correct) el.classList.add('correct');
+            else if (ei === ci) el.classList.add('incorrect');
+          });
+          box.querySelector('.explain').textContent = item.explain;
+          box.querySelector('.explain').classList.add('show');
+          updateScore();
+        });
+        choicesEl.appendChild(b);
+      });
+      quizList.appendChild(box);
+    });
+    updateScore();
+  }
+  function updateScore(){
+    document.getElementById('quizScore').textContent =
+      answered === 0 ? `${QUIZ.length} questions — click an answer to check yourself` : `Score: ${score} / ${answered} answered`;
+  }
+  renderQuiz();
+  document.getElementById('resetQuizBtn').addEventListener('click', renderQuiz);
+
+  const glossaryList = document.getElementById('glossaryList');
+  const alphaNav = document.getElementById('alphaNav');
+  const letters = [...new Set(TERMS.map(t => t.t[0].toUpperCase()))];
+  'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').forEach(L => {
+    const a = document.createElement('a');
+    a.textContent = L;
+    if (letters.includes(L)) { a.href = '#g-' + L; a.className = 'has'; }
+    else { a.href = 'javascript:void(0)'; }
+    alphaNav.appendChild(a);
+  });
+  let currentLetter = '';
+  TERMS.forEach(item => {
+    const L = item.t[0].toUpperCase();
+    if (L !== currentLetter) {
+      currentLetter = L;
+      const h = document.createElement('div');
+      h.className = 'glossary-letter'; h.id = 'g-' + L; h.textContent = L;
+      glossaryList.appendChild(h);
+    }
+    const wrap = document.createElement('div');
+    wrap.className = 'gitem';
+    wrap.innerHTML = `<dt>${item.t}</dt><dd>${item.d}</dd>`;
+    wrap.dataset.search = (item.t + ' ' + item.d).toLowerCase();
+    glossaryList.appendChild(wrap);
+  });
+  document.getElementById('glossarySearch').addEventListener('input', (e) => {
+    const q = e.target.value.toLowerCase().trim();
+    document.querySelectorAll('.gitem').forEach(el => {
+      el.classList.toggle('hidden', q && !el.dataset.search.includes(q));
+    });
+  });
+</script>
+
+<button id="backToTop" class="back-to-top" aria-label="Back to top" title="Back to top">&uarr;</button>
+
+<script>
+  const backToTop = document.getElementById('backToTop');
+  function toggleBackToTop(){ backToTop.classList.toggle('show', window.scrollY > 480); }
+  window.addEventListener('scroll', toggleBackToTop, {passive:true});
+  toggleBackToTop();
+  backToTop.addEventListener('click', () => window.scrollTo({top:0, behavior:'smooth'}));
+</script>

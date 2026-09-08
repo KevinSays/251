@@ -1,0 +1,588 @@
+<title>Networking, Shell &amp; Virtualization</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --bg:#f2f6f4;
+    --surface:#ffffff;
+    --surface-2:#e6efec;
+    --text:#0c1a15;
+    --muted:#51655d;
+    --border:#cddcd5;
+    --accent:#0f7a5c;
+    --accent-soft:#dcf1e7;
+    --accent-2:#0e7490;
+    --accent-2-soft:#dbeff4;
+    --danger:#b3261e;
+    --danger-soft:#f8dcd9;
+    --correct:#0f7a5c;
+    --correct-soft:#dcf1e7;
+    --shadow: 0 1px 2px rgba(12,26,21,.06), 0 8px 24px rgba(12,26,21,.07);
+    --mono:'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    --sans:'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0a0f0d; --surface:#0f1613; --surface-2:#131c18;
+      --text:#d9f5e8; --muted:#82a99a; --border:#1e2b26;
+      --accent:#3ddc97; --accent-soft:#123024;
+      --accent-2:#22d3ee; --accent-2-soft:#0c2b30;
+      --danger:#ff7a68; --danger-soft:#33150f;
+      --correct:#3ddc97; --correct-soft:#123024;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 12px 32px rgba(0,0,0,.45);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0a0f0d; --surface:#0f1613; --surface-2:#131c18;
+    --text:#d9f5e8; --muted:#82a99a; --border:#1e2b26;
+    --accent:#3ddc97; --accent-soft:#123024;
+    --accent-2:#22d3ee; --accent-2-soft:#0c2b30;
+    --danger:#ff7a68; --danger-soft:#33150f;
+    --correct:#3ddc97; --correct-soft:#123024;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 12px 32px rgba(0,0,0,.45);
+  }
+
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto;} *{animation-duration:.001ms !important; transition-duration:.001ms !important;} }
+  body{ margin:0; background:var(--bg); color:var(--text); font-family:var(--sans); line-height:1.55; -webkit-font-smoothing:antialiased; }
+  a{ color:var(--accent-2); }
+  ::selection{ background:var(--accent-soft); }
+  .wrap{ max-width:1080px; margin:0 auto; padding:0 24px; }
+
+  header.hero{
+    border-bottom:1px solid var(--border);
+    background:repeating-linear-gradient(180deg, var(--surface-2) 0 1px, var(--bg) 1px 28px);
+    padding:56px 0 40px;
+  }
+  .termbar{ display:flex; gap:6px; margin-bottom:20px; }
+  .termbar span{ width:11px; height:11px; border-radius:50%; }
+  .termbar span:nth-child(1){ background:#ff5f57; }
+  .termbar span:nth-child(2){ background:#febc2e; }
+  .termbar span:nth-child(3){ background:#28c840; }
+  .eyebrow{ font-family:var(--mono); font-size:.8rem; color:var(--accent); }
+  .eyebrow::before{ content:"$ "; opacity:.7; }
+  h1{ font-family:var(--mono); font-weight:700; font-size:clamp(2rem,4vw,3rem); line-height:1.08; margin:.4em 0 .3em; text-wrap:balance; letter-spacing:-.01em; }
+  h1 .cursor{ display:inline-block; width:.5ch; background:var(--accent); margin-left:.15em; animation:blink 1.1s steps(1) infinite; }
+  @keyframes blink{ 50%{ opacity:0; } }
+  .hero p.lede{ max-width:62ch; font-size:1.1rem; color:var(--muted); margin:0 0 1.6em; }
+  .factrow{ display:flex; flex-wrap:wrap; gap:10px; }
+  .fact{ font-family:var(--mono); font-size:.78rem; background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:.5em .8em; display:flex; gap:.5em; }
+  .fact b{ color:var(--muted); font-weight:500; text-transform:uppercase; letter-spacing:.06em; font-size:.72rem; }
+
+  nav.index{ position:sticky; top:0; z-index:20; background:color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter:blur(8px); border-bottom:1px solid var(--border); }
+  nav.index .wrap{ display:flex; gap:4px; overflow-x:auto; padding:10px 24px; scrollbar-width:none; }
+  nav.index .wrap::-webkit-scrollbar{ display:none; }
+  nav.index a{ font-family:var(--mono); font-size:.82rem; text-decoration:none; color:var(--muted); padding:.5em .9em; border-radius:6px; white-space:nowrap; border:1px solid transparent; }
+  nav.index a:hover{ color:var(--text); border-color:var(--border); background:var(--surface); }
+  nav.index a.toc-link{ font-weight:600; color:var(--accent); border-right:1px solid var(--border); border-radius:0; margin-right:8px; padding-right:16px; }
+  nav.index a.toc-link:hover{ color:var(--accent); background:transparent; border-right-color:var(--border); }
+  nav.index a:not(.toc-link)::before{ content:'#'; opacity:.5; margin-right:.3em; }
+
+  .back-to-top{ position:fixed; bottom:22px; right:22px; z-index:40; width:46px; height:46px;
+    background:var(--surface); border:1px solid var(--border); border-radius:10px; box-shadow:var(--shadow);
+    font-family:var(--mono); font-size:1.15rem; color:var(--accent); line-height:1;
+    display:flex; align-items:center; justify-content:center; padding:0; cursor:pointer; text-decoration:none;
+    opacity:0; visibility:hidden; transform:translateY(10px);
+    transition:opacity .25s ease, transform .25s ease, visibility 0s .25s; }
+  .back-to-top.show{ opacity:1; visibility:visible; transform:translateY(0); transition:opacity .25s ease, transform .25s ease, visibility 0s; }
+  .back-to-top:hover{ background:var(--accent-soft); border-color:var(--accent); }
+  .back-to-top:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+  @media print{ nav.index, .back-to-top{ display:none; } }
+
+  section{ padding:52px 0; border-bottom:1px solid var(--border); }
+  section:last-of-type{ border-bottom:none; }
+  .section-head{ margin-bottom:28px; max-width:70ch; }
+  .kicker{ font-family:var(--mono); font-size:.75rem; letter-spacing:.1em; text-transform:uppercase; color:var(--accent-2); margin:0 0 .5em; }
+  .kicker::before{ content:"// "; opacity:.6; }
+  h2{ font-family:var(--mono); font-size:clamp(1.4rem,2.4vw,1.9rem); margin:0 0 .3em; text-wrap:balance; }
+  .section-head p{ color:var(--muted); margin:.4em 0 0; }
+
+  .obj-list{ display:grid; gap:12px; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); list-style:none; margin:0; padding:0; }
+  .obj-list li{ background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:16px 18px; box-shadow:var(--shadow); font-size:.95rem; }
+  .obj-list li::before{ content:"$"; color:var(--accent); font-family:var(--mono); margin-right:.6em; font-weight:700; }
+
+  figure{ margin:36px 0 0; }
+  figure svg{ width:100%; height:auto; display:block; background:var(--surface); border:1px solid var(--border); border-radius:12px; }
+  figcaption{ font-size:.85rem; color:var(--muted); margin-top:.6em; }
+  .diagram-grid{ display:grid; gap:32px; grid-template-columns:1fr; }
+  @media(min-width:860px){ .diagram-grid{ grid-template-columns:1fr 1fr; } }
+
+  .toolbar{ display:flex; gap:10px; align-items:center; margin-bottom:20px; flex-wrap:wrap; }
+  button.btn{ font-family:var(--mono); font-size:.82rem; background:var(--surface); color:var(--text); border:1px solid var(--border); border-radius:7px; padding:.6em 1em; cursor:pointer; }
+  button.btn:hover{ border-color:var(--accent); color:var(--accent); }
+  button.btn:focus-visible, a:focus-visible, .flashcard:focus-visible, input:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+  #cardProgress{ font-family:var(--mono); font-size:.8rem; color:var(--muted); }
+
+  .card-grid{ display:grid; gap:16px; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); }
+  .flashcard{ perspective:1200px; height:150px; cursor:pointer; border:none; background:none; padding:0; font-family:inherit; text-align:left; width:100%; }
+  .flashcard-inner{ position:relative; width:100%; height:100%; transition:transform .5s cubic-bezier(.4,.2,.2,1); transform-style:preserve-3d; }
+  .flashcard.flipped .flashcard-inner{ transform:rotateY(180deg); }
+  .flashcard-face{ position:absolute; inset:0; backface-visibility:hidden; border-radius:10px; border:1px solid var(--border); box-shadow:var(--shadow); padding:16px; display:flex; flex-direction:column; justify-content:center; }
+  .flashcard-face.front{ background:var(--surface); }
+  .flashcard-face.back{ background:var(--accent-soft); transform:rotateY(180deg); overflow-y:auto; }
+  .flashcard-face .lbl{ font-family:var(--mono); font-size:.68rem; text-transform:uppercase; letter-spacing:.1em; color:var(--muted); margin-bottom:.5em; }
+  .flashcard-face.front .term{ font-family:var(--mono); font-weight:600; font-size:1.02rem; }
+  .flashcard-face.back .def{ font-size:.88rem; }
+  .flashcard.known .flashcard-face.front{ border-color:var(--correct); }
+
+  .quiz-q{ background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px 22px; margin-bottom:18px; box-shadow:var(--shadow); }
+  .quiz-q .qtext{ font-weight:600; margin:0 0 14px; }
+  .quiz-q .qnum{ font-family:var(--mono); color:var(--accent); margin-right:.5em; }
+  .choices{ display:grid; gap:8px; }
+  .choice{ text-align:left; font-family:var(--sans); font-size:.95rem; background:var(--surface-2); border:1px solid var(--border); border-radius:8px; padding:.7em .9em; cursor:pointer; color:var(--text); }
+  .choice:hover{ border-color:var(--accent); }
+  .choice.correct{ background:var(--correct-soft); border-color:var(--correct); }
+  .choice.incorrect{ background:var(--danger-soft); border-color:var(--danger); }
+  .choice[disabled]{ cursor:default; }
+  .explain{ margin-top:12px; font-size:.88rem; color:var(--muted); border-left:3px solid var(--accent-2); padding-left:12px; display:none; }
+  .explain.show{ display:block; }
+  #quizScore{ font-family:var(--mono); font-size:.85rem; color:var(--muted); margin-bottom:16px; }
+
+  .example{ background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px 22px; margin-bottom:16px; box-shadow:var(--shadow); }
+  .example h3{ font-family:var(--mono); font-size:1.02rem; margin:0 0 8px; }
+  .example .tag{ display:inline-block; font-family:var(--mono); font-size:.68rem; text-transform:uppercase; letter-spacing:.08em; color:var(--accent-2); background:var(--accent-2-soft); border-radius:5px; padding:.25em .6em; margin-bottom:10px; }
+  code.inline{ font-family:var(--mono); background:var(--surface-2); border-radius:4px; padding:.1em .4em; font-size:.92em; }
+  pre.term{ font-family:var(--mono); font-size:.85rem; background:var(--surface-2); border:1px solid var(--border); border-radius:8px; padding:12px 14px; overflow-x:auto; margin:10px 0; }
+  details.solution{ margin-top:12px; }
+  details.solution summary{ cursor:pointer; font-family:var(--mono); font-size:.82rem; color:var(--accent); list-style:none; display:inline-flex; align-items:center; gap:.4em; }
+  details.solution summary::-webkit-details-marker{ display:none; }
+  details.solution summary::before{ content:"▸"; transition:transform .15s; }
+  details.solution[open] summary::before{ transform:rotate(90deg); }
+  details.solution .solbody{ margin-top:10px; padding:14px 16px; background:var(--surface-2); border-radius:8px; font-size:.92rem; }
+
+  #glossarySearch{ width:100%; max-width:420px; font-family:var(--sans); font-size:.95rem; padding:.7em .9em; border-radius:8px; border:1px solid var(--border); background:var(--surface); color:var(--text); margin-bottom:16px; }
+  .alpha-nav{ display:flex; flex-wrap:wrap; gap:4px; margin-bottom:24px; }
+  .alpha-nav a{ font-family:var(--mono); font-size:.78rem; width:1.9em; height:1.9em; display:flex; align-items:center; justify-content:center; border:1px solid var(--border); border-radius:5px; text-decoration:none; color:var(--muted); }
+  .alpha-nav a.has{ color:var(--text); }
+  .alpha-nav a.has:hover{ border-color:var(--accent); color:var(--accent); }
+  .glossary-letter{ font-family:var(--mono); color:var(--accent); font-size:1.1rem; margin:22px 0 8px; }
+  dl.glossary{ margin:0; }
+  dl.glossary .gitem{ border-top:1px solid var(--border); padding:12px 0; }
+  dl.glossary dt{ font-family:var(--mono); font-weight:600; }
+  dl.glossary dd{ margin:.3em 0 0; color:var(--muted); font-size:.92rem; }
+  .gitem.hidden{ display:none; }
+
+  .callout{ border-left:3px solid var(--accent); background:var(--accent-soft); border-radius:0 8px 8px 0; padding:14px 18px; margin:10px 0 24px; font-size:.92rem; }
+  .callout b{ font-family:var(--mono); }
+
+  footer{ padding:32px 0 60px; }
+  footer p{ color:var(--muted); font-size:.85rem; font-family:var(--mono); }
+</style>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="termbar"><span></span><span></span><span></span></div>
+    <p class="eyebrow">IT251 · Week 2</p>
+    <h1>Networking, Shell &amp; Virtualization<span class="cursor">&nbsp;</span></h1>
+    <p class="lede">Four sub-modules, one theme: the tools that configure and observe a Linux box from the inside — how it talks to a network, how the shell itself is configured, how you back it up, and how it runs as a VM in the first place.</p>
+    <div class="factrow">
+      <span class="fact"><b>2.1</b> Lecture</span>
+      <span class="fact"><b>2.2</b> Lab</span>
+      <span class="fact"><b>Covers</b> Module 2: System Management II</span>
+      <span class="fact"><b>Lab</b> Linux Basics — Day 1</span>
+      <span class="fact"><b>Midterm</b> Week 8</span>
+    </div>
+  </div>
+</header>
+
+<nav class="index" aria-label="Section index">
+  <div class="wrap">
+    <a href="index.html" class="toc-link">&larr; Table of Contents</a>
+    <a href="#overview">Overview</a>
+    <a href="#diagrams">Concepts</a>
+    <a href="#lab">Hands-On Lab</a>
+    <a href="#flashcards">Flashcards</a>
+    <a href="#quiz">Quiz</a>
+    <a href="#examples">Examples</a>
+    <a href="#glossary">Glossary</a>
+  </div>
+</nav>
+
+<main class="wrap">
+
+  <section id="overview">
+    <div class="section-head">
+      <p class="kicker">Overview</p>
+      <h2>What Week 2 covers</h2>
+      <p>Four sub-modules today instead of Week 1's three: how a Linux box configures and inspects its own network settings, how the shell environment that runs every command is itself configured, how to archive and back up data, and how virtualization — the thing you're already using for every lab — actually works underneath.</p>
+    </div>
+    <ul class="obj-list">
+      <li>Configure and inspect network settings with NetworkManager/Netplan and common CLI tools</li>
+      <li>Explain shell environment variables, <code class="inline">PATH</code>, and shell config file load order</li>
+      <li>Use I/O redirection and basic shell utilities confidently</li>
+      <li>Archive and compress files with <code class="inline">tar</code> and common compression tools</li>
+      <li>Describe hypervisor types and VM networking modes</li>
+      <li>Navigate the filesystem and perform basic file operations, hands-on (this week's lab)</li>
+    </ul>
+  </section>
+
+  <section id="diagrams">
+    <div class="section-head">
+      <p class="kicker">Concepts</p>
+      <h2>Two ways to see it</h2>
+      <p>Shell config files show <em>which file wins</em> depending on how a shell was started. Hypervisor types show <em>where the virtualization layer sits</em> relative to real hardware.</p>
+    </div>
+    <div class="diagram-grid">
+      <figure>
+        <svg viewBox="0 0 460 260" role="img" aria-label="Shell config load order: login shells read /etc/profile then ~/.bash_profile; interactive non-login shells read ~/.bashrc directly.">
+          <g font-family="JetBrains Mono" font-size="12" font-weight="600">
+            <rect x="10" y="15" width="180" height="40" rx="6" fill="none" stroke="currentColor"/>
+            <text x="100" y="40" text-anchor="middle" fill="currentColor">New shell starts</text>
+
+            <rect x="10" y="95" width="180" height="40" rx="6" fill="none" stroke="currentColor"/>
+            <text x="100" y="120" text-anchor="middle" fill="currentColor">Login shell</text>
+            <rect x="10" y="175" width="180" height="40" rx="6" fill="var(--accent-soft)" stroke="var(--accent)"/>
+            <text x="100" y="192" text-anchor="middle" fill="var(--accent)" font-size="11">/etc/profile</text>
+            <text x="100" y="207" text-anchor="middle" fill="var(--accent)" font-size="11">then ~/.bash_profile</text>
+
+            <rect x="270" y="95" width="180" height="40" rx="6" fill="none" stroke="currentColor"/>
+            <text x="360" y="120" text-anchor="middle" fill="currentColor">Interactive, non-login</text>
+            <rect x="270" y="175" width="180" height="40" rx="6" fill="var(--accent-2-soft)" stroke="var(--accent-2)"/>
+            <text x="360" y="199" text-anchor="middle" fill="var(--accent-2)">~/.bashrc</text>
+          </g>
+          <path d="M100,55 L100,75 M55,75 L145,75 M55,75 L55,95 M145,75 L145,95" fill="none" stroke="currentColor" opacity=".5"/>
+          <path d="M100,55 L100,75 M100,75 L360,75 M360,75 L360,95" fill="none" stroke="currentColor" opacity=".5"/>
+          <line x1="100" y1="135" x2="100" y2="175" stroke="var(--accent)" stroke-width="1.5"/>
+          <line x1="360" y1="135" x2="360" y2="175" stroke="var(--accent-2)" stroke-width="1.5"/>
+          <text x="100" y="240" text-anchor="middle" font-family="IBM Plex Sans" font-size="10.5" fill="var(--muted)">SSH login, TTY login</text>
+          <text x="360" y="240" text-anchor="middle" font-family="IBM Plex Sans" font-size="10.5" fill="var(--muted)">new terminal window/tab</text>
+        </svg>
+        <figcaption>Which file loads depends on how the shell started — this is exactly what Lab 1's logging script had to account for.</figcaption>
+      </figure>
+
+      <figure>
+        <svg viewBox="0 0 420 260" role="img" aria-label="Type 1 hypervisor runs directly on hardware; Type 2 hypervisor runs as an application on a host OS, which runs on hardware.">
+          <g font-family="JetBrains Mono" font-size="12" font-weight="600" fill="currentColor">
+            <text x="10" y="30">Type 1 — Bare Metal</text>
+          </g>
+          <rect x="10" y="45" width="180" height="34" rx="6" fill="var(--accent-soft)" stroke="var(--accent)"/>
+          <text x="100" y="67" text-anchor="middle" fill="var(--accent)" font-family="JetBrains Mono" font-size="11">Hypervisor (KVM, ESXi)</text>
+          <rect x="10" y="89" width="180" height="30" rx="6" fill="none" stroke="currentColor" opacity=".7"/>
+          <text x="100" y="109" text-anchor="middle" fill="currentColor" font-family="JetBrains Mono" font-size="10.5">Physical Hardware</text>
+          <rect x="30" y="10" width="0" height="0"/>
+          <rect x="45" y="18" width="0" height="0"/>
+
+          <g font-family="JetBrains Mono" font-size="12" font-weight="600" fill="currentColor">
+            <text x="230" y="30">Type 2 — Hosted</text>
+          </g>
+          <rect x="230" y="45" width="180" height="30" rx="6" fill="var(--accent-2-soft)" stroke="var(--accent-2)"/>
+          <text x="320" y="65" text-anchor="middle" fill="var(--accent-2)" font-family="JetBrains Mono" font-size="11">VirtualBox / VMware</text>
+          <rect x="230" y="83" width="180" height="30" rx="6" fill="none" stroke="currentColor" opacity=".85"/>
+          <text x="320" y="103" text-anchor="middle" fill="currentColor" font-family="JetBrains Mono" font-size="10.5">Host OS</text>
+          <rect x="230" y="121" width="180" height="30" rx="6" fill="none" stroke="currentColor" opacity=".7"/>
+          <text x="320" y="141" text-anchor="middle" fill="currentColor" font-family="JetBrains Mono" font-size="10.5">Physical Hardware</text>
+
+          <text x="10" y="180" font-family="IBM Plex Sans" font-size="11" fill="var(--muted)">Better performance, common on servers/data centers.</text>
+          <text x="230" y="180" font-family="IBM Plex Sans" font-size="11" fill="var(--muted)">Easier to set up on a laptop — this is what Lab 1 used.</text>
+        </svg>
+        <figcaption>VirtualBox (your Lab 1 VM) is Type 2 — it needs a host OS underneath it, unlike a data center's Type 1 hypervisor.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section id="lab">
+    <div class="section-head">
+      <p class="kicker">2.2 · Hands-On</p>
+      <h2>Lab: Linux Basics — Day 1</h2>
+      <p>Today's lab turns this week's shell-basics material into muscle memory: navigation, file/directory operations, viewing files, redirection, <code class="inline">man</code> pages, and reading <code class="inline">ls -l</code> permission output — all inside the VM you built in Week 1.</p>
+    </div>
+    <div class="example">
+      <span class="tag">Full step-by-step</span>
+      <h3>Open the interactive follow-along</h3>
+      <p>Checklists, demo commands, a worksheet, and common-snags reference all live on the lab follow-along page.</p>
+      <p><a href="IT251_Lab1-4_Follow_Along.html#lab2">Open Lab 2 — Linux Basics Day 1 &rarr;</a></p>
+    </div>
+  </section>
+
+  <section id="flashcards">
+    <div class="section-head">
+      <p class="kicker">Study</p>
+      <h2>Flashcards</h2>
+      <p>Click a card to flip it. Double-click to mark it known once you've got it cold.</p>
+    </div>
+    <div class="toolbar">
+      <button class="btn" id="shuffleBtn">Shuffle</button>
+      <button class="btn" id="resetKnownBtn">Reset progress</button>
+      <span id="cardProgress"></span>
+    </div>
+    <div class="card-grid" id="cardGrid"></div>
+  </section>
+
+  <section id="quiz">
+    <div class="section-head">
+      <p class="kicker">Check yourself</p>
+      <h2>Sample questions</h2>
+      <p>Pick an answer to see if you're right — same style as the checkpoint quizzes.</p>
+    </div>
+    <div id="quizScore"></div>
+    <div id="quizList"></div>
+    <button class="btn" id="resetQuizBtn">Reset quiz</button>
+  </section>
+
+  <section id="examples">
+    <div class="section-head">
+      <p class="kicker">Applied</p>
+      <h2>Worked examples</h2>
+      <p>Think it through before you expand the answer.</p>
+    </div>
+
+    <div class="example">
+      <span class="tag">Networking</span>
+      <h3>The box can't reach anything</h3>
+      <p>A VM can't resolve any hostnames, but <code class="inline">ping 8.8.8.8</code> (a raw IP) works fine.</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <p><strong>Diagnosis:</strong> routing/connectivity is fine — this is a DNS problem specifically, since a raw IP works but names don't.</p>
+          <p><strong>Where to look:</strong> <code class="inline">/etc/resolv.conf</code> for a missing or unreachable nameserver, or <code class="inline">nmcli</code>/Netplan config if it's being managed and keeps getting overwritten.</p>
+        </div>
+      </details>
+    </div>
+
+    <div class="example">
+      <span class="tag">Shell config</span>
+      <h3>It works over SSH but not in a new terminal tab</h3>
+      <p>A student added an alias to <code class="inline">~/.bash_profile</code>. It works when they SSH in, but a new local terminal tab doesn't see it.</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <p><strong>Why:</strong> SSH sessions are login shells (read <code class="inline">/etc/profile</code> then <code class="inline">~/.bash_profile</code>); a new terminal tab is typically an interactive non-login shell (reads <code class="inline">~/.bashrc</code> only).</p>
+          <p><strong>Fix:</strong> put the alias in <code class="inline">~/.bashrc</code> instead — or have <code class="inline">~/.bash_profile</code> source it, which is the common convention.</p>
+        </div>
+      </details>
+    </div>
+
+    <div class="example">
+      <span class="tag">Backup &amp; restore</span>
+      <h3>Pick the right tool</h3>
+      <p>You need to (a) archive a project folder to send to someone, and (b) keep a nightly incremental backup of a home directory.</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <p><strong>(a):</strong> <code class="inline">tar -czvf project.tar.gz project/</code> — a single portable, compressed archive.</p>
+          <p><strong>(b):</strong> <code class="inline">rsync -a</code> — incremental, only copies what changed, preserves permissions/ownership. <code class="inline">tar</code> would re-archive everything every night; <code class="inline">rsync</code> is built for exactly this job.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section id="glossary">
+    <div class="section-head">
+      <p class="kicker">Reference</p>
+      <h2>Glossary &amp; index</h2>
+      <p>Every term from this week, searchable and indexed A–Z.</p>
+    </div>
+    <input type="text" id="glossarySearch" placeholder="Search terms…" aria-label="Search glossary">
+    <div class="alpha-nav" id="alphaNav"></div>
+    <dl class="glossary" id="glossaryList"></dl>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>IT251 · Linux+ (XK0-006) · Networking/shell/backup/virtualization + hands-on lab track · Week 2 reference — more weeks added as the course progresses.</p>
+  </div>
+</footer>
+
+<script>
+  const TERMS = [
+    {t:"nmcli / nmtui", d:"Command-line (nmcli) and text-UI (nmtui) tools for managing NetworkManager connection profiles."},
+    {t:"NetworkManager", d:"The modern default network-config service on most desktop/server distros — manages connections as profiles rather than raw interface files."},
+    {t:"Netplan", d:"Ubuntu Server's YAML-based network config layer (/etc/netplan/) that renders down to NetworkManager or systemd-networkd; changes take effect with netplan apply."},
+    {t:"ip / ss", d:"Modern network tools — ip addr/ip route for interface/routing info, ss for socket/connection info — replacing legacy ifconfig/netstat."},
+    {t:"dig / nslookup", d:"DNS lookup tools for resolving hostnames to IPs and inspecting DNS records."},
+    {t:"curl / wget", d:"Command-line tools for fetching data over HTTP(S) and other protocols — curl is more flexible, wget is simpler for straight downloads."},
+    {t:"/etc/resolv.conf", d:"Configuration file listing the DNS nameservers a system uses to resolve hostnames."},
+    {t:"Environment variable", d:"A named value available to a shell and the processes it starts — e.g. PATH, HOME, USER, PS1."},
+    {t:"PATH", d:"An ordered, colon-separated list of directories the shell searches to resolve a bare command name."},
+    {t:"export / unset / printenv", d:"export sets a variable for child processes to inherit; unset removes it; printenv (or env) lists current environment variables."},
+    {t:"which / type", d:"Show where a command name actually resolves from on the current PATH."},
+    {t:"Login vs. interactive shell", d:"A login shell (e.g. SSH) reads /etc/profile then ~/.bash_profile. An interactive non-login shell (e.g. a new terminal tab) reads ~/.bashrc instead."},
+    {t:"Redirection (>, >>, <, 2>&1)", d:"> overwrites a file with output, >> appends, < feeds a file in as input, 2>&1 merges stderr into stdout."},
+    {t:"vi / vim modes", d:"Insert mode (i) for typing, command mode (Esc) for commands — :wq saves and quits, :q! quits without saving. Often the only editor on a minimal server install."},
+    {t:"tar", d:"Bundles files into a single archive without compressing on its own — combines with gzip/bzip2/xz via flags. tar -czvf archive.tar.gz dir/ is the pattern to know cold."},
+    {t:"gzip / bzip2 / xz", d:"Compression tools with a speed-vs-ratio tradeoff: gzip is fastest, xz compresses best but slowest, bzip2 sits in between."},
+    {t:"rsync", d:"Efficient, incremental file sync/backup tool — only transfers what changed; -a preserves permissions, ownership, and timestamps."},
+    {t:"dd", d:"Low-level block-for-block copy tool, used for full-disk imaging — powerful and dangerous, a wrong output target can destroy a disk."},
+    {t:"Type 1 hypervisor", d:"Runs directly on hardware (bare metal) — e.g. KVM/QEMU, ESXi, Hyper-V. Common in data centers for better performance."},
+    {t:"Type 2 hypervisor", d:"Runs as an application on top of a host OS — e.g. VirtualBox, VMware Workstation. What Lab 1's VM setup used."},
+    {t:"VM snapshot", d:"A saved point-in-time VM state you can roll back to — the mechanism behind Lab 1's clean-install snapshot."},
+    {t:"NAT vs. Bridged vs. Host-only networking", d:"NAT: outbound internet only, not directly reachable. Bridged: VM appears as its own device on the physical LAN. Host-only/Internal: isolated from outside networks entirely — required once a vulnerable target VM is involved."},
+    {t:"Guest Additions / libvirt", d:"Guest Additions improve VirtualBox guest integration (clipboard, folders, resolution). libvirt/virt-manager is the GUI/API layer commonly used over KVM on Linux hosts."},
+  ];
+
+  const QUIZ = [
+    {
+      q:"A VM can ping 8.8.8.8 but can't resolve any hostnames. What's the most likely cause?",
+      choices:["The default gateway is misconfigured","A DNS problem — check /etc/resolv.conf","The network cable is unplugged","The firewall is blocking all traffic"],
+      correct:1,
+      explain:"Raw IP connectivity working but name resolution failing points specifically at DNS — routing is fine."
+    },
+    {
+      q:"Which shell config file is read by an SSH login session but NOT by a new local terminal tab (interactive, non-login)?",
+      choices:["~/.bashrc","/etc/bash.bashrc","~/.bash_profile","None — they all read the same file"],
+      correct:2,
+      explain:"SSH sessions are login shells and read /etc/profile then ~/.bash_profile. A new terminal tab is typically interactive non-login and reads ~/.bashrc instead."
+    },
+    {
+      q:"Which command is the best fit for a nightly incremental backup of a home directory?",
+      choices:["tar -czvf","rsync -a","dd","gzip"],
+      correct:1,
+      explain:"rsync only transfers what changed and preserves permissions/ownership — ideal for repeated incremental backups. tar would re-archive everything each run."
+    },
+    {
+      q:"What is Netplan's actual role on Ubuntu Server?",
+      choices:[
+        "A separate network stack that replaces NetworkManager entirely",
+        "A YAML config layer that generates config for NetworkManager or systemd-networkd",
+        "A firewall management tool",
+        "A DNS server"
+      ],
+      correct:1,
+      explain:"Netplan doesn't run the network itself — it's a config generator that renders YAML down to NetworkManager or systemd-networkd."
+    },
+    {
+      q:"Why is VirtualBox classified as a Type 2 hypervisor?",
+      choices:[
+        "It only runs Linux guests",
+        "It requires a host OS underneath it",
+        "It can't take snapshots",
+        "It runs directly on hardware with no host OS"
+      ],
+      correct:1,
+      explain:"Type 2 (hosted) hypervisors run as an application on top of a host OS — exactly how Lab 1's VirtualBox setup worked. Type 1 runs directly on bare metal."
+    },
+    {
+      q:"Which VM network mode should be used whenever a vulnerable target VM is also running?",
+      choices:["Bridged","NAT","Host-only or Internal Network","None — leave networking disabled"],
+      correct:2,
+      explain:"Host-only/Internal Network isolates the VM(s) from the internet and campus network entirely — the required mode once a target VM is involved."
+    },
+    {
+      q:"In redirection, what's the difference between > and >>?",
+      choices:[
+        "> appends, >> overwrites",
+        "> overwrites the file, >> appends to it",
+        "They do the same thing",
+        "> is for input, >> is for output"
+      ],
+      correct:1,
+      explain:"> overwrites a file's contents with a command's output; >> appends to the end instead — mixing these up is one of the most common early mistakes."
+    },
+  ];
+
+  const grid = document.getElementById('cardGrid');
+  TERMS.forEach((item, i) => {
+    const card = document.createElement('button');
+    card.className = 'flashcard';
+    card.setAttribute('aria-label', 'Flashcard: ' + item.t + '. Press to flip.');
+    card.dataset.i = i;
+    card.innerHTML = `
+      <div class="flashcard-inner">
+        <div class="flashcard-face front"><div class="lbl">Term</div><div class="term">${item.t}</div></div>
+        <div class="flashcard-face back"><div class="lbl">Definition</div><div class="def">${item.d}</div></div>
+      </div>`;
+    card.addEventListener('click', () => card.classList.toggle('flipped'));
+    card.addEventListener('dblclick', () => { card.classList.toggle('known'); updateProgress(); });
+    grid.appendChild(card);
+  });
+  function updateProgress(){
+    const known = document.querySelectorAll('.flashcard.known').length;
+    document.getElementById('cardProgress').textContent = `${known} / ${TERMS.length} marked known (double-click a card to mark it)`;
+  }
+  updateProgress();
+  document.getElementById('shuffleBtn').addEventListener('click', () => {
+    const cards = Array.from(grid.children);
+    cards.sort(() => Math.random() - 0.5);
+    cards.forEach(c => { c.classList.remove('flipped'); grid.appendChild(c); });
+  });
+  document.getElementById('resetKnownBtn').addEventListener('click', () => {
+    document.querySelectorAll('.flashcard.known').forEach(c => c.classList.remove('known'));
+    updateProgress();
+  });
+
+  const quizList = document.getElementById('quizList');
+  let score = 0, answered = 0;
+  function renderQuiz(){
+    quizList.innerHTML = ''; score = 0; answered = 0;
+    QUIZ.forEach((item, qi) => {
+      const box = document.createElement('div');
+      box.className = 'quiz-q';
+      box.innerHTML = `<p class="qtext"><span class="qnum">Q${qi+1}.</span>${item.q}</p><div class="choices"></div><p class="explain"></p>`;
+      const choicesEl = box.querySelector('.choices');
+      item.choices.forEach((c, ci) => {
+        const b = document.createElement('button');
+        b.className = 'choice'; b.textContent = c;
+        b.addEventListener('click', () => {
+          if (box.dataset.done) return;
+          box.dataset.done = '1'; answered++;
+          if (ci === item.correct) score++;
+          Array.from(choicesEl.children).forEach((el, ei) => {
+            el.disabled = true;
+            if (ei === item.correct) el.classList.add('correct');
+            else if (ei === ci) el.classList.add('incorrect');
+          });
+          box.querySelector('.explain').textContent = item.explain;
+          box.querySelector('.explain').classList.add('show');
+          updateScore();
+        });
+        choicesEl.appendChild(b);
+      });
+      quizList.appendChild(box);
+    });
+    updateScore();
+  }
+  function updateScore(){
+    document.getElementById('quizScore').textContent =
+      answered === 0 ? `${QUIZ.length} questions — click an answer to check yourself` : `Score: ${score} / ${answered} answered`;
+  }
+  renderQuiz();
+  document.getElementById('resetQuizBtn').addEventListener('click', renderQuiz);
+
+  const glossaryList = document.getElementById('glossaryList');
+  const alphaNav = document.getElementById('alphaNav');
+  const letters = [...new Set(TERMS.map(t => t.t[0].toUpperCase()))];
+  'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').forEach(L => {
+    const a = document.createElement('a');
+    a.textContent = L;
+    if (letters.includes(L)) { a.href = '#g-' + L; a.className = 'has'; }
+    else { a.href = 'javascript:void(0)'; }
+    alphaNav.appendChild(a);
+  });
+  let currentLetter = '';
+  TERMS.forEach(item => {
+    const L = item.t[0].toUpperCase();
+    if (L !== currentLetter) {
+      currentLetter = L;
+      const h = document.createElement('div');
+      h.className = 'glossary-letter'; h.id = 'g-' + L; h.textContent = L;
+      glossaryList.appendChild(h);
+    }
+    const wrap = document.createElement('div');
+    wrap.className = 'gitem';
+    wrap.innerHTML = `<dt>${item.t}</dt><dd>${item.d}</dd>`;
+    wrap.dataset.search = (item.t + ' ' + item.d).toLowerCase();
+    glossaryList.appendChild(wrap);
+  });
+  document.getElementById('glossarySearch').addEventListener('input', (e) => {
+    const q = e.target.value.toLowerCase().trim();
+    document.querySelectorAll('.gitem').forEach(el => {
+      el.classList.toggle('hidden', q && !el.dataset.search.includes(q));
+    });
+  });
+</script>
+
+<button id="backToTop" class="back-to-top" aria-label="Back to top" title="Back to top">&uarr;</button>
+
+<script>
+  const backToTop = document.getElementById('backToTop');
+  function toggleBackToTop(){ backToTop.classList.toggle('show', window.scrollY > 480); }
+  window.addEventListener('scroll', toggleBackToTop, {passive:true});
+  toggleBackToTop();
+  backToTop.addEventListener('click', () => window.scrollTo({top:0, behavior:'smooth'}));
+</script>

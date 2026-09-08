@@ -1,4 +1,4 @@
-<title>VM Setup &amp; Linux Basics</title>
+<title>Weeks 1&ndash;5 Lab Follow-Along</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -161,13 +161,15 @@
 <header class="hero">
   <div class="wrap">
     <div class="termbar"><span></span><span></span><span></span></div>
-    <p class="eyebrow">IT251 · Weeks 1–2</p>
-    <h1>VM Setup &amp; Linux Basics<span class="cursor">&nbsp;</span></h1>
-    <p class="lede">Follow along step by step: build the personal VM you'll use for every lab this semester, turn on logging that proves your work automatically, then put it to use navigating a real filesystem.</p>
+    <p class="eyebrow">IT251 · Weeks 1–5</p>
+    <h1>Lab Follow-Along<span class="cursor">&nbsp;</span></h1>
+    <p class="lede">Follow along step by step: build the personal VM you'll use for every lab this semester, turn on logging that proves your work automatically, then put it to use navigating, hunting through, and processing text on a real filesystem.</p>
     <div class="factrow">
       <span class="fact"><b>1.2</b> Lab 1</span>
       <span class="fact"><b>2.2</b> Lab 2</span>
-      <span class="fact"><b>Covers</b> VirtualBox, distro install, history logging, FHS navigation</span>
+      <span class="fact"><b>3.2</b> Lab 3</span>
+      <span class="fact"><b>5.2</b> Lab 4</span>
+      <span class="fact"><b>Covers</b> VirtualBox, distro install, history logging, FHS navigation, permissions, text processing, cron</span>
     </div>
   </div>
 </header>
@@ -179,6 +181,8 @@
     <a href="#before-class">Before Class</a>
     <a href="#lab1">Lab 1 · VM Setup</a>
     <a href="#lab2">Lab 2 · Linux Basics</a>
+    <a href="#lab3">Lab 3 · FHS Hunt</a>
+    <a href="#lab4">Lab 4 · Text &amp; Cron</a>
     <a href="#troubleshooting">Troubleshooting</a>
     <a href="#glossary">Glossary</a>
   </div>
@@ -189,8 +193,8 @@
   <section id="overview">
     <div class="section-head">
       <p class="kicker">Overview</p>
-      <h2>What these two labs cover</h2>
-      <p>Lab 1 is infrastructure day — everything after it happens inside the VM you build here. Lab 2 is the first real content lab, applying the lecture's FHS material with your hands on a keyboard instead of a slide.</p>
+      <h2>What these four labs cover</h2>
+      <p>Lab 1 is infrastructure day — everything after it happens inside the VM you build here. Lab 2 is the first real content lab, applying the lecture's FHS material with your hands on a keyboard instead of a slide. Lab 3 turns that into a local scavenger hunt through hidden files and permissions. Lab 4 puts real text-processing tools and a scheduled job to work against your own accumulated logs.</p>
     </div>
     <ul class="obj-list">
       <li>Create and configure a VM in VirtualBox</li>
@@ -201,6 +205,10 @@
       <li>Create, copy, move, and remove files and directories</li>
       <li>Read a man page to figure out an unfamiliar command</li>
       <li>Use redirection (<code class="inline">&gt;</code>, <code class="inline">&gt;&gt;</code>) and pipes (<code class="inline">|</code>)</li>
+      <li>Find hidden files, fix a locked file's permissions, and follow a symlink</li>
+      <li>Search text with <code class="inline">grep</code>, sort it, and diff two files</li>
+      <li>Identify a file's real type with <code class="inline">file</code>, independent of its name</li>
+      <li>Write and verify a basic <code class="inline">cron</code> job</li>
     </ul>
   </section>
 
@@ -445,6 +453,131 @@ man ls</pre>
     <p>Run <code class="inline">~/it251-export-log.sh</code> (from Lab 1) and submit the resulting file from <code class="inline">~/IT251/logs/</code> per LMS instructions — this is the timestamped record of every command you ran today.</p>
   </section>
 
+  <section id="lab3">
+    <div class="section-head">
+      <p class="kicker">3.2 · Hands-On</p>
+      <h2>Lab 3 — FHS Scavenger Hunt &amp; Permissions</h2>
+      <p><b>Prerequisite:</b> Labs 1–2 — a working VM with logging running and basic navigation/file-op comfort. <b>Longer session this week</b> — no Monday lecture, so there's extra room to dig in.</p>
+    </div>
+
+    <table class="blocks">
+      <caption>Time blocks — 75+ min</caption>
+      <thead><tr><th>T+</th><th>Block</th></tr></thead>
+      <tbody>
+        <tr><td>T+00:00:00 – T+00:08:00</td><td>Logging check-in; run the setup script; frame the hunt</td></tr>
+        <tr><td>T+00:08:00 – T+00:15:00</td><td>Demo Level 0 together (hidden files)</td></tr>
+        <tr><td>T+00:15:00 – T+01:00:00</td><td>Independent/paired work: Levels 1–5</td></tr>
+        <tr><td>T+01:00:00 – T+01:10:00</td><td>Class debrief — who got stuck where, and why</td></tr>
+        <tr><td>T+01:10:00 – T+01:15:00</td><td>Export log, submit</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Build your scavenger course</h3>
+    <p>Run the setup script your instructor provides (or paste it in if given directly) — it builds a personal <code class="inline">~/IT251/scavenger/level0</code> through <code class="inline">level5</code> tree, each level hiding a password behind one FHS/permissions trick:</p>
+    <pre class="term">bash ~/it251-scavenger-setup.sh</pre>
+    <div class="callout"><b>Same loop as OverTheWire Bandit</b> — find the trick, read the password, move to the next level — just running entirely inside your own VM instead of over SSH. (Bandit itself is still there as optional extra practice if you want more reps — see the LMS.)</div>
+
+    <h3>Demo: Level 0 (hidden files)</h3>
+    <pre class="term">cd ~/IT251/scavenger/level0
+ls
+ls -la
+cat .secret</pre>
+    <p style="color:var(--muted); font-size:.92rem;"><code class="inline">ls</code> hides dotfiles by default; <code class="inline">-a</code> shows them. This is a convention for reducing clutter, not access control — don't confuse it with real security.</p>
+
+    <h3>Levels 1–5 — work at your own pace</h3>
+    <div class="toolbar">
+      <button class="btn" id="resetLab3Btn">Reset progress</button>
+      <span id="lab3Progress"></span>
+    </div>
+    <ul class="checklist" id="lab3Checklist">
+      <li><label><input type="checkbox" data-id="l3-1"> <b>Level 1:</b> read a file whose name starts with <code class="inline">--</code> and contains spaces (hint: <code class="inline">ls -- *</code> or quote the exact name)</label></li>
+      <li><label><input type="checkbox" data-id="l3-2"> <b>Level 2:</b> fix a "Permission denied" on <code class="inline">locked.txt</code> with <code class="inline">chmod</code>, then read it</label></li>
+      <li><label><input type="checkbox" data-id="l3-3"> <b>Level 3:</b> isolate <code class="inline">needle.txt</code> among random-sized decoys using <code class="inline">find . -type f -size</code></label></li>
+      <li><label><input type="checkbox" data-id="l3-4"> <b>Level 4:</b> locate <code class="inline">target.txt</code> buried several directories deep with <code class="inline">find</code> — no manual <code class="inline">cd</code> chain</label></li>
+      <li><label><input type="checkbox" data-id="l3-5"> <b>Level 5:</b> follow a symlink named <code class="inline">shortcut</code> to its real target with <code class="inline">ls -l</code> / <code class="inline">readlink</code></label></li>
+      <li><label><input type="checkbox" data-id="l3-6"> Recorded all five passwords for submission</label></li>
+    </ul>
+    <details class="solution">
+      <summary>Stuck? Hints</summary>
+      <div class="solbody">
+        <p><b>Level 1:</b> the shell reads a leading <code class="inline">--</code> as flags unless you tell it otherwise — <code class="inline">cat -- "--not a flag--.txt"</code>.</p>
+        <p><b>Level 3:</b> check the real file's exact byte count first with <code class="inline">wc -c needle.txt</code>, then match units in <code class="inline">find -size</code> — <code class="inline">c</code> means bytes, no suffix means 512-byte blocks.</p>
+        <p><b>Level 5:</b> <code class="inline">cat shortcut</code> "just working" is correct — symlinks transparently follow to their target when read. <code class="inline">ls -l</code>/<code class="inline">readlink</code> are how you notice it's a symlink at all.</p>
+        <p>Finished early? Try <code class="inline">find ~/IT251/scavenger -perm 000</code> to find Level 2's file a different way, or <code class="inline">find ~/IT251/scavenger -type l</code> to find the symlink by type.</p>
+      </div>
+    </details>
+
+    <h3>Submit</h3>
+    <p>Run <code class="inline">~/it251-export-log.sh</code> and submit the exported log plus the five recorded passwords, per LMS instructions.</p>
+  </section>
+
+  <section id="lab4">
+    <div class="section-head">
+      <p class="kicker">5.2 · Hands-On</p>
+      <h2>Lab 4 — Text Processing, File Typing &amp; Cron</h2>
+      <p><b>Prerequisite:</b> Labs 1–3 — this lab reuses your own accumulated log exports in <code class="inline">~/IT251/logs/</code>, so you'll need at least two or three on disk.</p>
+    </div>
+
+    <table class="blocks">
+      <caption>Time blocks — 75 min</caption>
+      <thead><tr><th>T+</th><th>Block</th></tr></thead>
+      <tbody>
+        <tr><td>T+00:00:00 – T+00:08:00</td><td>Logging check-in; confirm log history exists</td></tr>
+        <tr><td>T+00:08:00 – T+00:20:00</td><td><code class="inline">grep</code>/<code class="inline">sort</code>/<code class="inline">diff</code> demo, against real log files</td></tr>
+        <tr><td>T+00:20:00 – T+00:30:00</td><td><code class="inline">file</code> command demo (mystery files)</td></tr>
+        <tr><td>T+00:30:00 – T+00:40:00</td><td>Cron intro, demo</td></tr>
+        <tr><td>T+00:40:00 – T+01:05:00</td><td>Independent/paired work: worksheet</td></tr>
+        <tr><td>T+01:05:00 – T+01:15:00</td><td>Debrief, export log, submit</td></tr>
+      </tbody>
+    </table>
+
+    <h3><code class="inline">grep</code> / <code class="inline">sort</code> / <code class="inline">diff</code> — on your own data</h3>
+    <pre class="term">cd ~/IT251/logs
+ls -la
+grep "cd" history_*.txt              # every line containing "cd"
+grep -i "SUDO" history_*.txt         # case-insensitive
+grep -c "ls" history_*.txt           # count matches per file
+sort history_20260826_*.txt | less   # alphabetical, not chronological
+diff history_20260826_*.txt history_20260902_*.txt   # what differs between sessions</pre>
+    <p style="color:var(--muted); font-size:.92rem;"><code class="inline">grep -i</code> (ignore case), <code class="inline">-c</code> (count), <code class="inline">-v</code> (invert) are the three flags worth memorizing. In <code class="inline">diff</code> output, lines starting <code class="inline">&lt;</code> are only in the first file, <code class="inline">&gt;</code> only in the second.</p>
+
+    <h3><code class="inline">file</code> — extensions lie, magic bytes don't</h3>
+    <pre class="term">file /bin/ls
+file ~/IT251/logs/history_*.txt
+file ~/it251-export-log.sh</pre>
+    <div class="callout"><b>Security note:</b> <code class="inline">file</code> reads a file's actual content, not its extension — a malicious file renamed <code class="inline">.txt</code> doesn't stop being an executable.</div>
+
+    <h3>Cron — schedule a job</h3>
+    <pre class="term">crontab -e</pre>
+    <p>Add a line that appends the current time to a file every minute:</p>
+    <pre class="term">* * * * * date >> $HOME/IT251/logs/cron-test.txt</pre>
+    <p style="color:var(--muted); font-size:.92rem;">Five fields: minute, hour, day-of-month, month, day-of-week — each <code class="inline">*</code> means "every." Save/exit, then <code class="inline">crontab -l</code> to confirm it registered. Come back later and <code class="inline">tail</code> the file to see it actually ran unattended.</p>
+
+    <h3>Worksheet — work at your own pace</h3>
+    <div class="toolbar">
+      <button class="btn" id="resetLab4Btn">Reset progress</button>
+      <span id="lab4Progress"></span>
+    </div>
+    <ul class="checklist" id="lab4Checklist">
+      <li><label><input type="checkbox" data-id="l4-1"> Use <code class="inline">grep</code> to find every line across your logs where you ran <code class="inline">chmod</code></label></li>
+      <li><label><input type="checkbox" data-id="l4-2"> Use <code class="inline">grep -c</code> to count how many times you ran <code class="inline">ls</code> (any form) across all logs</label></li>
+      <li><label><input type="checkbox" data-id="l4-3"> <code class="inline">diff</code> your two most recent log exports; note one thing that changed</label></li>
+      <li><label><input type="checkbox" data-id="l4-4"> <code class="inline">sort</code> one log file and redirect the result to <code class="inline">sorted-example.txt</code></label></li>
+      <li><label><input type="checkbox" data-id="l4-5"> Run <code class="inline">file</code> on five different files and record what each one reports</label></li>
+      <li><label><input type="checkbox" data-id="l4-6"> Write a cron job appending <code class="inline">whoami</code> output to <code class="inline">~/IT251/logs/cron-whoami.txt</code> every minute; verify with <code class="inline">crontab -l</code></label></li>
+      <li><label><input type="checkbox" data-id="l4-7"> If time allows: change the schedule to every 5 minutes (<code class="inline">*/5</code>) and re-verify</label></li>
+    </ul>
+    <details class="solution">
+      <summary>Stuck? Hints</summary>
+      <div class="solbody">
+        <p>Finished early? Try <code class="inline">grep -E</code> with a simple regex against a log file — e.g. matching either <code class="inline">cd</code> or <code class="inline">ls</code>: <code class="inline">grep -E "cd|ls"</code>.</p>
+      </div>
+    </details>
+
+    <h3>Submit</h3>
+    <p>Run <code class="inline">~/it251-export-log.sh</code> and submit that file, <code class="inline">sorted-example.txt</code>, and a screenshot of <code class="inline">crontab -l</code> showing the registered job. <b>Leave the cron job running</b> — Week 6's timed checkpoint checks that it's still logging.</p>
+  </section>
+
   <section id="troubleshooting">
     <div class="section-head">
       <p class="kicker">Reference</p>
@@ -475,13 +608,37 @@ man ls</pre>
         <tr><td><code class="inline">less</code> seems to hang the terminal</td><td>Not hung — it's a pager. Press <code class="inline">q</code> to quit</td></tr>
       </tbody>
     </table>
+
+    <table class="blocks">
+      <caption>Lab 3 — FHS scavenger hunt</caption>
+      <thead><tr><th>Symptom</th><th>Likely cause / fix</th></tr></thead>
+      <tbody>
+        <tr><td><code class="inline">ls</code> on Level 1's file does nothing or errors</td><td>Shell is parsing the leading <code class="inline">--</code> as flags to <code class="inline">ls</code> itself — use <code class="inline">ls -- &lt;name&gt;</code> or quote/tab-complete the full name</td></tr>
+        <tr><td><code class="inline">chmod</code> on Level 2 says "Operation not permitted"</td><td>Confirm you're the file's owner (<code class="inline">ls -l</code>) — this shouldn't happen on a personal VM you set up yourself</td></tr>
+        <tr><td><code class="inline">find -size</code> on Level 3 returns nothing</td><td>Size units matter — <code class="inline">c</code> = bytes, no suffix = 512-byte blocks; check the real file's exact byte count with <code class="inline">wc -c needle.txt</code> and match units</td></tr>
+        <tr><td>Level 4's <code class="inline">find</code> returns nothing</td><td>Typo'd path or filename — try <code class="inline">find ~/IT251/scavenger -iname "*target*"</code> to widen the search while debugging</td></tr>
+        <tr><td>Level 5 <code class="inline">cat shortcut</code> "works" but seems too easy</td><td>That's correct — symlinks transparently follow to their target when read; <code class="inline">ls -l</code>/<code class="inline">readlink</code> are how you notice it's a symlink at all</td></tr>
+      </tbody>
+    </table>
+
+    <table class="blocks">
+      <caption>Lab 4 — Text processing &amp; cron</caption>
+      <thead><tr><th>Symptom</th><th>Likely cause / fix</th></tr></thead>
+      <tbody>
+        <tr><td><code class="inline">grep</code> finds nothing when you're sure the text is there</td><td>Case mismatch — try <code class="inline">-i</code>; or your search term has a typo matching your own command's typo</td></tr>
+        <tr><td><code class="inline">crontab -e</code> opens an unfamiliar editor</td><td>Default is often <code class="inline">nano</code> but can be <code class="inline">vi</code> — if it's <code class="inline">vi</code>, <code class="inline">:wq</code> saves and quits, <code class="inline">:q!</code> exits without saving</td></tr>
+        <tr><td>Cron job never seems to run</td><td>Wrong number of fields (must be exactly 5 before the command), or a typo in the path — cron doesn't get your normal <code class="inline">$PATH</code>, so absolute paths are safer than relying on <code class="inline">cd</code></td></tr>
+        <tr><td><code class="inline">file</code> reports "ASCII text" for a script you wrote</td><td>Correct — a script's shebang is what makes it <em>executable</em> when run; <code class="inline">file</code> just reports byte content, not execute permission</td></tr>
+        <tr><td><code class="inline">diff</code> shows the entire file as different</td><td>You're comparing two unrelated logs — pick two exports that actually overlap in content for the exercise to be meaningful</td></tr>
+      </tbody>
+    </table>
   </section>
 
   <section id="glossary">
     <div class="section-head">
       <p class="kicker">Reference</p>
       <h2>Glossary &amp; index</h2>
-      <p>Every term from these two labs, searchable and indexed A–Z.</p>
+      <p>Every term from all four labs, searchable and indexed A–Z.</p>
     </div>
     <input type="text" id="glossarySearch" placeholder="Search terms…" aria-label="Search glossary">
     <div class="alpha-nav" id="alphaNav"></div>
@@ -492,7 +649,7 @@ man ls</pre>
 
 <footer>
   <div class="wrap">
-    <p>IT251 · Linux+ (XK0-006) · Weeks 1–2 follow-along — Lab 1 (VM setup + logging) and Lab 2 (Linux basics). Progress checkboxes save to this browser only.</p>
+    <p>IT251 · Linux+ (XK0-006) · Weeks 1–5 follow-along — Lab 1 (VM setup + logging), Lab 2 (Linux basics), Lab 3 (FHS scavenger hunt), Lab 4 (text processing &amp; cron). Progress checkboxes save to this browser only.</p>
   </div>
 </footer>
 
@@ -525,6 +682,20 @@ man ls</pre>
     {t:"man", d:"Opens a command's manual page — the built-in reference for what a command does and what its flags mean."},
     {t:"find", d:"Searches a directory tree for files matching criteria like name, type, size, or modification time."},
     {t:"ls -l permission fields", d:"The long-format listing shows, in order: file type + permissions, link count, owner, group, size, and modified date."},
+    {t:"dotfile", d:"A file whose name starts with a dot — hidden from a plain ls listing by convention, shown with ls -a. Not real access control."},
+    {t:"-- (end-of-options marker)", d:"Tells a command 'no more flags after this' — needed to safely operate on a filename that starts with a dash."},
+    {t:"chmod (symbolic mode)", d:"Changes file permissions using symbols like u+r (add owner-read) or o-w (remove other-write), instead of a numeric mode like 644."},
+    {t:"find -name / -type / -size / -perm", d:"Common find filters: match by filename, by entry type (f = file, d = directory, l = symlink), by size, or by permission bits."},
+    {t:"wc -c", d:"Counts bytes in a file — useful for matching an exact size with find -size."},
+    {t:"symlink / readlink", d:"A symbolic link is a file that points at another path. ls -l shows the arrow to its target; readlink prints just the target path."},
+    {t:"ln -s", d:"Creates a symbolic link: ln -s <target> <link-name>."},
+    {t:"grep (-i, -c, -v, -E)", d:"Searches text for a pattern. -i ignores case, -c counts matches, -v inverts (shows non-matching lines), -E enables extended regex."},
+    {t:"sort (-n, -k)", d:"Sorts lines of text — alphabetically by default. -n sorts numerically, -k sorts by a specific column/field."},
+    {t:"diff", d:"Compares two files line by line. In its output, lines starting < are only in the first file, lines starting > are only in the second."},
+    {t:"file (magic bytes)", d:"Reports a file's real content type by reading its data, not its name/extension — a renamed executable doesn't stop being executable."},
+    {t:"crontab -e / -l / -r", d:"Edits (-e), lists (-l), or removes all (-r) the current user's scheduled cron jobs."},
+    {t:"cron 5-field syntax", d:"minute hour day-of-month month day-of-week, in that order, before the command to run. * in any field means 'every'."},
+    {t:"$PATH in cron context", d:"Cron jobs don't inherit your normal interactive shell's $PATH — use absolute paths in cron commands rather than relying on bare command names or cd."},
   ];
 
   const glossaryList = document.getElementById('glossaryList');
@@ -593,6 +764,8 @@ man ls</pre>
   wireChecklist('prepChecklist', null, null, 'it251_prep_checklist');
   wireChecklist('lab1Checklist', 'lab1Progress', 'resetLab1Btn', 'it251_lab1_checklist');
   wireChecklist('lab2Checklist', 'lab2Progress', 'resetLab2Btn', 'it251_lab2_checklist');
+  wireChecklist('lab3Checklist', 'lab3Progress', 'resetLab3Btn', 'it251_lab3_checklist');
+  wireChecklist('lab4Checklist', 'lab4Progress', 'resetLab4Btn', 'it251_lab4_checklist');
 </script>
 
 <button id="backToTop" class="back-to-top" aria-label="Back to top" title="Back to top">&uarr;</button>
