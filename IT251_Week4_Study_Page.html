@@ -329,6 +329,44 @@
         <tr><td>Shell</td><td><code class="inline">/bin/bash</code></td><td>Program run on login — <code class="inline">/usr/sbin/nologin</code> for service accounts</td></tr>
       </tbody>
     </table>
+
+    <figure>
+      <svg viewBox="0 0 640 190" role="img" aria-label="Cron five-field syntax: minute, hour, day of month, month, day of week, then the command. Example: star slash 5 star star star star runs a command every 5 minutes.">
+        <g font-family="JetBrains Mono" font-size="12" font-weight="600">
+          <rect x="10" y="20" width="90" height="44" rx="6" fill="var(--accent-soft)" stroke="var(--accent)"/>
+          <text x="55" y="47" text-anchor="middle" fill="var(--accent)">minute</text>
+          <rect x="112" y="20" width="90" height="44" rx="6" fill="none" stroke="currentColor"/>
+          <text x="157" y="47" text-anchor="middle" fill="currentColor">hour</text>
+          <rect x="214" y="20" width="110" height="44" rx="6" fill="none" stroke="currentColor"/>
+          <text x="269" y="41" text-anchor="middle" fill="currentColor" font-size="10.5">day of</text>
+          <text x="269" y="54" text-anchor="middle" fill="currentColor" font-size="10.5">month</text>
+          <rect x="336" y="20" width="90" height="44" rx="6" fill="none" stroke="currentColor"/>
+          <text x="381" y="47" text-anchor="middle" fill="currentColor">month</text>
+          <rect x="438" y="20" width="110" height="44" rx="6" fill="none" stroke="currentColor"/>
+          <text x="493" y="41" text-anchor="middle" fill="currentColor" font-size="10.5">day of</text>
+          <text x="493" y="54" text-anchor="middle" fill="currentColor" font-size="10.5">week</text>
+          <rect x="560" y="20" width="70" height="44" rx="6" fill="var(--accent-2-soft)" stroke="var(--accent-2)"/>
+          <text x="595" y="47" text-anchor="middle" fill="var(--accent-2)" font-size="11">command</text>
+        </g>
+        <g font-family="JetBrains Mono" font-size="13" font-weight="700">
+          <text x="55" y="100" text-anchor="middle" fill="var(--accent)">*/5</text>
+          <text x="157" y="100" text-anchor="middle" fill="currentColor">*</text>
+          <text x="269" y="100" text-anchor="middle" fill="currentColor">*</text>
+          <text x="381" y="100" text-anchor="middle" fill="currentColor">*</text>
+          <text x="493" y="100" text-anchor="middle" fill="currentColor">*</text>
+          <text x="595" y="100" text-anchor="middle" fill="var(--accent-2)" font-size="10.5">date &gt;&gt; out.txt</text>
+        </g>
+        <line x1="55" y1="64" x2="55" y2="88" stroke="var(--accent)" opacity=".6"/>
+        <line x1="157" y1="64" x2="157" y2="88" stroke="currentColor" opacity=".4"/>
+        <line x1="269" y1="64" x2="269" y2="88" stroke="currentColor" opacity=".4"/>
+        <line x1="381" y1="64" x2="381" y2="88" stroke="currentColor" opacity=".4"/>
+        <line x1="493" y1="64" x2="493" y2="88" stroke="currentColor" opacity=".4"/>
+        <text x="10" y="140" font-family="IBM Plex Sans" font-size="11" fill="var(--accent)">*/5 in the minute field means "every 5 minutes," not "at minute 5"</text>
+        <text x="10" y="160" font-family="IBM Plex Sans" font-size="10.5" fill="var(--muted)">A plain * in any field always means "every" for that unit.</text>
+        <text x="10" y="178" font-family="IBM Plex Sans" font-size="10.5" fill="var(--muted)">Ranges (1-5) and lists (1,15,30) work the same way, in any field.</text>
+      </svg>
+      <figcaption>Field order is always minute → hour → day-of-month → month → day-of-week — reversing any two is the single most common cron mistake.</figcaption>
+    </figure>
   </section>
 
   <section id="lab">
@@ -415,6 +453,21 @@
 # still stuck?
 kill -SIGKILL &lt;pid&gt;   # force — no cleanup, last resort</pre>
           <p><code class="inline">SIGTERM</code> (15) gives the process a chance to close files/save state; <code class="inline">SIGKILL</code> (9) can't be caught or ignored, but skips any cleanup — reach for it only after SIGTERM fails.</p>
+        </div>
+      </details>
+    </div>
+
+    <div class="example">
+      <span class="tag">Scheduling</span>
+      <h3>The cron job that "does nothing"</h3>
+      <p>A cron job runs a script by name — <code class="inline">myscript.sh</code> — that works perfectly when typed directly into the terminal. In cron, it silently produces no output and no error.</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <p><strong>Diagnosis:</strong> cron jobs don't inherit your interactive shell's <code class="inline">$PATH</code> — they run with a minimal environment. A bare command name or relative path that only resolves because of your normal shell's <code class="inline">PATH</code>/working directory won't resolve the same way under cron.</p>
+          <p><strong>Fix:</strong> use absolute paths for both the script and anything it calls — <code class="inline">/home/user/myscript.sh</code>, not <code class="inline">myscript.sh</code> or <code class="inline">./myscript.sh</code> — and redirect output somewhere you can actually check it:</p>
+          <pre class="term">* * * * * /home/user/myscript.sh >> /home/user/cron.log 2>&1</pre>
+          <p>That <code class="inline">2&gt;&amp;1</code> is what turns "silently does nothing" into an actual error message you can read.</p>
         </div>
       </details>
     </div>
@@ -508,6 +561,9 @@ kill -SIGKILL &lt;pid&gt;   # force — no cleanup, last resort</pre>
     {t:"SIGTERM / SIGKILL / SIGHUP", d:"SIGTERM (15) asks a process to exit cleanly. SIGKILL (9) forces termination immediately, no cleanup. SIGHUP (1) traditionally signals a reload/hangup."},
     {t:"crontab -e / -l / -r", d:"Edit, list, or remove all of the current user's scheduled cron jobs."},
     {t:"cron 5-field syntax", d:"minute hour day-of-month month day-of-week, before the command — each * means 'every'."},
+    {t:"Cron step/range/list values (*/N, 1-5, 1,15)", d:"*/N means 'every N units' (*/5 in the minute field = every 5 minutes, not at minute 5). Ranges (1-5) and comma lists (1,15,30) work in any field the same way."},
+    {t:"$PATH in cron context", d:"Cron jobs run with a minimal environment and don't inherit your interactive shell's $PATH — use absolute paths for scripts and commands, and redirect output (2>&1) so failures aren't silent."},
+    {t:"/etc/cron.d", d:"Directory for system-wide cron jobs, separate from an individual user's personal crontab — root-owned, used by packages that install their own scheduled tasks."},
     {t:"at", d:"Schedules a one-shot job to run once at a specific time, unlike cron's recurring schedule."},
   ];
 
@@ -581,6 +637,18 @@ kill -SIGKILL &lt;pid&gt;   # force — no cleanup, last resort</pre>
       choices:["Whether the file is a backup or config file","Block device vs. character device","Whether the device is built-in or USB","Big-endian vs. little-endian"],
       correct:1,
       explain:"b marks a block device (fixed-size chunks, like a disk); c marks a character device (continuous stream, like a serial port or /dev/null)."
+    },
+    {
+      q:"A cron job works fine when run manually but does nothing when scheduled. What's the most likely cause?",
+      choices:["Cron is broken on the system","The job references a bare command/relative path that only resolves under your interactive shell's $PATH","Cron jobs can't run scripts, only single commands","The crontab file needs execute permission"],
+      correct:1,
+      explain:"Cron runs with a minimal environment and doesn't inherit your shell's $PATH — absolute paths and redirected output (2>&1) turn a silent failure into a visible one."
+    },
+    {
+      q:"What does */5 mean in a cron minute field?",
+      choices:["At exactly minute 5 of every hour","Every 5 minutes","5 minutes after the job is saved","Invalid syntax"],
+      correct:1,
+      explain:"*/N is a step value meaning 'every N units' — */5 in the minute field runs every 5 minutes, not at a specific minute-5 mark."
     },
   ];
 
