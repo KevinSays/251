@@ -521,9 +521,10 @@ echo "Scavenger course built at $BASE"</pre>
     <h3>Demo: Level 0 (hidden files)</h3>
     <pre class="term">cd ~/IT251/scavenger/level0
 ls
+ls -a
 ls -la
 cat .secret</pre>
-    <p style="color:var(--muted); font-size:.92rem;"><code class="inline">ls</code> hides dotfiles by default; <code class="inline">-a</code> shows them. This is a convention for reducing clutter, not access control — don't confuse it with real security.</p>
+    <p style="color:var(--muted); font-size:.92rem;"><code class="inline">ls</code> hides dotfiles by default; <code class="inline">-a</code> (all) is what reveals them — that alone is enough to see <code class="inline">.secret</code> in the listing. <code class="inline">-l</code> is a separate, independent flag that only changes the *format* (permissions/owner/size/date columns) — it doesn't affect which files show up. They're commonly typed together as <code class="inline">-la</code>, but it's really two flags doing two different jobs, not one combined trick — <code class="inline">ls -a</code> alone would have found this file just as well.</p>
 
     <h3>Levels 1–5 — work at your own pace</h3>
     <div class="toolbar">
@@ -547,6 +548,42 @@ cat .secret</pre>
         <p>Finished early? Try <code class="inline">find ~/IT251/scavenger -perm 000</code> to find Level 2's file a different way, or <code class="inline">find ~/IT251/scavenger -type l</code> to find the symlink by type.</p>
       </div>
     </details>
+
+    <h3>Reference: finding files by name pattern</h3>
+    <p>Every level in this lab is really the same skill — locate a file whose name doesn't behave like a normal one. Here's the general toolkit, beyond just this lab's five levels.</p>
+
+    <div class="example">
+      <span class="tag">Dotfiles</span>
+      <h3>Finding hidden files with <code class="inline">find</code>, not just <code class="inline">ls -a</code></h3>
+      <pre class="term">find . -maxdepth 1 -name ".*"          # this directory only
+find . -name ".*"                       # this directory and everything below it
+find ~/IT251 ~/Documents -name ".*"     # multiple directories in one command</pre>
+      <p style="color:var(--muted); font-size:.92rem;"><code class="inline">find</code> never returns bare <code class="inline">.</code> or <code class="inline">..</code> as matches — you don't need to filter those out yourself. Drop <code class="inline">-maxdepth 1</code> to search recursively through every subdirectory instead of just the top level, and list as many starting directories as you want before the first flag — <code class="inline">find</code> searches all of them in a single pass.</p>
+    </div>
+
+    <div class="example">
+      <span class="tag">Leading dashes</span>
+      <h3>find doesn't have Level 1's <code class="inline">--</code> problem</h3>
+      <pre class="term">find . -name "-*"</pre>
+      <p style="color:var(--muted); font-size:.92rem;">Level 1's <code class="inline">--not-a-flag--.txt</code> trips up commands like <code class="inline">ls</code> and <code class="inline">cat</code> because they parse a leading <code class="inline">-</code> as the start of a flag — that's why those commands need the <code class="inline">--</code> end-of-options marker. <code class="inline">find</code>'s <code class="inline">-name</code> doesn't have this problem: the very next argument after <code class="inline">-name</code> is always treated as the pattern, dash or no dash, so <code class="inline">find . -name "-*"</code> just works with no special trick. Files starting with <code class="inline">_</code> (underscore) never had this problem for any command — it's not a shell-special character at all.</p>
+    </div>
+
+    <div class="example">
+      <span class="tag">which / type vs. find</span>
+      <h3>Different tools search different things</h3>
+      <pre class="term">which mytool      # first match on $PATH only
+which -a mytool   # every match on $PATH, not just the first
+type mytool       # like which, but also reports aliases/functions/builtins
+find / -name "mytool" 2&gt;/dev/null   # searches the whole filesystem, not just $PATH</pre>
+      <p style="color:var(--muted); font-size:.92rem;"><code class="inline">which</code>/<code class="inline">type</code> only look inside the directories listed in <code class="inline">$PATH</code>, and only for things the shell could actually run as a command — they won't find a data file, and they won't find a second copy of a tool sitting somewhere not on <code class="inline">$PATH</code>. <code class="inline">find</code> searches the real filesystem structure and doesn't care whether something's executable or even in <code class="inline">$PATH</code> at all. Redirecting stderr to <code class="inline">/dev/null</code> when searching from <code class="inline">/</code> hides the wall of "Permission denied" noise from directories you can't read.</p>
+    </div>
+
+    <div class="example">
+      <span class="tag">grep -r</span>
+      <h3>Searching file <em>contents</em> across a whole tree</h3>
+      <pre class="term">grep -r "PASSWORD" ~/IT251/scavenger</pre>
+      <p style="color:var(--muted); font-size:.92rem;"><code class="inline">find</code> matches on filenames; <code class="inline">grep -r</code> (recursive) matches on what's actually written <em>inside</em> files, walking every subdirectory automatically. They solve different problems and combine well — e.g. <code class="inline">find . -name "*.txt" -exec grep -l PASSWORD {} \;</code> narrows to a file type first, then searches inside just those.</p>
+    </div>
 
     <h3>Self-check (optional)</h3>
     <p>Not graded, not submitted — just tells you what's actually correct so far, so you're not guessing before you submit. Write your six passwords into a file, one per line, in level order (0 through 5):</p>
@@ -879,6 +916,12 @@ tail ~/IT251/logs/cron-*.txt</pre>
     {t:"-- (end-of-options marker)", d:"Tells a command 'no more flags after this' — needed to safely operate on a filename that starts with a dash."},
     {t:"chmod (symbolic mode)", d:"Changes file permissions using symbols like u+r (add owner-read) or o-w (remove other-write), instead of a numeric mode like 644."},
     {t:"find -name / -type / -size / -perm", d:"Common find filters: match by filename, by entry type (f = file, d = directory, l = symlink), by size, or by permission bits."},
+    {t:"find -maxdepth", d:"Limits how many directory levels find descends into — -maxdepth 1 searches only the given directory itself, not its subdirectories. Omit it to search recursively."},
+    {t:"find with multiple starting paths", d:"find accepts more than one starting directory before its first flag, e.g. find dirA dirB -name pattern — it searches all of them in a single pass."},
+    {t:"find -name with a leading dash", d:"Unlike ls/cat, find's -name doesn't misparse a pattern starting with - as a flag — the argument right after -name is always treated as the pattern, no -- needed."},
+    {t:"which -a / type", d:"which -a lists every match on $PATH, not just the first. type is similar but also reports aliases, shell functions, and builtins that which can't see."},
+    {t:"grep -r / -R", d:"Recursive grep — searches file contents through an entire directory tree instead of one file at a time. Matches on content, where find matches on filenames."},
+    {t:"find ... -exec", d:"Runs a command against each file find matches, e.g. find . -name '*.txt' -exec grep -l PASSWORD {} \\; — combines find's filename filtering with another command's own logic."},
     {t:"wc -c", d:"Counts bytes in a file — useful for matching an exact size with find -size."},
     {t:"symlink / readlink", d:"A symbolic link is a file that points at another path. ls -l shows the arrow to its target; readlink prints just the target path."},
     {t:"ln -s", d:"Creates a symbolic link: ln -s <target> <link-name>."},
