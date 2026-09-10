@@ -1,0 +1,265 @@
+<title>Midterm Review</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --bg:#f2f6f4; --surface:#ffffff; --surface-2:#e6efec;
+    --text:#0c1a15; --muted:#51655d; --border:#cddcd5;
+    --accent:#0f7a5c; --accent-soft:#dcf1e7;
+    --accent-2:#0e7490; --accent-2-soft:#dbeff4;
+    --danger:#b3261e; --danger-soft:#f8dcd9;
+    --shadow: 0 1px 2px rgba(12,26,21,.06), 0 8px 24px rgba(12,26,21,.07);
+    --mono:'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    --sans:'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0a0f0d; --surface:#0f1613; --surface-2:#131c18;
+      --text:#d9f5e8; --muted:#82a99a; --border:#1e2b26;
+      --accent:#3ddc97; --accent-soft:#123024;
+      --accent-2:#22d3ee; --accent-2-soft:#0c2b30;
+      --danger:#ff7a68; --danger-soft:#33150f;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 12px 32px rgba(0,0,0,.45);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0a0f0d; --surface:#0f1613; --surface-2:#131c18;
+    --text:#d9f5e8; --muted:#82a99a; --border:#1e2b26;
+    --accent:#3ddc97; --accent-soft:#123024;
+    --accent-2:#22d3ee; --accent-2-soft:#0c2b30;
+    --danger:#ff7a68; --danger-soft:#33150f;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 12px 32px rgba(0,0,0,.45);
+  }
+
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto;} *{animation-duration:.001ms !important; transition-duration:.001ms !important;} }
+  body{ margin:0; background:var(--bg); color:var(--text); font-family:var(--sans); line-height:1.55; -webkit-font-smoothing:antialiased; }
+  a{ color:var(--accent-2); }
+  ::selection{ background:var(--accent-soft); }
+  .wrap{ max-width:1080px; margin:0 auto; padding:0 24px; }
+
+  header.hero{
+    border-bottom:1px solid var(--border);
+    background:repeating-linear-gradient(180deg, var(--surface-2) 0 1px, var(--bg) 1px 28px);
+    padding:56px 0 40px;
+  }
+  .termbar{ display:flex; gap:6px; margin-bottom:20px; }
+  .termbar span{ width:11px; height:11px; border-radius:50%; }
+  .termbar span:nth-child(1){ background:#ff5f57; }
+  .termbar span:nth-child(2){ background:#febc2e; }
+  .termbar span:nth-child(3){ background:#28c840; }
+  .eyebrow{ font-family:var(--mono); font-size:.8rem; color:var(--accent); }
+  .eyebrow::before{ content:"$ "; opacity:.7; }
+  h1{ font-family:var(--mono); font-weight:700; font-size:clamp(2rem,4vw,3rem); line-height:1.08; margin:.4em 0 .3em; text-wrap:balance; letter-spacing:-.01em; }
+  h1 .cursor{ display:inline-block; width:.5ch; background:var(--accent); margin-left:.15em; animation:blink 1.1s steps(1) infinite; }
+  @keyframes blink{ 50%{ opacity:0; } }
+  .hero p.lede{ max-width:62ch; font-size:1.1rem; color:var(--muted); margin:0 0 1.6em; }
+  .factrow{ display:flex; flex-wrap:wrap; gap:10px; }
+  .fact{ font-family:var(--mono); font-size:.78rem; background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:.5em .8em; display:flex; gap:.5em; }
+  .fact b{ color:var(--muted); font-weight:500; text-transform:uppercase; letter-spacing:.06em; font-size:.72rem; }
+
+  nav.index{ position:sticky; top:0; z-index:20; background:color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter:blur(8px); border-bottom:1px solid var(--border); }
+  nav.index .wrap{ display:flex; gap:4px; overflow-x:auto; padding:10px 24px; scrollbar-width:none; }
+  nav.index .wrap::-webkit-scrollbar{ display:none; }
+  nav.index a{ font-family:var(--mono); font-size:.82rem; text-decoration:none; color:var(--muted); padding:.5em .9em; border-radius:6px; white-space:nowrap; border:1px solid transparent; }
+  nav.index a:hover{ color:var(--text); border-color:var(--border); background:var(--surface); }
+  nav.index a.toc-link{ font-weight:600; color:var(--accent); border-right:1px solid var(--border); border-radius:0; margin-right:8px; padding-right:16px; }
+  nav.index a.toc-link:hover{ color:var(--accent); background:transparent; border-right-color:var(--border); }
+  nav.index a:not(.toc-link)::before{ content:'#'; opacity:.5; margin-right:.3em; }
+
+  .back-to-top{ position:fixed; bottom:22px; right:22px; z-index:40; width:46px; height:46px;
+    background:var(--surface); border:1px solid var(--border); border-radius:10px; box-shadow:var(--shadow);
+    font-family:var(--mono); font-size:1.15rem; color:var(--accent); line-height:1;
+    display:flex; align-items:center; justify-content:center; padding:0; cursor:pointer; text-decoration:none;
+    opacity:0; visibility:hidden; transform:translateY(10px);
+    transition:opacity .25s ease, transform .25s ease, visibility 0s .25s; }
+  .back-to-top.show{ opacity:1; visibility:visible; transform:translateY(0); transition:opacity .25s ease, transform .25s ease, visibility 0s; }
+  .back-to-top:hover{ background:var(--accent-soft); border-color:var(--accent); }
+  .back-to-top:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+  @media print{ nav.index, .back-to-top{ display:none; } }
+
+  section{ padding:52px 0; border-bottom:1px solid var(--border); }
+  section:last-of-type{ border-bottom:none; }
+  .section-head{ margin-bottom:28px; max-width:70ch; }
+  .kicker{ font-family:var(--mono); font-size:.75rem; letter-spacing:.1em; text-transform:uppercase; color:var(--accent-2); margin:0 0 .5em; }
+  .kicker::before{ content:"// "; opacity:.6; }
+  h2{ font-family:var(--mono); font-size:clamp(1.4rem,2.4vw,1.9rem); margin:0 0 .3em; text-wrap:balance; }
+  h3{ font-family:var(--mono); font-size:1.05rem; margin:0 0 8px; }
+  .section-head p{ color:var(--muted); margin:.4em 0 0; }
+
+  .review-grid{ display:grid; gap:18px; grid-template-columns:1fr; }
+  @media(min-width:760px){ .review-grid{ grid-template-columns:1fr 1fr; } }
+  .review-card{ background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:22px 24px; box-shadow:var(--shadow); }
+  .review-card .tag{ display:inline-block; font-family:var(--mono); font-size:.7rem; text-transform:uppercase; letter-spacing:.08em; color:var(--accent-2); background:var(--accent-2-soft); border-radius:5px; padding:.25em .6em; margin-bottom:10px; }
+  .review-card ul{ margin:12px 0 14px; padding-left:1.2em; color:var(--muted); font-size:.92rem; }
+  .review-card ul li{ margin-bottom:.35em; }
+  .review-card a.open-link{ display:inline-flex; align-items:center; gap:.3em; font-family:var(--mono); font-weight:600; font-size:.85rem; text-decoration:none; color:var(--accent-2); border-bottom:1.5px solid var(--accent-2); padding-bottom:1px; }
+  .review-card a.open-link:hover{ background:var(--accent-2-soft); }
+
+  .example{ background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px 22px; margin-bottom:16px; box-shadow:var(--shadow); }
+  .example .tag{ display:inline-block; font-family:var(--mono); font-size:.68rem; text-transform:uppercase; letter-spacing:.08em; color:var(--accent-2); background:var(--accent-2-soft); border-radius:5px; padding:.25em .6em; margin-bottom:10px; }
+  code.inline{ font-family:var(--mono); background:var(--surface-2); border-radius:4px; padding:.1em .4em; font-size:.92em; }
+
+  .callout{ border-left:3px solid var(--accent); background:var(--accent-soft); border-radius:0 8px 8px 0; padding:14px 18px; margin:10px 0 24px; font-size:.92rem; }
+  .callout b{ font-family:var(--mono); }
+
+  table.ref{ width:100%; border-collapse:collapse; font-size:.9rem; margin:10px 0 24px; }
+  table.ref th, table.ref td{ border:1px solid var(--border); padding:.6em .85em; text-align:left; vertical-align:top; }
+  table.ref th{ background:var(--surface-2); font-family:var(--mono); font-size:.76rem; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); }
+  table.ref tbody tr:nth-child(odd){ background:var(--surface); }
+  table.ref tbody tr:nth-child(even){ background:color-mix(in srgb, var(--surface) 60%, var(--surface-2)); }
+
+  footer{ padding:32px 0 60px; }
+  footer p{ color:var(--muted); font-size:.85rem; font-family:var(--mono); }
+</style>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="termbar"><span></span><span></span><span></span></div>
+    <p class="eyebrow">IT251 · Week 6</p>
+    <h1>Midterm Review<span class="cursor">&nbsp;</span></h1>
+    <p class="lede">No new material this week — everything you need is already built. This page is a map back into Weeks 1–5, plus what to actually expect on Week 8's midterm.</p>
+    <div class="factrow">
+      <span class="fact"><b>6.1</b> Review</span>
+      <span class="fact"><b>6.2</b> Lab</span>
+      <span class="fact"><b>Covers</b> Modules 1–4 (cumulative)</span>
+      <span class="fact"><b>Midterm</b> Week 8 — written exam + practical checkpoint</span>
+    </div>
+  </div>
+</header>
+
+<nav class="index" aria-label="Section index">
+  <div class="wrap">
+    <a href="index.html" class="toc-link">&larr; Table of Contents</a>
+    <a href="#overview">Overview</a>
+    <a href="#map">Review Map</a>
+    <a href="#format">Midterm Format</a>
+    <a href="#lab">Hands-On Lab</a>
+  </div>
+</nav>
+
+<main class="wrap">
+
+  <section id="overview">
+    <div class="section-head">
+      <p class="kicker">Overview</p>
+      <h2>How to use this week</h2>
+      <p>Modules 1–4 are complete as of Week 5 — the written midterm (Week 8) and this week's review both cover exactly that scope, nothing more. Rather than re-teach any of it, this page points you back to each week's own study page, where the flashcards, quiz, and glossary you already used are still there and still searchable.</p>
+    </div>
+    <div class="callout"><b>Best use of this week:</b> don't just re-read — open each study page below, shuffle its flashcards, and retake its quiz cold. If a quiz question still trips you up, that's exactly the material to spend more time on before Week 8.</div>
+  </section>
+
+  <section id="map">
+    <div class="section-head">
+      <p class="kicker">Review Map</p>
+      <h2>Modules 1–4, week by week</h2>
+      <p>Same order they were taught — work through them in sequence, or jump straight to whichever module feels shakiest.</p>
+    </div>
+    <div class="review-grid">
+      <div class="review-card">
+        <span class="tag">Module 1</span>
+        <h3>Week 1 — System Management</h3>
+        <ul>
+          <li>Boot process (firmware → GRUB → kernel → initramfs → systemd)</li>
+          <li>Filesystem Hierarchy Standard (FHS)</li>
+          <li>Distro families &amp; package managers</li>
+          <li>Kernel modules, device management, storage (partitions, LVM, filesystems)</li>
+        </ul>
+        <a class="open-link" href="IT251_Study_Page.html">Open Week 1 Study Page &rarr;</a>
+      </div>
+      <div class="review-card">
+        <span class="tag">Module 2</span>
+        <h3>Week 2 — System Management II</h3>
+        <ul>
+          <li>Linux networking (NetworkManager, Netplan, common tools)</li>
+          <li>Shell basics (variables, PATH, config files, redirection)</li>
+          <li>Backup &amp; restore (tar, compression tools, rsync, dd)</li>
+          <li>Virtualization (hypervisor types, VM operations, network modes)</li>
+        </ul>
+        <a class="open-link" href="IT251_Week2_Study_Page.html">Open Week 2 Study Page &rarr;</a>
+      </div>
+      <div class="review-card">
+        <span class="tag">Module 3</span>
+        <h3>Week 4 — Services &amp; User Mgmt I</h3>
+        <ul>
+          <li>Files/directories, links (hard vs. symbolic), device types</li>
+          <li>Local account management — add, modify, lock, list</li>
+          <li>Process/job management — states, signals, priority</li>
+          <li>Scheduling — cron 5-field syntax, <code class="inline">at</code></li>
+        </ul>
+        <a class="open-link" href="IT251_Week4_Study_Page.html">Open Week 4 Study Page &rarr;</a>
+      </div>
+      <div class="review-card">
+        <span class="tag">Module 4</span>
+        <h3>Week 5 — Services &amp; User Mgmt II</h3>
+        <ul>
+          <li>Software management (apt/dnf, repos, update-alternatives)</li>
+          <li>Systemd (unit types, active/enabled distinction, journalctl)</li>
+          <li>Containers (image vs. container, volumes, networking)</li>
+        </ul>
+        <a class="open-link" href="IT251_Week5_Study_Page.html">Open Week 5 Study Page &rarr;</a>
+      </div>
+    </div>
+  </section>
+
+  <section id="format">
+    <div class="section-head">
+      <p class="kicker">Week 8</p>
+      <h2>What the midterm actually looks like</h2>
+      <p>Two separate pieces, same day of class.</p>
+    </div>
+    <table class="ref">
+      <thead><tr><th>Piece</th><th>Format</th><th>Best prep</th></tr></thead>
+      <tbody>
+        <tr><td>Written exam</td><td>Covers Modules 1–4 — the same scope as this week's review and every quiz on Weeks 1, 2, 4, 5's study pages</td><td>Retake each week's quiz cold; if a question still misses, reread that week's glossary entry for it</td></tr>
+        <tr><td>Practical checkpoint</td><td>Timed, hands-on, individual — same format as Lab 5</td><td>Lab 5 itself, plus Week 7's open lab/practice review</td></tr>
+      </tbody>
+    </table>
+    <div class="example">
+      <span class="tag">Worked example</span>
+      <h3>How to actually study a "weak" module</h3>
+      <p>Say Module 3 (Week 4) feels shaky. The efficient path isn't re-reading the whole page top to bottom:</p>
+      <ol style="color:var(--muted); font-size:.92rem; line-height:1.7;">
+        <li>Open <a href="IT251_Week4_Study_Page.html#quiz">Week 4's quiz</a> cold — no peeking at the page first.</li>
+        <li>For every question you get wrong, jump straight to that term in the <a href="IT251_Week4_Study_Page.html#glossary">glossary</a> (it's searchable).</li>
+        <li>Reread just that entry, then retake the quiz — repeat until nothing misses.</li>
+      </ol>
+      <p>This targets the actual gaps instead of re-reading material you already have cold.</p>
+    </div>
+  </section>
+
+  <section id="lab">
+    <div class="section-head">
+      <p class="kicker">6.2 · Hands-On</p>
+      <h2>Lab: Timed Practice Checkpoint</h2>
+      <p>A cold, 45-minute, individual re-run of Labs 1–4's skills — direct rehearsal for Week 8's practical checkpoint, same format, lower stakes.</p>
+    </div>
+    <div class="example">
+      <span class="tag">Full step-by-step</span>
+      <h3>Open the interactive follow-along</h3>
+      <p>Time blocks, the timed checklist, a self-check script for the scavenger levels, and common-snags reference all live on the lab follow-along page.</p>
+      <p><a href="IT251_Lab1-5_Follow_Along.html#lab5">Open Lab 5 — Timed Practice Checkpoint &rarr;</a></p>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>IT251 · Linux+ (XK0-006) · Midterm review — Modules 1–4, no new content · Week 6 reference.</p>
+  </div>
+</footer>
+
+<button id="backToTop" class="back-to-top" aria-label="Back to top" title="Back to top">&uarr;</button>
+
+<script>
+  const backToTop = document.getElementById('backToTop');
+  function toggleBackToTop(){ backToTop.classList.toggle('show', window.scrollY > 480); }
+  window.addEventListener('scroll', toggleBackToTop, {passive:true});
+  toggleBackToTop();
+  backToTop.addEventListener('click', () => window.scrollTo({top:0, behavior:'smooth'}));
+</script>

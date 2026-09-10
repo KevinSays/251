@@ -1,4 +1,4 @@
-<title>Weeks 1&ndash;5 Lab Follow-Along</title>
+<title>Weeks 1&ndash;6 Lab Follow-Along</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -161,15 +161,16 @@
 <header class="hero">
   <div class="wrap">
     <div class="termbar"><span></span><span></span><span></span></div>
-    <p class="eyebrow">IT251 · Weeks 1–5</p>
+    <p class="eyebrow">IT251 · Weeks 1–6</p>
     <h1>Lab Follow-Along<span class="cursor">&nbsp;</span></h1>
-    <p class="lede">Follow along step by step: build the personal VM you'll use for every lab this semester, turn on logging that proves your work automatically, then put it to use navigating, hunting through, and processing text on a real filesystem.</p>
+    <p class="lede">Follow along step by step: build the personal VM you'll use for every lab this semester, turn on logging that proves your work automatically, then put it to use navigating, hunting through, processing text, and — under a clock — proving you can do all of it cold.</p>
     <div class="factrow">
       <span class="fact"><b>1.2</b> Lab 1</span>
       <span class="fact"><b>2.2</b> Lab 2</span>
       <span class="fact"><b>3.2</b> Lab 3</span>
       <span class="fact"><b>5.2</b> Lab 4</span>
-      <span class="fact"><b>Covers</b> VirtualBox, distro install, history logging, FHS navigation, permissions, text processing, cron</span>
+      <span class="fact"><b>6.2</b> Lab 5</span>
+      <span class="fact"><b>Covers</b> VirtualBox, distro install, history logging, FHS navigation, permissions, text processing, cron, timed practice</span>
     </div>
   </div>
 </header>
@@ -183,6 +184,7 @@
     <a href="#lab2">Lab 2 · Linux Basics</a>
     <a href="#lab3">Lab 3 · FHS Hunt</a>
     <a href="#lab4">Lab 4 · Text &amp; Cron</a>
+    <a href="#lab5">Lab 5 · Timed Checkpoint</a>
     <a href="#troubleshooting">Troubleshooting</a>
     <a href="#glossary">Glossary</a>
   </div>
@@ -193,8 +195,8 @@
   <section id="overview">
     <div class="section-head">
       <p class="kicker">Overview</p>
-      <h2>What these four labs cover</h2>
-      <p>Lab 1 is infrastructure day — everything after it happens inside the VM you build here. Lab 2 is the first real content lab, applying the lecture's FHS material with your hands on a keyboard instead of a slide. Lab 3 turns that into a local scavenger hunt through hidden files and permissions. Lab 4 puts real text-processing tools and a scheduled job to work against your own accumulated logs.</p>
+      <h2>What these five labs cover</h2>
+      <p>Lab 1 is infrastructure day — everything after it happens inside the VM you build here. Lab 2 is the first real content lab, applying the lecture's FHS material with your hands on a keyboard instead of a slide. Lab 3 turns that into a local scavenger hunt through hidden files and permissions. Lab 4 puts real text-processing tools and a scheduled job to work against your own accumulated logs. Lab 5 is a cold, timed re-run of Labs 1–4's skills — rehearsal for the Week 8 practical midterm checkpoint.</p>
     </div>
     <ul class="obj-list">
       <li>Create and configure a VM in VirtualBox</li>
@@ -209,6 +211,7 @@
       <li>Search text with <code class="inline">grep</code>, sort it, and diff two files</li>
       <li>Identify a file's real type with <code class="inline">file</code>, independent of its name</li>
       <li>Write and verify a basic <code class="inline">cron</code> job</li>
+      <li>Do all of the above under time pressure, without step-by-step guidance</li>
     </ul>
   </section>
 
@@ -696,6 +699,66 @@ file ~/it251-export-log.sh</pre>
     <p>Run <code class="inline">~/it251-export-log.sh</code> and submit that file, <code class="inline">sorted-example.txt</code>, and a screenshot of <code class="inline">crontab -l</code> showing the registered job. <b>Leave the cron job running</b> — Week 6's timed checkpoint checks that it's still logging.</p>
   </section>
 
+  <section id="lab5">
+    <div class="section-head">
+      <p class="kicker">6.2 · Hands-On</p>
+      <h2>Lab 5 — Timed Practice Checkpoint</h2>
+      <p><b>Prerequisite:</b> Labs 1–4. This is a cold, timed re-run of everything covered so far — no new material. It's explicit rehearsal for Week 8's practical midterm checkpoint, same format, lower stakes.</p>
+    </div>
+
+    <table class="blocks">
+      <caption>Time blocks — 75 min</caption>
+      <thead><tr><th>T+</th><th>Block</th></tr></thead>
+      <tbody>
+        <tr><td>T+00:00:00 – T+00:05:00</td><td>Framing — this is a rehearsal, not a new grade risk</td></tr>
+        <tr><td>T+00:05:00 – T+00:10:00</td><td>Reset: fresh scavenger course + check cron job from Lab 4</td></tr>
+        <tr><td>T+00:10:00 – T+00:55:00</td><td><b>Timed checklist — 45 minutes, work alone</b></td></tr>
+        <tr><td>T+00:55:00 – T+01:10:00</td><td>Self-grade against the answer key; discuss misses as a class</td></tr>
+        <tr><td>T+01:10:00 – T+01:15:00</td><td>Export log, submit</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout"><b>No collaboration during the 45-minute block</b> — this simulates the real checkpoint's individual-work conditions. Questions afterward are welcome. Today's score is formative, not high-stakes — the goal is finding out now what's shaky, with two weeks left to fix it.</div>
+
+    <h3>Reset</h3>
+    <p>Re-run Lab 3's generator script — it wipes and rebuilds <code class="inline">~/IT251/scavenger</code> from scratch, so a plain re-run is safe:</p>
+    <pre class="term">bash ~/it251-scavenger-setup.sh</pre>
+    <p>Then confirm Lab 4's cron job is still registered and its output file has kept growing since last class:</p>
+    <pre class="term">crontab -l
+tail ~/IT251/logs/cron-*.txt</pre>
+    <p style="color:var(--muted); font-size:.92rem;">Job not running anymore? Re-add it now and note the gap for yourself — not something to fix mid-checklist.</p>
+
+    <h3>Timed checklist — 45 minutes, individual</h3>
+    <p>Work through as many items as you can. Record your answers in a single file, <code class="inline">~/IT251/checkpoint-answers.txt</code>.</p>
+    <div class="toolbar">
+      <button class="btn" id="resetLab5Btn">Reset progress</button>
+      <span id="lab5Progress"></span>
+    </div>
+    <ul class="checklist" id="lab5Checklist">
+      <li><label><input type="checkbox" data-id="l5-1"> Find the hidden dotfile in <code class="inline">level0</code> and record its contents</label></li>
+      <li><label><input type="checkbox" data-id="l5-2"> Read the contents of <code class="inline">level1</code>'s awkwardly-named file</label></li>
+      <li><label><input type="checkbox" data-id="l5-3"> Fix the permissions on <code class="inline">level2</code>'s locked file and read it</label></li>
+      <li><label><input type="checkbox" data-id="l5-4"> Use <code class="inline">find</code> (not manual browsing) to locate the real file among decoys in <code class="inline">level3</code></label></li>
+      <li><label><input type="checkbox" data-id="l5-5"> Use <code class="inline">find</code> to locate the buried file in <code class="inline">level4</code> without manually <code class="inline">cd</code>-ing down</label></li>
+      <li><label><input type="checkbox" data-id="l5-6"> Determine what <code class="inline">level5</code>'s symlink points to, without guessing</label></li>
+      <li><label><input type="checkbox" data-id="l5-7"> <code class="inline">grep</code> (case-insensitive) for every time you ran a command containing <code class="inline">sudo</code> across all your log exports</label></li>
+      <li><label><input type="checkbox" data-id="l5-8"> Pick any two log exports and <code class="inline">diff</code> them; write one sentence on what changed</label></li>
+      <li><label><input type="checkbox" data-id="l5-9"> Run <code class="inline">file</code> on three files of your choosing and record the real type of each</label></li>
+      <li><label><input type="checkbox" data-id="l5-10"> Confirm your cron job is still running by checking its output file's most recent timestamp</label></li>
+    </ul>
+
+    <div class="callout"><b>Self-check items 1–6:</b> these are the same six scavenger levels from Lab 3, freshly rebuilt. Run the checker against this checklist's answers file directly (it defaults to a different filename, so pass this one explicitly):
+      <pre class="term" style="margin-top:10px;">bash ~/it251-scavenger-check.sh ~/IT251/checkpoint-answers.txt</pre>
+      Same script as Lab 3, no new download needed — it only reads the first six lines, so items 7–10 further down the file don't interfere. Items 7–10 are personal (your own log data) and don't have a single fixed answer, so they're not covered by the checker — your instructor's answer key at the end of the block is the source of truth for those.
+    </div>
+
+    <h3>Self-grade &amp; debrief</h3>
+    <p>Your instructor will post or hand out the answer key once the timed block ends. Self-grade <code class="inline">~/IT251/checkpoint-answers.txt</code> against it — honesty over accuracy here, the point is diagnostic, not competitive. As a class, expect to spend the remaining time on whichever 1–2 items stalled the most people — likely candidates: <code class="inline">find -size</code> (Level 3), quoting the Level 1 filename, or reading <code class="inline">diff</code> output correctly.</p>
+
+    <h3>Submit</h3>
+    <p>Run <code class="inline">~/it251-export-log.sh</code> and submit the exported log file, <code class="inline">checkpoint-answers.txt</code>, and a self-reported score against the answer key.</p>
+  </section>
+
   <section id="troubleshooting">
     <div class="section-head">
       <p class="kicker">Reference</p>
@@ -751,13 +814,24 @@ file ~/it251-export-log.sh</pre>
         <tr><td><code class="inline">diff</code> shows the entire file as different</td><td>You're comparing two unrelated logs — pick two exports that actually overlap in content for the exercise to be meaningful</td></tr>
       </tbody>
     </table>
+
+    <table class="blocks">
+      <caption>Lab 5 — Timed checkpoint</caption>
+      <thead><tr><th>Symptom</th><th>Likely cause / fix</th></tr></thead>
+      <tbody>
+        <tr><td>Panicking at the 45-minute framing</td><td>This is ungraded-for-correctness and formative — the thing being measured is "where are the gaps," not "did you get 10/10"</td></tr>
+        <tr><td>Cron job from Lab 4 isn't running anymore</td><td>VM was shut down (not suspended) between sessions and cron didn't restart, or the crontab got cleared accidentally — re-add it now and note the gap, not a mid-checklist problem to solve</td></tr>
+        <tr><td>Re-running the scavenger script feels like cheating (you remember the levels from Lab 3)</td><td>That's expected and fine — the point of the timed re-run is speed and confidence under pressure, not novelty; real learning happens in repetition</td></tr>
+        <tr><td>Checker script says a level is wrong but you're sure you typed it right</td><td>The comparison is exact — check for a typo, extra trailing space, or a missing/extra word against what <code class="inline">cat</code> actually showed you</td></tr>
+      </tbody>
+    </table>
   </section>
 
   <section id="glossary">
     <div class="section-head">
       <p class="kicker">Reference</p>
       <h2>Glossary &amp; index</h2>
-      <p>Every term from all four labs, searchable and indexed A–Z.</p>
+      <p>Every term from all five labs, searchable and indexed A–Z. Lab 5 is a pure review of Labs 1–4's skills, so no new terms — just the same list under time pressure.</p>
     </div>
     <input type="text" id="glossarySearch" placeholder="Search terms…" aria-label="Search glossary">
     <div class="alpha-nav" id="alphaNav"></div>
@@ -768,7 +842,7 @@ file ~/it251-export-log.sh</pre>
 
 <footer>
   <div class="wrap">
-    <p>IT251 · Linux+ (XK0-006) · Weeks 1–5 follow-along — Lab 1 (VM setup + logging), Lab 2 (Linux basics), Lab 3 (FHS scavenger hunt), Lab 4 (text processing &amp; cron). Progress checkboxes save to this browser only.</p>
+    <p>IT251 · Linux+ (XK0-006) · Weeks 1–6 follow-along — Lab 1 (VM setup + logging), Lab 2 (Linux basics), Lab 3 (FHS scavenger hunt), Lab 4 (text processing &amp; cron), Lab 5 (timed checkpoint). Progress checkboxes save to this browser only.</p>
   </div>
 </footer>
 
@@ -885,6 +959,7 @@ file ~/it251-export-log.sh</pre>
   wireChecklist('lab2Checklist', 'lab2Progress', 'resetLab2Btn', 'it251_lab2_checklist');
   wireChecklist('lab3Checklist', 'lab3Progress', 'resetLab3Btn', 'it251_lab3_checklist');
   wireChecklist('lab4Checklist', 'lab4Progress', 'resetLab4Btn', 'it251_lab4_checklist');
+  wireChecklist('lab5Checklist', 'lab5Progress', 'resetLab5Btn', 'it251_lab5_checklist');
 </script>
 
 <button id="backToTop" class="back-to-top" aria-label="Back to top" title="Back to top">&uarr;</button>
