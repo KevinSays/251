@@ -371,7 +371,9 @@ echo "Submit this file (or the whole ~/IT251/logs folder) as lab proof."</pre>
       <li><label><input type="checkbox" data-id="l1-logging"> Logging script run, <code class="inline">.bashrc</code>/<code class="inline">.zshrc</code> updated</label></li>
       <li><label><input type="checkbox" data-id="l1-verify"> Ran a few commands, confirmed <code class="inline">history | tail</code> shows timestamps</label></li>
       <li><label><input type="checkbox" data-id="l1-export"> Ran <code class="inline">~/it251-export-log.sh</code> and located the file in <code class="inline">~/IT251/logs/</code></label></li>
+      <!-- WEEKLY LOG SUBMISSION (disabled Fall 2026 — log submission is Midterm/Final only for now)
       <li><label><input type="checkbox" data-id="l1-submit"> Submitted exported log file + snapshot screenshot per LMS instructions</label></li>
+      -->
     </ul>
   </section>
 
@@ -454,8 +456,10 @@ man ls</pre>
       </div>
     </details>
 
+    <!-- WEEKLY LOG SUBMISSION (disabled Fall 2026 — log submission is Midterm/Final only for now)
     <h3>Submit</h3>
     <p>Run <code class="inline">~/it251-export-log.sh</code> (from Lab 1) and submit the resulting file from <code class="inline">~/IT251/logs/</code> per LMS instructions — this is the timestamped record of every command you ran today.</p>
+    -->
   </section>
 
   <section id="lab3">
@@ -665,8 +669,10 @@ fi</pre>
     <pre class="term">bash ~/it251-scavenger-check.sh</pre>
     <p style="color:var(--muted); font-size:.92rem;">The comparison is exact (whitespace at the ends is trimmed, but the text itself must match exactly what's in the file) — a "NOT YET" doesn't mean you're wrong conceptually, it usually just means a typo. Level 2 shows <code class="inline">SKIP</code> instead of a flat fail until you've actually fixed its permissions, since the checker genuinely can't read a 000-permission file either.</p>
 
+    <!-- WEEKLY LOG SUBMISSION (disabled Fall 2026 — log submission is Midterm/Final only for now)
     <h3>Submit</h3>
     <p>Run <code class="inline">~/it251-export-log.sh</code> and submit the exported log plus the six recorded passwords, per LMS instructions.</p>
+    -->
   </section>
 
   <section id="lab4">
@@ -732,8 +738,11 @@ file ~/it251-export-log.sh</pre>
       </div>
     </details>
 
-    <h3>Submit</h3>
-    <p>Run <code class="inline">~/it251-export-log.sh</code> and submit that file, <code class="inline">sorted-example.txt</code>, and a screenshot of <code class="inline">crontab -l</code> showing the registered job. <b>Leave the cron job running</b> — Week 6's timed checkpoint checks that it's still logging.</p>
+    <h3>Wrap-up</h3>
+    <p><b>Leave the cron job running</b> — Week 6's timed checkpoint checks that it's still logging.</p>
+    <!-- WEEKLY LOG SUBMISSION (disabled Fall 2026 — log submission is Midterm/Final only for now)
+    <p>Run <code class="inline">~/it251-export-log.sh</code> and submit that file, <code class="inline">sorted-example.txt</code>, and a screenshot of <code class="inline">crontab -l</code> showing the registered job.</p>
+    -->
   </section>
 
   <section id="lab5">
@@ -792,8 +801,10 @@ tail ~/IT251/logs/cron-*.txt</pre>
     <h3>Self-grade &amp; debrief</h3>
     <p>Your instructor will post or hand out the answer key once the timed block ends. Self-grade <code class="inline">~/IT251/checkpoint-answers.txt</code> against it — honesty over accuracy here, the point is diagnostic, not competitive. As a class, expect to spend the remaining time on whichever 1–2 items stalled the most people — likely candidates: <code class="inline">find -size</code> (Level 3), quoting the Level 1 filename, or reading <code class="inline">diff</code> output correctly.</p>
 
+    <!-- WEEKLY LOG SUBMISSION (disabled Fall 2026 — log submission is Midterm/Final only for now)
     <h3>Submit</h3>
     <p>Run <code class="inline">~/it251-export-log.sh</code> and submit the exported log file, <code class="inline">checkpoint-answers.txt</code>, and a self-reported score against the answer key.</p>
+    -->
   </section>
 
   <section id="troubleshooting">
