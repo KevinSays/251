@@ -1,0 +1,280 @@
+<title>Week 5 Deep Dive — Ordering vs. Requirement</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --bg:#f2f6f4;
+    --surface:#ffffff;
+    --surface-2:#e6efec;
+    --text:#0c1a15;
+    --muted:#51655d;
+    --border:#cddcd5;
+    --accent:#0f7a5c;
+    --accent-soft:#dcf1e7;
+    --accent-2:#0e7490;
+    --accent-2-soft:#dbeff4;
+    --danger:#b3261e;
+    --danger-soft:#f8dcd9;
+    --correct:#0f7a5c;
+    --correct-soft:#dcf1e7;
+    --shadow: 0 1px 2px rgba(12,26,21,.06), 0 8px 24px rgba(12,26,21,.07);
+    --mono:'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    --sans:'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0a0f0d; --surface:#0f1613; --surface-2:#131c18;
+      --text:#d9f5e8; --muted:#82a99a; --border:#1e2b26;
+      --accent:#3ddc97; --accent-soft:#123024;
+      --accent-2:#22d3ee; --accent-2-soft:#0c2b30;
+      --danger:#ff7a68; --danger-soft:#33150f;
+      --correct:#3ddc97; --correct-soft:#123024;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 12px 32px rgba(0,0,0,.45);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0a0f0d; --surface:#0f1613; --surface-2:#131c18;
+    --text:#d9f5e8; --muted:#82a99a; --border:#1e2b26;
+    --accent:#3ddc97; --accent-soft:#123024;
+    --accent-2:#22d3ee; --accent-2-soft:#0c2b30;
+    --danger:#ff7a68; --danger-soft:#33150f;
+    --correct:#3ddc97; --correct-soft:#123024;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 12px 32px rgba(0,0,0,.45);
+  }
+
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto;} *{animation-duration:.001ms !important; transition-duration:.001ms !important;} }
+  body{ margin:0; background:var(--bg); color:var(--text); font-family:var(--sans); line-height:1.55; -webkit-font-smoothing:antialiased; }
+  a{ color:var(--accent-2); }
+  ::selection{ background:var(--accent-soft); }
+  .wrap{ max-width:1080px; margin:0 auto; padding:0 24px; }
+
+  header.hero{
+    border-bottom:1px solid var(--border);
+    background:repeating-linear-gradient(180deg, var(--surface-2) 0 1px, var(--bg) 1px 28px);
+    padding:56px 0 40px;
+  }
+  .termbar{ display:flex; gap:6px; margin-bottom:20px; }
+  .termbar span{ width:11px; height:11px; border-radius:50%; }
+  .termbar span:nth-child(1){ background:#ff5f57; }
+  .termbar span:nth-child(2){ background:#febc2e; }
+  .termbar span:nth-child(3){ background:#28c840; }
+  .eyebrow{ font-family:var(--mono); font-size:.8rem; color:var(--accent); }
+  .eyebrow::before{ content:"$ "; opacity:.7; }
+  h1{ font-family:var(--mono); font-weight:700; font-size:clamp(2rem,4vw,3rem); line-height:1.08; margin:.4em 0 .3em; text-wrap:balance; letter-spacing:-.01em; }
+  h1 .cursor{ display:inline-block; width:.5ch; background:var(--accent); margin-left:.15em; animation:blink 1.1s steps(1) infinite; }
+  @keyframes blink{ 50%{ opacity:0; } }
+  .hero p.lede{ max-width:68ch; font-size:1.1rem; color:var(--muted); margin:0 0 1.2em; }
+  .parent-link{ display:inline-flex; align-items:center; gap:.5em; font-family:var(--mono); font-size:.85rem; background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:.6em 1em; text-decoration:none; color:var(--accent); box-shadow:var(--shadow); }
+  .parent-link:hover{ border-color:var(--accent); }
+
+  nav.index{ position:sticky; top:0; z-index:20; background:color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter:blur(8px); border-bottom:1px solid var(--border); }
+  nav.index .wrap{ display:flex; gap:4px; overflow-x:auto; padding:10px 24px; scrollbar-width:none; }
+  nav.index .wrap::-webkit-scrollbar{ display:none; }
+  nav.index a{ font-family:var(--mono); font-size:.82rem; text-decoration:none; color:var(--muted); padding:.5em .9em; border-radius:6px; white-space:nowrap; border:1px solid transparent; }
+  nav.index a:hover{ color:var(--text); border-color:var(--border); background:var(--surface); }
+  nav.index a.toc-link{ font-weight:600; color:var(--accent); border-right:1px solid var(--border); border-radius:0; margin-right:8px; padding-right:16px; }
+  nav.index a.toc-link:hover{ color:var(--accent); background:transparent; border-right-color:var(--border); }
+  nav.index a:not(.toc-link)::before{ content:'#'; opacity:.5; margin-right:.3em; }
+
+  .back-to-top{ position:fixed; bottom:22px; right:22px; z-index:40; width:46px; height:46px;
+    background:var(--surface); border:1px solid var(--border); border-radius:10px; box-shadow:var(--shadow);
+    font-family:var(--mono); font-size:1.15rem; color:var(--accent); line-height:1;
+    display:flex; align-items:center; justify-content:center; padding:0; cursor:pointer; text-decoration:none;
+    opacity:0; visibility:hidden; transform:translateY(10px);
+    transition:opacity .25s ease, transform .25s ease, visibility 0s .25s; }
+  .back-to-top.show{ opacity:1; visibility:visible; transform:translateY(0); transition:opacity .25s ease, transform .25s ease, visibility 0s; }
+  .back-to-top:hover{ background:var(--accent-soft); border-color:var(--accent); }
+  .back-to-top:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+  @media print{ nav.index, .back-to-top{ display:none; } }
+
+  section{ padding:52px 0; border-bottom:1px solid var(--border); }
+  section:last-of-type{ border-bottom:none; }
+  .section-head{ margin-bottom:22px; max-width:74ch; }
+  .kicker{ font-family:var(--mono); font-size:.75rem; letter-spacing:.1em; text-transform:uppercase; color:var(--accent-2); margin:0 0 .5em; }
+  .kicker::before{ content:"// "; opacity:.6; }
+  h2{ font-family:var(--mono); font-size:clamp(1.4rem,2.4vw,1.9rem); margin:0 0 .3em; text-wrap:balance; }
+  h3{ font-family:var(--mono); font-size:1.05rem; margin:1.4em 0 .4em; }
+  .section-head p{ color:var(--muted); margin:.4em 0 0; }
+  section p{ max-width:74ch; }
+
+  table.blocks{ width:100%; border-collapse:collapse; font-size:.9rem; margin:22px 0 24px; }
+  table.blocks caption{ caption-side:top; text-align:left; font-family:var(--mono); font-size:.75rem; text-transform:uppercase; letter-spacing:.08em; color:var(--accent-2); margin-bottom:.5em; }
+  table.blocks th, table.blocks td{ border:1px solid var(--border); padding:.6em .85em; text-align:left; vertical-align:top; }
+  table.blocks th{ background:var(--surface-2); font-family:var(--mono); font-size:.78rem; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); }
+  table.blocks td:first-child{ font-family:var(--mono); font-weight:600; color:var(--accent); }
+  table.blocks tbody tr:nth-child(odd){ background:var(--surface); }
+  table.blocks tbody tr:nth-child(even){ background:color-mix(in srgb, var(--surface) 60%, var(--surface-2)); }
+
+  .example{ background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px 22px; margin-bottom:16px; box-shadow:var(--shadow); }
+  .example h3{ font-family:var(--mono); font-size:1.02rem; margin:0 0 8px; }
+  .example .tag{ display:inline-block; font-family:var(--mono); font-size:.68rem; text-transform:uppercase; letter-spacing:.08em; color:var(--accent-2); background:var(--accent-2-soft); border-radius:5px; padding:.25em .6em; margin-bottom:10px; }
+  code.inline{ font-family:var(--mono); background:var(--surface-2); border-radius:4px; padding:.1em .4em; font-size:.92em; }
+  pre.term{ font-family:var(--mono); font-size:.85rem; background:var(--surface-2); border:1px solid var(--border); border-radius:8px; padding:12px 14px; overflow-x:auto; margin:10px 0; white-space:pre; }
+  details.solution{ margin-top:12px; }
+  details.solution summary{ cursor:pointer; font-family:var(--mono); font-size:.82rem; color:var(--accent); list-style:none; display:inline-flex; align-items:center; gap:.4em; }
+  details.solution summary::-webkit-details-marker{ display:none; }
+  details.solution summary::before{ content:"▸"; transition:transform .15s; }
+  details.solution[open] summary::before{ transform:rotate(90deg); }
+  details.solution .solbody{ margin-top:10px; padding:14px 16px; background:var(--surface-2); border-radius:8px; font-size:.92rem; }
+  details.solution .solbody p{ max-width:none; }
+
+  .callout{ border-left:3px solid var(--accent); background:var(--accent-soft); border-radius:0 8px 8px 0; padding:14px 18px; margin:10px 0 24px; font-size:.92rem; max-width:74ch; }
+  .callout b{ font-family:var(--mono); }
+
+  footer{ padding:32px 0 60px; }
+  footer p{ color:var(--muted); font-size:.85rem; font-family:var(--mono); }
+</style>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="termbar"><span></span><span></span><span></span></div>
+    <p class="eyebrow">IT251 · Week 5 · Deep Dive</p>
+    <h1>Ordering vs. Requirement, and Reading systemctl status for Real<span class="cursor">&nbsp;</span></h1>
+    <p class="lede">Companion to the Week 5 study page. That page's active/enabled two-axis diagram is, by design, the best diagram in this whole course — it teaches "currently running" and "starts at boot" as independent axes instead of one linear state. This deep dive applies the exact same move to a second systemd trap the study page's glossary only touches in passing (<code class="inline">Wants=</code>/<code class="inline">Requires=</code>), and then does the annotated-output pass the study page doesn't have room for: reading an actual <code class="inline">systemctl status</code> block line by line. Have the active/enabled diagram and the mask vs. disable distinction down before this — this builds directly on both.</p>
+    <a class="parent-link" href="IT251_Week5_Study_Page.html">&larr; Back to the Week 5 Study Page</a>
+  </div>
+</header>
+
+<nav class="index" aria-label="Section index">
+  <div class="wrap">
+    <a href="IT251_Week5_Study_Page.html" class="toc-link">&larr; Study Page</a>
+    <a href="#ordering-vs-requirement">Ordering vs. requirement</a>
+    <a href="#systemctl-status">Reading systemctl status</a>
+    <a href="#exam-traps">Exam traps</a>
+    <a href="#quiz">Scenario quiz</a>
+  </div>
+</nav>
+
+<main class="wrap">
+
+  <section id="ordering-vs-requirement">
+    <div class="section-head">
+      <p class="kicker">Two independent axes, again</p>
+      <h2>After=/Before= vs. Wants=/Requires=</h2>
+      <p>The study page's glossary says "Wants is a soft suggestion, Requires is a hard dependency." True, but that's only <em>one</em> of the two axes a unit file's dependency directives control, and conflating the two axes is a real, common mistake.</p>
+    </div>
+    <p><strong>Axis 1 — ordering:</strong> <code class="inline">After=</code> and <code class="inline">Before=</code> control <em>when</em> a unit starts relative to another, and nothing else. <code class="inline">After=network-online.target</code> in a unit file means "don't start me until network-online.target has started" — it says nothing about whether that target actually has to succeed, or even exist.</p>
+    <p><strong>Axis 2 — requirement:</strong> <code class="inline">Wants=</code> and <code class="inline">Requires=</code> control whether one unit's success/failure <em>matters</em> to another, and nothing about timing. <code class="inline">Wants=</code> pulls in the target unit as a soft dependency — if it fails or is missing, the unit with <code class="inline">Wants=</code> still starts anyway. <code class="inline">Requires=</code> makes it a hard dependency — if the required unit fails, systemd won't start (or will stop) the unit that required it.</p>
+    <p><strong>The trap:</strong> these two axes are independent, and a unit file commonly needs <strong>both</strong> directives together to get the intended behavior, because neither one implies the other:</p>
+    <pre class="term">[Unit]
+Description=My web app
+Wants=network-online.target
+After=network-online.target</pre>
+    <div class="callout"><code class="inline">After=</code> alone here would mean "wait until network-online.target has <em>started</em> (or failed and given up) before launching" — but without <code class="inline">Wants=</code>, systemd has no reason to make sure network-online.target is even <em>pulled in</em> as part of the boot sequence at all if nothing else already wants it. And <code class="inline">Wants=</code> alone, without <code class="inline">After=</code>, would mean "pull this dependency in, but don't guarantee it starts first" — the app could still race ahead and try to bind a socket before the network is actually up, purely because nothing told systemd to sequence them. Ordering and requirement are genuinely orthogonal — you can have either without the other, and most real service files pair <code class="inline">After=</code> with <code class="inline">Wants=</code> (or the stronger <code class="inline">Requires=</code>) specifically because one directive alone leaves a gap the other closes.</div>
+    <p><strong>Where this shows up as a real bug:</strong> a service that "usually works, but sometimes fails right after boot" — intermittent, not consistent — is a classic symptom of a missing <code class="inline">After=</code> on a service that assumes some other resource (network, a database, a mount) is already up. It works most of the time because that other unit usually finishes first anyway, by luck of however fast that particular boot happened to go, and fails intermittently when timing shifts. This is exactly the same shape of bug as the active/enabled trap the study page already teaches — a real behavior driven by two independent settings, where changing only one half doesn't fix the underlying gap.</p>
+  </section>
+
+  <section id="systemctl-status">
+    <div class="section-head">
+      <p class="kicker">Annotated output</p>
+      <h2>Reading systemctl status output, field by field</h2>
+      <p>The study page shows systemctl start/stop/restart/status as commands to run, but doesn't walk through what a real status block is telling you. Here's an annotated one.</p>
+    </div>
+    <pre class="term">$ systemctl status nginx
+● nginx.service - A high performance web server
+     Loaded: loaded (/usr/lib/systemd/system/nginx.service; enabled; vendor preset: disabled)
+     Active: active (running) since Sun 2026-09-14 08:02:11 UTC; 2h 14min ago
+       Docs: man:nginx(8)
+   Main PID: 1042 (nginx)
+      Tasks: 3 (limit: 4683)
+     Memory: 5.2M
+        CPU: 89ms
+     CGroup: /system.slice/nginx.service
+             ├─1042 nginx: master process /usr/sbin/nginx
+             ├─1043 nginx: worker process
+             └─1044 nginx: worker process
+
+Sep 14 08:02:11 web01 systemd[1]: Starting A high performance web server...
+Sep 14 08:02:11 web01 systemd[1]: Started A high performance web server.</pre>
+    <p>Reading it top to bottom:</p>
+    <p><strong>The colored dot (●)</strong> is a fast visual summary before you read anything else — green for active/running, red for failed, white/grey for inactive or stopped. Worth knowing this exists even in a text-only environment where color may not render, because the word after <code class="inline">Active:</code> carries the same information regardless.</p>
+    <p><strong>Loaded:</strong> answers "does systemd know about this unit and where did its definition come from" — the file path tells you whether you're looking at a package-provided unit (<code class="inline">/usr/lib/systemd/system/</code>) or a local override (<code class="inline">/etc/systemd/system/</code>, which the study page's glossary already notes takes precedence). The enabled/disabled word here is the <strong>boot-time axis</strong> from the active/enabled diagram — it's telling you the same fact <code class="inline">systemctl is-enabled</code> would.</p>
+    <p><strong>Active:</strong> is the <strong>current-state axis</strong> — and it's actually two pieces of information in one line: the high-level state (active, inactive, failed, activating) and, in parentheses, a lower-level sub-state (running, exited, dead) that clarifies what that high-level state actually looks like for this unit type. A one-shot script-running unit can show <code class="inline">active (exited)</code> — meaning it ran, succeeded, and correctly isn't still running anything, which is entirely normal for that unit type and not evidence of a stalled service, unlike a long-running daemon unit where exited instead of running usually does mean something's wrong.</p>
+    <p><strong>Main PID:</strong> is the process systemd is actually tracking and will signal on stop/restart — useful when a service forks child workers, since this tells you which PID is the one systemd considers authoritative, distinct from the worker PIDs shown further down in the CGroup tree.</p>
+    <p><strong>The CGroup: tree</strong> shows every process systemd considers part of this unit, not just the main one — this is how systemd can cleanly stop a multi-process service (like nginx's master + worker model shown here) as one unit instead of hunting down each PID by hand, and it's the same cgroups mechanism the study page's container material already connects to resource limits.</p>
+    <p><strong>The last lines</strong> are a tail of that unit's own journal entries (the same data <code class="inline">journalctl -u nginx</code> would show in full) — a quick, unscoped preview without needing a separate command, useful for a fast first look before reaching for the full Week 7 journalctl toolkit if something looks wrong.</p>
+  </section>
+
+  <section id="exam-traps">
+    <div class="section-head">
+      <p class="kicker">Paired confusions</p>
+      <h2>Exam traps</h2>
+    </div>
+    <table class="blocks">
+      <caption>Students conflate... / ...with / What actually discriminates them</caption>
+      <thead><tr><th>Students conflate...</th><th>...with</th><th>What actually discriminates them</th></tr></thead>
+      <tbody>
+        <tr><td><code class="inline">After=</code></td><td><code class="inline">Wants=</code>/<code class="inline">Requires=</code></td><td><code class="inline">After=</code>/<code class="inline">Before=</code> control <strong>ordering only</strong>; <code class="inline">Wants=</code>/<code class="inline">Requires=</code> control <strong>whether failure matters</strong> — a unit can have either without the other, and usually needs both together</td></tr>
+        <tr><td><code class="inline">Wants=</code> without <code class="inline">After=</code></td><td>A guarantee the wanted unit starts first</td><td><code class="inline">Wants=</code> only ensures the dependency is pulled in — it says nothing about sequencing; without <code class="inline">After=</code>, the two can start in either order</td></tr>
+        <tr><td><code class="inline">active (exited)</code></td><td>A service that crashed or stopped unexpectedly</td><td>Entirely normal for a <strong>one-shot</strong> unit that ran to completion and correctly has nothing left running — the sub-state in parentheses is what tells you which case you're in</td></tr>
+        <tr><td>Killing worker PIDs shown in the CGroup tree</td><td>The correct way to stop a multi-process service</td><td><code class="inline">systemctl stop</code> operates on the whole cgroup as one unit via the <strong>Main PID</strong>; manually killing worker PIDs can leave systemd's tracked state inconsistent with reality</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="quiz">
+    <div class="section-head">
+      <p class="kicker">Check yourself</p>
+      <h2>Scenario quiz</h2>
+      <p>Think it through before you expand the answer.</p>
+    </div>
+
+    <div class="example">
+      <span class="tag">Ordering vs. requirement</span>
+      <h3>Q1. Wants= but no After=</h3>
+      <p>A service's unit file has <code class="inline">Wants=postgresql.service</code> but no <code class="inline">After=postgresql.service</code>. The service occasionally fails to connect to its database right after a reboot, but works fine after a manual restart. Diagnose why, precisely.</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <p><code class="inline">Wants=</code> only guarantees <code class="inline">postgresql.service</code> gets pulled into the boot sequence — it does not guarantee it starts <em>before</em> the dependent service. Without a matching <code class="inline">After=postgresql.service</code>, systemd is free to start both units in either order (or in parallel), so the dependent service sometimes wins the race and tries to connect before the database is listening. Adding <code class="inline">After=postgresql.service</code> alongside the existing <code class="inline">Wants=</code> fixes the ordering without changing the failure-tolerance behavior <code class="inline">Wants=</code> already provides.</p>
+        </div>
+      </details>
+    </div>
+
+    <div class="example">
+      <span class="tag">Reading status</span>
+      <h3>Q2. active (exited) on a backup unit</h3>
+      <p><code class="inline">systemctl status</code> for a nightly-backup unit shows <code class="inline">Active: active (exited)</code>. A junior admin flags this as a failure needing investigation. Are they right?</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <p>Not necessarily — for a one-shot unit (the typical type for a backup job that runs once and finishes), <code class="inline">active (exited)</code> means it ran successfully to completion and correctly has no ongoing process, which is the expected end state. The distinguishing check is whether the unit's <code class="inline">ExecStart</code> is a one-shot type and whether the exit code was 0 (visible via <code class="inline">systemctl status</code>'s recent journal lines or a full <code class="inline">journalctl -u</code> check) — exited alone isn't evidence of failure, only the combination of unit type and exit code tells you that.</p>
+        </div>
+      </details>
+    </div>
+
+    <div class="example">
+      <span class="tag">Process management</span>
+      <h3>Q3. Killing a worker PID directly</h3>
+      <p>A multi-worker service is misbehaving, and an admin runs <code class="inline">kill</code> directly against one worker PID visible in the <code class="inline">CGroup:</code> tree instead of using <code class="inline">systemctl restart</code>. What's the risk with this approach?</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <p>systemd tracks the unit as a whole via its Main PID and cgroup membership, not by any single worker PID — manually killing one worker can leave systemd's view of the unit's state (active/running) out of sync with what's actually happening (a service now missing a worker, possibly respawning it unpredictably depending on the unit's <code class="inline">Restart=</code> policy, or left in a degraded state systemd doesn't detect). <code class="inline">systemctl restart</code> operates through systemd's own tracking, ensuring the whole unit's process group is stopped and started coherently instead of leaving a partial state behind.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>IT251 · Linux+ (XK0-006) · Week 5 deep dive — companion to the Week 5 study page.</p>
+  </div>
+</footer>
+
+<button id="backToTop" class="back-to-top" aria-label="Back to top" title="Back to top">&uarr;</button>
+
+<script>
+  const backToTop = document.getElementById('backToTop');
+  function toggleBackToTop(){ backToTop.classList.toggle('show', window.scrollY > 480); }
+  window.addEventListener('scroll', toggleBackToTop, {passive:true});
+  toggleBackToTop();
+  backToTop.addEventListener('click', () => window.scrollTo({top:0, behavior:'smooth'}));
+</script>

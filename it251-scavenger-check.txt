@@ -3,6 +3,10 @@
 # just compares what you recorded against what's actually in your own
 # ~/IT251/scavenger tree right now, so you know what's correct before you submit.
 set -uo pipefail
+# No -e here on purpose (unlike the other IT251 scripts): each check() call
+# below is allowed to "fail" (a wrong or unreadable answer) without killing
+# the script, because the whole point is to run all six checks and report a
+# score, not to bail out on the first miss.
 
 BASE="$HOME/IT251/scavenger"
 ANSWERS="${1:-$HOME/IT251/scavenger-answers.txt}"

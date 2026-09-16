@@ -1,0 +1,287 @@
+<title>Week 1 Deep Dive — Reading the Storage Stack</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --bg:#f2f6f4;
+    --surface:#ffffff;
+    --surface-2:#e6efec;
+    --text:#0c1a15;
+    --muted:#51655d;
+    --border:#cddcd5;
+    --accent:#0f7a5c;
+    --accent-soft:#dcf1e7;
+    --accent-2:#0e7490;
+    --accent-2-soft:#dbeff4;
+    --danger:#b3261e;
+    --danger-soft:#f8dcd9;
+    --correct:#0f7a5c;
+    --correct-soft:#dcf1e7;
+    --shadow: 0 1px 2px rgba(12,26,21,.06), 0 8px 24px rgba(12,26,21,.07);
+    --mono:'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    --sans:'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0a0f0d; --surface:#0f1613; --surface-2:#131c18;
+      --text:#d9f5e8; --muted:#82a99a; --border:#1e2b26;
+      --accent:#3ddc97; --accent-soft:#123024;
+      --accent-2:#22d3ee; --accent-2-soft:#0c2b30;
+      --danger:#ff7a68; --danger-soft:#33150f;
+      --correct:#3ddc97; --correct-soft:#123024;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 12px 32px rgba(0,0,0,.45);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0a0f0d; --surface:#0f1613; --surface-2:#131c18;
+    --text:#d9f5e8; --muted:#82a99a; --border:#1e2b26;
+    --accent:#3ddc97; --accent-soft:#123024;
+    --accent-2:#22d3ee; --accent-2-soft:#0c2b30;
+    --danger:#ff7a68; --danger-soft:#33150f;
+    --correct:#3ddc97; --correct-soft:#123024;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 12px 32px rgba(0,0,0,.45);
+  }
+
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto;} *{animation-duration:.001ms !important; transition-duration:.001ms !important;} }
+  body{ margin:0; background:var(--bg); color:var(--text); font-family:var(--sans); line-height:1.55; -webkit-font-smoothing:antialiased; }
+  a{ color:var(--accent-2); }
+  ::selection{ background:var(--accent-soft); }
+  .wrap{ max-width:1080px; margin:0 auto; padding:0 24px; }
+
+  header.hero{
+    border-bottom:1px solid var(--border);
+    background:repeating-linear-gradient(180deg, var(--surface-2) 0 1px, var(--bg) 1px 28px);
+    padding:56px 0 40px;
+  }
+  .termbar{ display:flex; gap:6px; margin-bottom:20px; }
+  .termbar span{ width:11px; height:11px; border-radius:50%; }
+  .termbar span:nth-child(1){ background:#ff5f57; }
+  .termbar span:nth-child(2){ background:#febc2e; }
+  .termbar span:nth-child(3){ background:#28c840; }
+  .eyebrow{ font-family:var(--mono); font-size:.8rem; color:var(--accent); }
+  .eyebrow::before{ content:"$ "; opacity:.7; }
+  h1{ font-family:var(--mono); font-weight:700; font-size:clamp(2rem,4vw,3rem); line-height:1.08; margin:.4em 0 .3em; text-wrap:balance; letter-spacing:-.01em; }
+  h1 .cursor{ display:inline-block; width:.5ch; background:var(--accent); margin-left:.15em; animation:blink 1.1s steps(1) infinite; }
+  @keyframes blink{ 50%{ opacity:0; } }
+  .hero p.lede{ max-width:68ch; font-size:1.1rem; color:var(--muted); margin:0 0 1.2em; }
+  .parent-link{ display:inline-flex; align-items:center; gap:.5em; font-family:var(--mono); font-size:.85rem; background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:.6em 1em; text-decoration:none; color:var(--accent); box-shadow:var(--shadow); }
+  .parent-link:hover{ border-color:var(--accent); }
+
+  nav.index{ position:sticky; top:0; z-index:20; background:color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter:blur(8px); border-bottom:1px solid var(--border); }
+  nav.index .wrap{ display:flex; gap:4px; overflow-x:auto; padding:10px 24px; scrollbar-width:none; }
+  nav.index .wrap::-webkit-scrollbar{ display:none; }
+  nav.index a{ font-family:var(--mono); font-size:.82rem; text-decoration:none; color:var(--muted); padding:.5em .9em; border-radius:6px; white-space:nowrap; border:1px solid transparent; }
+  nav.index a:hover{ color:var(--text); border-color:var(--border); background:var(--surface); }
+  nav.index a.toc-link{ font-weight:600; color:var(--accent); border-right:1px solid var(--border); border-radius:0; margin-right:8px; padding-right:16px; }
+  nav.index a.toc-link:hover{ color:var(--accent); background:transparent; border-right-color:var(--border); }
+  nav.index a:not(.toc-link)::before{ content:'#'; opacity:.5; margin-right:.3em; }
+
+  .back-to-top{ position:fixed; bottom:22px; right:22px; z-index:40; width:46px; height:46px;
+    background:var(--surface); border:1px solid var(--border); border-radius:10px; box-shadow:var(--shadow);
+    font-family:var(--mono); font-size:1.15rem; color:var(--accent); line-height:1;
+    display:flex; align-items:center; justify-content:center; padding:0; cursor:pointer; text-decoration:none;
+    opacity:0; visibility:hidden; transform:translateY(10px);
+    transition:opacity .25s ease, transform .25s ease, visibility 0s .25s; }
+  .back-to-top.show{ opacity:1; visibility:visible; transform:translateY(0); transition:opacity .25s ease, transform .25s ease, visibility 0s; }
+  .back-to-top:hover{ background:var(--accent-soft); border-color:var(--accent); }
+  .back-to-top:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+  @media print{ nav.index, .back-to-top{ display:none; } }
+
+  section{ padding:52px 0; border-bottom:1px solid var(--border); }
+  section:last-of-type{ border-bottom:none; }
+  .section-head{ margin-bottom:22px; max-width:74ch; }
+  .kicker{ font-family:var(--mono); font-size:.75rem; letter-spacing:.1em; text-transform:uppercase; color:var(--accent-2); margin:0 0 .5em; }
+  .kicker::before{ content:"// "; opacity:.6; }
+  h2{ font-family:var(--mono); font-size:clamp(1.4rem,2.4vw,1.9rem); margin:0 0 .3em; text-wrap:balance; }
+  h3{ font-family:var(--mono); font-size:1.05rem; margin:1.4em 0 .4em; }
+  .section-head p{ color:var(--muted); margin:.4em 0 0; }
+  section p{ max-width:74ch; }
+
+  table.blocks{ width:100%; border-collapse:collapse; font-size:.9rem; margin:22px 0 24px; }
+  table.blocks caption{ caption-side:top; text-align:left; font-family:var(--mono); font-size:.75rem; text-transform:uppercase; letter-spacing:.08em; color:var(--accent-2); margin-bottom:.5em; }
+  table.blocks th, table.blocks td{ border:1px solid var(--border); padding:.6em .85em; text-align:left; vertical-align:top; }
+  table.blocks th{ background:var(--surface-2); font-family:var(--mono); font-size:.78rem; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); }
+  table.blocks td:first-child{ font-family:var(--mono); font-weight:600; color:var(--accent); }
+  table.blocks tbody tr:nth-child(odd){ background:var(--surface); }
+  table.blocks tbody tr:nth-child(even){ background:color-mix(in srgb, var(--surface) 60%, var(--surface-2)); }
+
+  .example{ background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px 22px; margin-bottom:16px; box-shadow:var(--shadow); }
+  .example h3{ font-family:var(--mono); font-size:1.02rem; margin:0 0 8px; }
+  .example .tag{ display:inline-block; font-family:var(--mono); font-size:.68rem; text-transform:uppercase; letter-spacing:.08em; color:var(--accent-2); background:var(--accent-2-soft); border-radius:5px; padding:.25em .6em; margin-bottom:10px; }
+  code.inline{ font-family:var(--mono); background:var(--surface-2); border-radius:4px; padding:.1em .4em; font-size:.92em; }
+  pre.term{ font-family:var(--mono); font-size:.85rem; background:var(--surface-2); border:1px solid var(--border); border-radius:8px; padding:12px 14px; overflow-x:auto; margin:10px 0; white-space:pre; }
+  details.solution{ margin-top:12px; }
+  details.solution summary{ cursor:pointer; font-family:var(--mono); font-size:.82rem; color:var(--accent); list-style:none; display:inline-flex; align-items:center; gap:.4em; }
+  details.solution summary::-webkit-details-marker{ display:none; }
+  details.solution summary::before{ content:"▸"; transition:transform .15s; }
+  details.solution[open] summary::before{ transform:rotate(90deg); }
+  details.solution .solbody{ margin-top:10px; padding:14px 16px; background:var(--surface-2); border-radius:8px; font-size:.92rem; }
+  details.solution .solbody p{ max-width:none; }
+
+  .callout{ border-left:3px solid var(--accent); background:var(--accent-soft); border-radius:0 8px 8px 0; padding:14px 18px; margin:10px 0 24px; font-size:.92rem; max-width:74ch; }
+  .callout b{ font-family:var(--mono); }
+
+  footer{ padding:32px 0 60px; }
+  footer p{ color:var(--muted); font-size:.85rem; font-family:var(--mono); }
+</style>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="termbar"><span></span><span></span><span></span></div>
+    <p class="eyebrow">IT251 · Week 1 · Deep Dive</p>
+    <h1>Reading the Storage Stack for Real<span class="cursor">&nbsp;</span></h1>
+    <p class="lede">Companion to the Week 1 study page. That page gave you the boot-sequence diagram, the FHS tree, and the storage-stack diagram (Disk &rarr; Partition &rarr; LVM &rarr; Filesystem &rarr; Mount). This picks up where the diagram stops being enough: actual command output, the failure modes that only show up once a box has been alive for a while, and the traps in this material that show up on practice exams. If you haven't got the boot sequence and FHS basics down cold from the study page, go do that first — this assumes you do.</p>
+    <a class="parent-link" href="IT251_Study_Page.html">&larr; Back to the Week 1 Study Page</a>
+  </div>
+</header>
+
+<nav class="index" aria-label="Section index">
+  <div class="wrap">
+    <a href="IT251_Study_Page.html" class="toc-link">&larr; Study Page</a>
+    <a href="#reading-output">Reading real output</a>
+    <a href="#edge-cases">Edge cases</a>
+    <a href="#exam-traps">Exam traps</a>
+    <a href="#quiz">Scenario quiz</a>
+  </div>
+</nav>
+
+<main class="wrap">
+
+  <section id="reading-output">
+    <div class="section-head">
+      <p class="kicker">Annotated output</p>
+      <h2>Reading real output: lsblk, findmnt, blkid, fstab</h2>
+      <p>The study page's storage-stack diagram shows the <em>shape</em> — Disk &rarr; Partition &rarr; LVM &rarr; Filesystem &rarr; Mount. In the real world you diagnose that shape by reading four tools' output together. None of them alone tells the whole story.</p>
+    </div>
+
+    <h3>lsblk — the disk's physical/logical layout</h3>
+    <pre class="term">$ lsblk
+NAME            MAJ:MIN RM   SIZE RO TYPE MOUNTPOINTS
+sda               8:0    0    40G  0 disk
+├─sda1            8:1    0     1G  0 part /boot
+└─sda2            8:2    0    39G  0 part
+  └─vg_data-lv_root
+                253:0    0    35G  0 lvm  /
+  └─vg_data-lv_var
+                253:1    0     4G  0 lvm  /var</pre>
+    <p>Read this top to bottom as a tree, not a list:</p>
+    <p><code class="inline">sda</code> is the whole disk (<code class="inline">disk</code>). Its size (40G) is the ceiling everything below it has to fit inside.</p>
+    <p><code class="inline">sda1</code> and <code class="inline">sda2</code> are partitions carved out of that disk (<code class="inline">part</code>). Notice <code class="inline">sda1</code> mounts directly at <code class="inline">/boot</code> — no LVM layer at all for the boot partition. That's deliberate and common: GRUB has to be able to find and read <code class="inline">/boot</code> before the kernel and any LVM tooling exist to assemble a logical volume, so <code class="inline">/boot</code> is almost always a plain partition.</p>
+    <p><code class="inline">sda2</code> doesn't mount anywhere itself — it feeds into LVM (<code class="inline">lvm</code> type), which then presents <code class="inline">lv_root</code> and <code class="inline">lv_var</code> as the things that actually get mounted.</p>
+    <p>The indentation under <code class="inline">sda2</code> is the giveaway that LVM is doing something with a partition here — a flat, no-LVM box would show partitions mounting directly, the way <code class="inline">sda1</code> does.</p>
+    <div class="callout"><b>Exam-trap version of this:</b> a question describes a box where <code class="inline">/boot</code> mounts fine but the rest of the system won't come up, and asks you to explain why LVM tooling isn't the problem. The <code class="inline">lsblk</code> layout above is exactly why — <code class="inline">/boot</code> never depended on LVM being available in the first place.</div>
+
+    <h3>findmnt — what's actually mounted, right now, with real options</h3>
+    <pre class="term">$ findmnt /var
+TARGET SOURCE                FSTYPE OPTIONS
+/var   /dev/mapper/vg_data-lv_var
+                              ext4   rw,relatime</pre>
+    <p><code class="inline">lsblk</code> tells you the block-device layout; <code class="inline">findmnt</code> tells you the <em>live mount table</em> — what filesystem type is actually in use and what options it mounted with. This matters because a filesystem can exist and be perfectly healthy while mounted read-only (<code class="inline">ro</code> instead of <code class="inline">rw</code> in the options column) — a classic "I have permission on paper but writes fail anyway" symptom that <code class="inline">ls -l</code> alone won't explain, because the block on write is coming from the mount, not the file's permission bits.</p>
+
+    <h3>blkid — matching a device node to the UUID fstab actually uses</h3>
+    <pre class="term">$ blkid /dev/sda1
+/dev/sda1: UUID="3a91-2C4F" TYPE="vfat" PARTUUID="a1b2c3d4-01"</pre>
+    <p>This is the missing link between <code class="inline">lsblk</code>'s device names and <code class="inline">/etc/fstab</code>'s entries, which almost never reference <code class="inline">/dev/sda1</code> directly — they reference the UUID. Why UUID instead of the device name? Because <code class="inline">/dev/sda1</code> isn't a stable identity — if you add a second disk, or the boot order changes, what the kernel calls <code class="inline">sda</code> and <code class="inline">sdb</code> can swap. A UUID is generated once, baked into the filesystem itself, and doesn't drift when device enumeration order changes. <code class="inline">blkid</code> is how you find out what UUID a given partition actually carries, so you can cross-check it against what <code class="inline">fstab</code> claims.</p>
+
+    <h3>/etc/fstab — field by field, and what happens when one is wrong</h3>
+    <pre class="term">UUID=3a91-2C4F  /boot  vfat  defaults        0  2
+UUID=7f2e-91aa  /      ext4  defaults        0  1
+UUID=b81c-44de  /var   ext4  defaults,nofail 0  2</pre>
+    <p>Six fields, in order: <strong>device</strong> (by UUID here), <strong>mount point</strong>, <strong>filesystem type</strong>, <strong>mount options</strong>, <strong>dump flag</strong> (legacy, almost always <code class="inline">0</code> now), <strong>fsck pass order</strong> (<code class="inline">0</code> = don't check, <code class="inline">1</code> = check first — root only gets <code class="inline">1</code>, everything else gets <code class="inline">2</code> or <code class="inline">0</code>).</p>
+    <div class="callout"><b>The trap that actually bites students:</b> if a UUID in <code class="inline">fstab</code> doesn't match any real device — a drive was removed, cloned without regenerating its UUID, or someone fat-fingered a digit — the boot process will, on most distros, drop you into an <strong>emergency shell</strong> (sometimes called a maintenance/rescue shell) instead of completing the boot. This looks alarming the first time you see it — a text prompt, no desktop, an error about a filesystem or <code class="inline">fsck</code> failing — but it's not a kernel panic and it's not data loss. The fix is almost always: boot into that emergency shell (it's usually a normal root shell), edit <code class="inline">/etc/fstab</code> to correct or remove the bad line, and reboot. This is precisely why the <code class="inline">nofail</code> option exists on the <code class="inline">/var</code> line above — for a non-critical mount, <code class="inline">nofail</code> tells the boot process "continue normally even if this one doesn't mount," trading a working-but-incomplete boot for a hard stop. Root's own entry should never carry <code class="inline">nofail</code> — if root can't mount, there's no functioning system to continue booting into anyway.</div>
+  </section>
+
+  <section id="edge-cases">
+    <div class="section-head">
+      <p class="kicker">Edge cases</p>
+      <h2>Where the simple rules break</h2>
+    </div>
+    <p><strong>GPT still needs a small BIOS boot partition on legacy-BIOS+GPT combos.</strong> The study page correctly says GPT removes MBR's 2TB/4-partition limits — but if a system boots via legacy BIOS (not UEFI) and uses GPT, GRUB needs a tiny (~1MB) unformatted "BIOS boot partition" to embed its second-stage code, because legacy BIOS has nowhere else to put it. Pure UEFI+GPT systems don't need this — it's specifically the BIOS+GPT combination that does. If you see an unlabeled, tiny partition with no filesystem and no mount point in <code class="inline">lsblk</code> output on an otherwise-normal GPT disk, this is almost certainly it, not an error.</p>
+    <p><strong>resize2fs can grow <em>and</em> shrink ext4 — xfs_growfs can only grow.</strong> This is a real, frequently-tested asymmetry, not a minor footnote: XFS has no supported way to shrink a filesystem once created, full stop. If a student's plan is "make the LV smaller, then shrink the filesystem to match," that plan only exists on ext4. On XFS, the only path to a smaller filesystem is backup &rarr; recreate smaller &rarr; restore. Verify current at authoring time if you're teaching a specific distro's default (this asymmetry itself is stable and long-standing).</p>
+    <p><strong>A VG showing free space doesn't guarantee an LV can use all of it.</strong> The study page's "disk is full, VG has 200GB free" example is the common case, but if that VG spans multiple physical volumes and the LV isn't set up as <code class="inline">--type striped</code> or similar, <code class="inline">lvextend</code> still works fine — LVM handles this transparently for a simple linear LV. The rarer edge case is a <em>thinly provisioned</em> LV pool: you can technically over-commit a thin pool beyond the VG's real physical space, and running out of actual backing space then causes writes to fail even though <code class="inline">lvs</code>/<code class="inline">vgs</code> "space available" numbers looked fine. Worth knowing this distinction exists even if thin provisioning itself is out of scope here.</p>
+  </section>
+
+  <section id="exam-traps">
+    <div class="section-head">
+      <p class="kicker">Paired confusions</p>
+      <h2>Exam traps</h2>
+    </div>
+    <table class="blocks">
+      <caption>Students conflate... / ...with / What actually discriminates them</caption>
+      <thead><tr><th>Students conflate...</th><th>...with</th><th>What actually discriminates them</th></tr></thead>
+      <tbody>
+        <tr><td>MBR's 2TB limit</td><td>A hardware limitation of the drive</td><td>MBR's limit is a property of the <strong>partition table format</strong>, not the disk — the same physical drive shows its full capacity once repartitioned with GPT</td></tr>
+        <tr><td>resize2fs failing to shrink</td><td>A generic "filesystem is full" error</td><td><code class="inline">resize2fs</code> shrinks ext4 fine when there's room; the real asymmetry is that <strong>XFS can't shrink at all</strong>, regardless of free space</td></tr>
+        <tr><td>An emergency/rescue shell at boot</td><td>A kernel panic or hardware failure</td><td>An emergency shell usually means <strong>fstab or fsck found a mount it couldn't satisfy</strong> — it's a config problem you fix from a live root shell, not a hardware failure</td></tr>
+        <tr><td><code class="inline">/dev/sda1</code> in fstab</td><td>A stable, safe way to reference a partition</td><td>Device names can renumber when disks are added/removed; <strong>UUID</strong> (from <code class="inline">blkid</code>) is the stable identity fstab should reference instead</td></tr>
+        <tr><td>A VG with free space</td><td>A guarantee any LV in it can grow</td><td>True for a simple linear LV; <strong>thin-provisioned pools</strong> can report space that isn't really backed by physical capacity</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="quiz">
+    <div class="section-head">
+      <p class="kicker">Check yourself</p>
+      <h2>Scenario quiz</h2>
+      <p>Think it through before you expand the answer.</p>
+    </div>
+
+    <div class="example">
+      <span class="tag">Boot failure</span>
+      <h3>Q1. Drops to a shell with a bad UUID message</h3>
+      <p>A server won't finish booting — it drops to a shell prompt with no desktop, and the last visible message before that mentions a device UUID that "does not exist." What's your first move, and is this a hardware failure?</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <p>Not a hardware failure — this is the classic bad-<code class="inline">fstab</code>-entry emergency shell. From that shell (it's a functioning root shell), run <code class="inline">blkid</code> to see what UUIDs actually exist on the box, compare against <code class="inline">/etc/fstab</code>, fix or remove the stale line (adding <code class="inline">nofail</code> if it's a non-critical mount), and reboot.</p>
+        </div>
+      </details>
+    </div>
+
+    <div class="example">
+      <span class="tag">Filesystem</span>
+      <h3>Q2. Shrinking an XFS-backed LV</h3>
+      <p>You're told to shrink an LV that holds an XFS filesystem by 10GB to free up space for another LV in the same VG. Walk through why this specific request, as stated, can't be done directly.</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <p>XFS has no supported shrink operation — <code class="inline">xfs_growfs</code> only grows. The LV's block device could theoretically be shrunk with <code class="inline">lvreduce</code>, but doing that while an XFS filesystem still occupies the old size risks corrupting it, since the filesystem has no way to first shrink its own metadata down to match. The real path is: back up the data, recreate the filesystem at the smaller size, restore. If shrinking without a rebuild is a hard requirement, that's an argument for provisioning ext4 instead of XFS on volumes expected to need this later.</p>
+        </div>
+      </details>
+    </div>
+
+    <div class="example">
+      <span class="tag">Boot layout</span>
+      <h3>Q3. /boot outside of LVM</h3>
+      <p><code class="inline">lsblk</code> shows <code class="inline">/boot</code> mounted directly from a partition (<code class="inline">sda1</code>), with no LVM layer, while <code class="inline">/</code> and <code class="inline">/var</code> both sit on top of an LVM volume group. Is this inconsistent or misconfigured?</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <p>Not misconfigured — this is the normal, expected layout. GRUB needs to read <code class="inline">/boot</code> before any LVM tooling is available to assemble a volume group, so <code class="inline">/boot</code> almost always stays a plain partition even when everything else on the disk uses LVM.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>IT251 · Linux+ (XK0-006) · Week 1 deep dive — companion to the Week 1 study page.</p>
+  </div>
+</footer>
+
+<button id="backToTop" class="back-to-top" aria-label="Back to top" title="Back to top">&uarr;</button>
+
+<script>
+  const backToTop = document.getElementById('backToTop');
+  function toggleBackToTop(){ backToTop.classList.toggle('show', window.scrollY > 480); }
+  window.addEventListener('scroll', toggleBackToTop, {passive:true});
+  toggleBackToTop();
+  backToTop.addEventListener('click', () => window.scrollTo({top:0, behavior:'smooth'}));
+</script>

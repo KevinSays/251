@@ -317,6 +317,8 @@
       <figcaption>Anything written only to a container's writable layer disappears when the container is removed — a volume or bind mount is the only way data outlives the container itself.</figcaption>
     </figure>
 
+    <p>Containers aren't a separate virtualization technology — they're regular Linux processes wearing two kernel features as a disguise. <strong>Namespaces</strong> give a process its own isolated view of things every other process shares by default (its own PID tree, network interfaces, mount points, hostname), which is what makes a container feel like a separate machine. <strong>Cgroups</strong> (control groups) cap and account for what that process is allowed to use — CPU, memory, I/O — which is the actual mechanism behind flags like <code class="inline">--memory</code> and <code class="inline">--cpus</code>. Cgroups v2 is the current default on virtually every modern distro (cgroups v1 is legacy at this point); a container runtime is mostly a friendly wrapper around namespaces + cgroups, not magic underneath.</p>
+
     <table class="blocks">
       <caption>Systemd unit types</caption>
       <thead><tr><th>Unit type</th><th>Manages</th></tr></thead>
@@ -404,6 +406,19 @@
     </div>
 
     <div class="example">
+      <span class="tag">Systemd</span>
+      <h3>Disabled won't stay down — mask it</h3>
+      <p>A junior admin keeps <code class="inline">systemctl disable</code>-ing a service so it won't start at boot, but another admin (or a package update) keeps manually starting it back up. How do you actually lock it down?</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <pre class="term">sudo systemctl mask servicename</pre>
+          <p><code class="inline">disable</code> only removes the boot-time symlink — the unit can still be started manually with <code class="inline">systemctl start</code> at any time. <code class="inline">mask</code> goes further: it symlinks the unit file to <code class="inline">/dev/null</code>, so <em>nothing</em> can start it — manually, at boot, or as another unit's dependency — until it's explicitly <code class="inline">unmask</code>ed. Reach for <code class="inline">mask</code> when a service being started at all (not just at boot) would be a problem, not just when you want it off by default.</p>
+        </div>
+      </details>
+    </div>
+
+    <div class="example">
       <span class="tag">Containers</span>
       <h3>Data disappeared after removing a container</h3>
       <p>A container was writing to a file inside itself. After <code class="inline">docker rm</code>, that data is gone.</p>
@@ -425,7 +440,12 @@
         <summary>Show answer</summary>
         <div class="solbody">
           <p><strong>Diagnosis:</strong> the repo's GPG signing key hasn't been imported yet — <code class="inline">apt</code> refuses to trust packages it can't cryptographically verify came from that repo, which is the whole point of repo signing.</p>
-          <p><strong>Fix:</strong> import the repository's public key (the exact command is provided by whoever publishes the repo, typically an <code class="inline">apt-key add</code> or a key file dropped into <code class="inline">/etc/apt/trusted.gpg.d/</code> on modern Debian/Ubuntu), then re-run <code class="inline">apt update</code>. Never work around this by disabling signature checks — that defeats the entire protection.</p>
+          <p><strong>Fix (current practice):</strong> download the repo's public key, convert it to binary with <code class="inline">gpg --dearmor</code>, and drop it in <code class="inline">/etc/apt/keyrings/</code>, then reference it explicitly with <code class="inline">signed-by=</code> in the repo's source entry:</p>
+          <pre class="term">curl -fsSL https://example.com/repo.asc | sudo gpg --dearmor -o /etc/apt/keyrings/example.gpg
+echo "deb [signed-by=/etc/apt/keyrings/example.gpg] https://example.com/repo stable main" | sudo tee /etc/apt/sources.list.d/example.list
+sudo apt update</pre>
+          <p><code class="inline">signed-by=</code> scopes that one key to that one repo — the old failure mode it fixes is a single imported key being able to vouch for <em>any</em> repo on the system, not just the one it was meant for.</p>
+          <p><strong>What older tutorials show:</strong> <code class="inline">apt-key add</code> or dropping a key straight into <code class="inline">/etc/apt/trusted.gpg.d/</code>. That's the old global-keyring method — <code class="inline">apt-key</code> is deprecated (removed entirely as of Debian 13), which is exactly why it's worth checking a tutorial's date before following it verbatim. Never work around either error by disabling signature checks — that defeats the entire protection.</p>
         </div>
       </details>
     </div>
@@ -506,7 +526,7 @@
     {t:"Volume (named vs. bind mount)", d:"Storage that persists outside a container's writable layer — a named volume is managed by the runtime; a bind mount maps a specific host path."},
     {t:"Container networking / port publishing", d:"Containers on a shared user-defined network can reach each other by name; -p host:container exposes a container's port to the host."},
     {t:"Privileged vs. unprivileged/rootless", d:"--privileged grants near-host-level access — a real security boundary, not a convenience flag. Unprivileged/rootless is the safer default posture."},
-    {t:"GPG repository signing", d:"Package repositories sign their packages with a GPG key; the package manager refuses to install anything it can't verify against a trusted, imported key — the mechanism that stops a compromised mirror from silently serving malicious packages."},
+    {t:"GPG repository signing", d:"Package repositories sign their packages with a GPG key; the package manager refuses to install anything it can't verify against a trusted, imported key — the mechanism that stops a compromised mirror from silently serving malicious packages. Current practice: dearmor the key into /etc/apt/keyrings/ and scope it to one repo with signed-by= in the source entry; apt-key and a bare drop into /etc/apt/trusted.gpg.d/ are what older tutorials show and are deprecated (apt-key is gone as of Debian 13)."},
     {t:"update-alternatives --config", d:"Interactively lists every registered alternative for a command and lets you choose which one the symlinked command actually resolves to."},
     {t:".service unit file location", d:"/usr/lib/systemd/system/ holds package-provided units; /etc/systemd/system/ holds local overrides and wins when both define the same unit."},
     {t:"Port publishing (-p host:container)", d:"Maps a host port to a container's internal port. Without it, a container's service is only reachable from inside its own network namespace, not from the host or outside."},

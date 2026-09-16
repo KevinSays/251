@@ -1,0 +1,284 @@
+<title>Week 4 Deep Dive — Cron, Umask, and ls -l</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --bg:#f2f6f4;
+    --surface:#ffffff;
+    --surface-2:#e6efec;
+    --text:#0c1a15;
+    --muted:#51655d;
+    --border:#cddcd5;
+    --accent:#0f7a5c;
+    --accent-soft:#dcf1e7;
+    --accent-2:#0e7490;
+    --accent-2-soft:#dbeff4;
+    --danger:#b3261e;
+    --danger-soft:#f8dcd9;
+    --correct:#0f7a5c;
+    --correct-soft:#dcf1e7;
+    --shadow: 0 1px 2px rgba(12,26,21,.06), 0 8px 24px rgba(12,26,21,.07);
+    --mono:'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    --sans:'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0a0f0d; --surface:#0f1613; --surface-2:#131c18;
+      --text:#d9f5e8; --muted:#82a99a; --border:#1e2b26;
+      --accent:#3ddc97; --accent-soft:#123024;
+      --accent-2:#22d3ee; --accent-2-soft:#0c2b30;
+      --danger:#ff7a68; --danger-soft:#33150f;
+      --correct:#3ddc97; --correct-soft:#123024;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 12px 32px rgba(0,0,0,.45);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0a0f0d; --surface:#0f1613; --surface-2:#131c18;
+    --text:#d9f5e8; --muted:#82a99a; --border:#1e2b26;
+    --accent:#3ddc97; --accent-soft:#123024;
+    --accent-2:#22d3ee; --accent-2-soft:#0c2b30;
+    --danger:#ff7a68; --danger-soft:#33150f;
+    --correct:#3ddc97; --correct-soft:#123024;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 12px 32px rgba(0,0,0,.45);
+  }
+
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto;} *{animation-duration:.001ms !important; transition-duration:.001ms !important;} }
+  body{ margin:0; background:var(--bg); color:var(--text); font-family:var(--sans); line-height:1.55; -webkit-font-smoothing:antialiased; }
+  a{ color:var(--accent-2); }
+  ::selection{ background:var(--accent-soft); }
+  .wrap{ max-width:1080px; margin:0 auto; padding:0 24px; }
+
+  header.hero{
+    border-bottom:1px solid var(--border);
+    background:repeating-linear-gradient(180deg, var(--surface-2) 0 1px, var(--bg) 1px 28px);
+    padding:56px 0 40px;
+  }
+  .termbar{ display:flex; gap:6px; margin-bottom:20px; }
+  .termbar span{ width:11px; height:11px; border-radius:50%; }
+  .termbar span:nth-child(1){ background:#ff5f57; }
+  .termbar span:nth-child(2){ background:#febc2e; }
+  .termbar span:nth-child(3){ background:#28c840; }
+  .eyebrow{ font-family:var(--mono); font-size:.8rem; color:var(--accent); }
+  .eyebrow::before{ content:"$ "; opacity:.7; }
+  h1{ font-family:var(--mono); font-weight:700; font-size:clamp(2rem,4vw,3rem); line-height:1.08; margin:.4em 0 .3em; text-wrap:balance; letter-spacing:-.01em; }
+  h1 .cursor{ display:inline-block; width:.5ch; background:var(--accent); margin-left:.15em; animation:blink 1.1s steps(1) infinite; }
+  @keyframes blink{ 50%{ opacity:0; } }
+  .hero p.lede{ max-width:68ch; font-size:1.1rem; color:var(--muted); margin:0 0 1.2em; }
+  .parent-link{ display:inline-flex; align-items:center; gap:.5em; font-family:var(--mono); font-size:.85rem; background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:.6em 1em; text-decoration:none; color:var(--accent); box-shadow:var(--shadow); }
+  .parent-link:hover{ border-color:var(--accent); }
+
+  nav.index{ position:sticky; top:0; z-index:20; background:color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter:blur(8px); border-bottom:1px solid var(--border); }
+  nav.index .wrap{ display:flex; gap:4px; overflow-x:auto; padding:10px 24px; scrollbar-width:none; }
+  nav.index .wrap::-webkit-scrollbar{ display:none; }
+  nav.index a{ font-family:var(--mono); font-size:.82rem; text-decoration:none; color:var(--muted); padding:.5em .9em; border-radius:6px; white-space:nowrap; border:1px solid transparent; }
+  nav.index a:hover{ color:var(--text); border-color:var(--border); background:var(--surface); }
+  nav.index a.toc-link{ font-weight:600; color:var(--accent); border-right:1px solid var(--border); border-radius:0; margin-right:8px; padding-right:16px; }
+  nav.index a.toc-link:hover{ color:var(--accent); background:transparent; border-right-color:var(--border); }
+  nav.index a:not(.toc-link)::before{ content:'#'; opacity:.5; margin-right:.3em; }
+
+  .back-to-top{ position:fixed; bottom:22px; right:22px; z-index:40; width:46px; height:46px;
+    background:var(--surface); border:1px solid var(--border); border-radius:10px; box-shadow:var(--shadow);
+    font-family:var(--mono); font-size:1.15rem; color:var(--accent); line-height:1;
+    display:flex; align-items:center; justify-content:center; padding:0; cursor:pointer; text-decoration:none;
+    opacity:0; visibility:hidden; transform:translateY(10px);
+    transition:opacity .25s ease, transform .25s ease, visibility 0s .25s; }
+  .back-to-top.show{ opacity:1; visibility:visible; transform:translateY(0); transition:opacity .25s ease, transform .25s ease, visibility 0s; }
+  .back-to-top:hover{ background:var(--accent-soft); border-color:var(--accent); }
+  .back-to-top:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+  @media print{ nav.index, .back-to-top{ display:none; } }
+
+  section{ padding:52px 0; border-bottom:1px solid var(--border); }
+  section:last-of-type{ border-bottom:none; }
+  .section-head{ margin-bottom:22px; max-width:74ch; }
+  .kicker{ font-family:var(--mono); font-size:.75rem; letter-spacing:.1em; text-transform:uppercase; color:var(--accent-2); margin:0 0 .5em; }
+  .kicker::before{ content:"// "; opacity:.6; }
+  h2{ font-family:var(--mono); font-size:clamp(1.4rem,2.4vw,1.9rem); margin:0 0 .3em; text-wrap:balance; }
+  h3{ font-family:var(--mono); font-size:1.05rem; margin:1.4em 0 .4em; }
+  .section-head p{ color:var(--muted); margin:.4em 0 0; }
+  section p{ max-width:74ch; }
+
+  table.blocks{ width:100%; border-collapse:collapse; font-size:.9rem; margin:22px 0 24px; }
+  table.blocks caption{ caption-side:top; text-align:left; font-family:var(--mono); font-size:.75rem; text-transform:uppercase; letter-spacing:.08em; color:var(--accent-2); margin-bottom:.5em; }
+  table.blocks th, table.blocks td{ border:1px solid var(--border); padding:.6em .85em; text-align:left; vertical-align:top; }
+  table.blocks th{ background:var(--surface-2); font-family:var(--mono); font-size:.78rem; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); }
+  table.blocks td:first-child{ font-family:var(--mono); font-weight:600; color:var(--accent); }
+  table.blocks tbody tr:nth-child(odd){ background:var(--surface); }
+  table.blocks tbody tr:nth-child(even){ background:color-mix(in srgb, var(--surface) 60%, var(--surface-2)); }
+
+  .example{ background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px 22px; margin-bottom:16px; box-shadow:var(--shadow); }
+  .example h3{ font-family:var(--mono); font-size:1.02rem; margin:0 0 8px; }
+  .example .tag{ display:inline-block; font-family:var(--mono); font-size:.68rem; text-transform:uppercase; letter-spacing:.08em; color:var(--accent-2); background:var(--accent-2-soft); border-radius:5px; padding:.25em .6em; margin-bottom:10px; }
+  code.inline{ font-family:var(--mono); background:var(--surface-2); border-radius:4px; padding:.1em .4em; font-size:.92em; }
+  pre.term{ font-family:var(--mono); font-size:.85rem; background:var(--surface-2); border:1px solid var(--border); border-radius:8px; padding:12px 14px; overflow-x:auto; margin:10px 0; white-space:pre; }
+  details.solution{ margin-top:12px; }
+  details.solution summary{ cursor:pointer; font-family:var(--mono); font-size:.82rem; color:var(--accent); list-style:none; display:inline-flex; align-items:center; gap:.4em; }
+  details.solution summary::-webkit-details-marker{ display:none; }
+  details.solution summary::before{ content:"▸"; transition:transform .15s; }
+  details.solution[open] summary::before{ transform:rotate(90deg); }
+  details.solution .solbody{ margin-top:10px; padding:14px 16px; background:var(--surface-2); border-radius:8px; font-size:.92rem; }
+  details.solution .solbody p{ max-width:none; }
+
+  .callout{ border-left:3px solid var(--accent); background:var(--accent-soft); border-radius:0 8px 8px 0; padding:14px 18px; margin:10px 0 24px; font-size:.92rem; max-width:74ch; }
+  .callout b{ font-family:var(--mono); }
+
+  footer{ padding:32px 0 60px; }
+  footer p{ color:var(--muted); font-size:.85rem; font-family:var(--mono); }
+</style>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="termbar"><span></span><span></span><span></span></div>
+    <p class="eyebrow">IT251 · Week 4 · Deep Dive</p>
+    <h1>Cron's OR Trap, Umask Arithmetic, and Reading ls -l for Real<span class="cursor">&nbsp;</span></h1>
+    <p class="lede">Companion to the Week 4 study page. That page covers the cron 5-field syntax, the <code class="inline">/etc/passwd</code> fields, the zombie-process worked example, and the <code class="inline">/etc/login.defs</code> UID/GID lookup. This goes deeper on three things the study page correctly kept brief: what happens when cron's day-of-month and day-of-week fields fight each other, the actual arithmetic behind umask (it isn't subtraction), and how to read the parts of <code class="inline">ls -l</code> output the study page's permission coverage doesn't reach — setuid/setgid/sticky bits and the link-count column. Have the cron 5-field syntax and basic chmod/ls -l reading down before this.</p>
+    <a class="parent-link" href="IT251_Week4_Study_Page.html">&larr; Back to the Week 4 Study Page</a>
+  </div>
+</header>
+
+<nav class="index" aria-label="Section index">
+  <div class="wrap">
+    <a href="IT251_Week4_Study_Page.html" class="toc-link">&larr; Study Page</a>
+    <a href="#cron">Cron's OR trap</a>
+    <a href="#umask">Umask arithmetic</a>
+    <a href="#ls-l">Reading ls -l</a>
+    <a href="#exam-traps">Exam traps</a>
+    <a href="#quiz">Scenario quiz</a>
+  </div>
+</nav>
+
+<main class="wrap">
+
+  <section id="cron">
+    <div class="section-head">
+      <p class="kicker">Annotated, verified against man 5 crontab</p>
+      <h2>The cron day-of-month/day-of-week trap</h2>
+      <p>The study page teaches the 5-field syntax (minute hour day-of-month month day-of-week) and step/range/list values. What it doesn't cover — because it's an edge case, not the core mental model — is what happens when a cron line restricts <strong>both</strong> the day-of-month field and the day-of-week field at the same time.</p>
+    </div>
+    <p>The intuitive assumption is "AND" — run only when both conditions are true. <strong>That assumption is wrong</strong>, and it's wrong specifically, per the crontab man page's documented behavior:</p>
+    <div class="callout">If both fields are restricted (i.e., don't start with <code class="inline">*</code>), the command will be run when <strong>either</strong> field matches the current time.</div>
+    <pre class="term">30 4 1,15 * 5</pre>
+    <p>A student reading this as "4:30am, but only on the 1st or 15th, and only if that day happens to be a Friday" would be wrong. The actual behavior: this fires at 4:30am on the 1st of the month, on the 15th of the month, <strong>and</strong> on every Friday — three independent trigger conditions OR'd together, not one narrow AND'd condition.</p>
+    <p><strong>The rule that resolves the confusion:</strong> the AND/OR behavior hinges on whether a field is "restricted" — meaning it doesn't start with <code class="inline">*</code>. If <em>either</em> the day-of-month or day-of-week field is unrestricted (a plain <code class="inline">*</code>, or something like <code class="inline">*/2</code> which the man page also treats as unrestricted since it starts with <code class="inline">*</code>), the two fields behave normally and combine with AND, same as every other field pair in the line. It's specifically the case where <strong>both</strong> are restricted simultaneously that flips the relationship to OR. This is exactly the kind of rule that's easy to get backwards under exam pressure because "restricted fields should be more selective, not less" is the natural (wrong) intuition — restricting both fields actually <em>widens</em> the set of trigger times compared to restricting just one.</p>
+    <p><strong>Why this matters for real jobs, not just the exam:</strong> a backup script scheduled with <code class="inline">0 2 1 * 1</code> (intending "2am on the 1st, if it's a Monday" as an extra safety check) will actually run at 2am on the 1st of every month <em>and</em> every Monday — almost certainly more often than intended. If you genuinely need a true AND — "only the first Monday of the month" — cron's 5-field syntax can't express that directly; the common workaround is a day-of-month range plus a script-level day-of-week check (<code class="inline">[ "$(date +%u)" -eq 1 ]</code>), not a cleverer cron expression.</p>
+  </section>
+
+  <section id="umask">
+    <div class="section-head">
+      <p class="kicker">Annotated output</p>
+      <h2>Umask arithmetic — why it isn't subtraction</h2>
+      <p>The study page's <code class="inline">/etc/login.defs</code> example shows students reading policy files, but umask itself — the thing that decides a <em>new</em> file or directory's default permissions — isn't covered there. It's easy to memorize "umask 022 means subtract 022 from the default," and that shortcut happens to give the right answer for files but breaks for directories if you don't know why.</p>
+    </div>
+    <p><strong>The real mechanism: umask is subtracted using bitwise math, not decimal subtraction</strong>, and there's a different starting maximum for files versus directories:</p>
+    <p>New <strong>files</strong> start from a maximum of <code class="inline">666</code> (rw-rw-rw-) — never executable by default, even with a permissive umask, because the kernel won't set the execute bit on a freshly created file just because umask allows it. New <strong>directories</strong> start from a maximum of <code class="inline">777</code> (rwxrwxrwx) — directories need the execute bit to be enterable at all, so it's part of their default maximum.</p>
+    <p>With umask 022:</p>
+    <pre class="term">File:      666 &amp; ~022  =  644  (rw-r--r--)
+Directory: 777 &amp; ~022  =  755  (rwxr-xr-x)</pre>
+    <p>Both examples happen to look like decimal subtraction here, which is exactly the trap — it <em>coincidentally</em> works for the common umask values (022, 002) because those don't force any bit-borrowing. Try umask 027 on a file, though:</p>
+    <pre class="term">File:      666 & ~027 = 640   (not 639 — decimal subtraction would give the wrong digit)</pre>
+    <div class="callout"><code class="inline">666</code> in binary per-bit is <code class="inline">110 110 110</code>; <code class="inline">027</code> is <code class="inline">000 010 111</code>. The bitwise AND-with-complement clears exactly the bits umask has set, per bit, independent of decimal borrowing rules. The practical takeaway: don't do the arithmetic as decimal subtraction in your head and hope it's right — know the two starting maximums (666 for files, 777 for directories) and think in bits, or just trust <code class="inline">umask -S</code> to show you the symbolic result directly.</div>
+    <pre class="term">$ umask 027
+$ umask -S
+u=rwx,g=rx,o=</pre>
+  </section>
+
+  <section id="ls-l">
+    <div class="section-head">
+      <p class="kicker">Annotated output</p>
+      <h2>Reading ls -l output completely: setuid, setgid, sticky, and the link-count column</h2>
+      <p>The study page covers hard links vs. symlinks conceptually. Here's the rest of what a real ls -l line is telling you.</p>
+    </div>
+    <pre class="term">-rwsr-xr-x  1 root root   68208 Mar  2 09:14 /usr/bin/passwd
+drwxrwxrwt  9 root root    4096 Sep 14 22:01 /tmp
+drwxr-sr-x  3 root devs    4096 Sep 10 11:02 /srv/shared-project
+drwxr-xr-x  4 alice alice  4096 Sep  1 08:00 /home/alice/scripts</pre>
+    <p><strong>The permission string's special-bit positions</strong> — where you'd expect x, you sometimes see s or t instead:</p>
+    <p><code class="inline">passwd</code>'s owner-execute slot shows <code class="inline">s</code> (setuid). While it runs, the process temporarily runs <strong>as the file's owner (root)</strong>, not as whoever launched it. This is precisely how an unprivileged user runs <code class="inline">passwd</code> and is still able to write to <code class="inline">/etc/shadow</code> (which ordinary users can't touch directly) — the setuid bit is the mechanism, not a special case in passwd's code. A capital <code class="inline">S</code> instead of lowercase <code class="inline">s</code> would mean the setuid bit is set but the underlying execute bit for the owner is <em>not</em> — usually a misconfiguration, since setuid without execute permission does nothing useful.</p>
+    <p><code class="inline">/srv/shared-project</code>'s group-execute slot shows <code class="inline">s</code> (setgid) <strong>on a directory</strong>. This is a different, equally real mechanism: any new file created inside that directory inherits the directory's group (<code class="inline">devs</code>) automatically, instead of the creating user's primary group. This is the standard fix for "everyone on the team needs group-shared access to files their teammates create," without needing every user to manually <code class="inline">chgrp</code> every new file.</p>
+    <p><code class="inline">/tmp</code>'s other-execute slot shows <code class="inline">t</code> (sticky bit). In a world-writable directory like <code class="inline">/tmp</code>, this restricts deletion/renaming of a file to that file's own owner (or root) — otherwise any user with write access to <code class="inline">/tmp</code> could delete anyone else's files sitting there, since directory write permission alone normally governs delete rights, not the file's own permissions.</p>
+    <div class="callout"><b>The link-count column</b> (the number right after the permission string): for a <strong>directory</strong>, this number is not arbitrary — it equals <strong>2 plus the number of immediate subdirectories</strong> (the 2 accounts for the directory's own <code class="inline">.</code> entry and the <code class="inline">..</code> entry inside each of its subdirectories pointing back up to it). <code class="inline">/home/alice/scripts</code> showing <code class="inline">4</code> means it has exactly 2 subdirectories inside it, whether or not you can see them all in a quick listing (a hidden dotdir still counts). For a <strong>regular file</strong>, the same column instead means "how many hard-linked directory entries point at this same inode" — normally <code class="inline">1</code>, and only higher if you deliberately created hard links to it, tying directly back into the Week 4 study page's hard-link material.</div>
+  </section>
+
+  <section id="exam-traps">
+    <div class="section-head">
+      <p class="kicker">Paired confusions</p>
+      <h2>Exam traps</h2>
+    </div>
+    <table class="blocks">
+      <caption>Students conflate... / ...with / What actually discriminates them</caption>
+      <thead><tr><th>Students conflate...</th><th>...with</th><th>What actually discriminates them</th></tr></thead>
+      <tbody>
+        <tr><td>Restricting both cron day fields</td><td>Making the schedule more selective (AND)</td><td>Per man 5 crontab, restricting <strong>both</strong> flips the relationship to <strong>OR</strong> — the job fires on either match, which usually <em>widens</em> the schedule, not narrows it</td></tr>
+        <tr><td>Umask subtraction</td><td>Simple decimal subtraction</td><td>It's a <strong>bitwise</strong> AND-with-complement against a starting maximum (666 for files, 777 for dirs) — decimal subtraction only coincidentally matches for common umask values</td></tr>
+        <tr><td>setuid on an executable</td><td>A generic "special permission" flag</td><td>Specifically means the process runs with the <strong>file owner's</strong> privileges while executing — it's the exact mechanism behind passwd writing to /etc/shadow</td></tr>
+        <tr><td>setgid on a file vs. on a directory</td><td>The same behavior in both cases</td><td>On a directory, setgid makes <strong>new files inherit the directory's group</strong>; on an executable file, it's the group analogue of setuid (runs as the file's group)</td></tr>
+        <tr><td>A directory's link count</td><td>An arbitrary/cosmetic number</td><td>It's always <strong>2 + number of immediate subdirectories</strong> — a reliable, checkable fact about the directory tree beneath it</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="quiz">
+    <div class="section-head">
+      <p class="kicker">Check yourself</p>
+      <h2>Scenario quiz</h2>
+      <p>Think it through before you expand the answer.</p>
+    </div>
+
+    <div class="example">
+      <span class="tag">Cron</span>
+      <h3>Q1. "6am on the 15th, if it's a Monday"</h3>
+      <p>A junior admin writes <code class="inline">0 6 15 * 1</code> intending "6am on the 15th, but only if the 15th falls on a Monday." What will this cron line actually do, and why?</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <p>It will run at 6am on the 15th of every month <em>and</em> at 6am every Monday — two independent conditions OR'd together, not one AND'd condition — because both the day-of-month field (<code class="inline">15</code>) and the day-of-week field (<code class="inline">1</code>) are restricted (neither starts with <code class="inline">*</code>). To get the intended "only if the 15th is a Monday" behavior, cron's fields alone can't express it; the fix is a broader schedule plus a script-level date check.</p>
+        </div>
+      </details>
+    </div>
+
+    <div class="example">
+      <span class="tag">Umask</span>
+      <h3>Q2. Predicting permissions under umask 027</h3>
+      <p>With <code class="inline">umask 027</code> active, a script creates both a new file and a new directory. Predict the resulting permissions for each and show the bitwise reasoning.</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <p>File: <code class="inline">666 &amp; ~027 = 640</code> (rw-r-----). Directory: <code class="inline">777 &amp; ~027 = 750</code> (rwxr-x---). Both come from clearing exactly the bits set in <code class="inline">027</code> against each type's starting maximum — not decimal subtraction, which would give the wrong result for the file case.</p>
+        </div>
+      </details>
+    </div>
+
+    <div class="example">
+      <span class="tag">setgid</span>
+      <h3>Q3. Group ownership in a setgid directory</h3>
+      <p>A shared project directory has the setgid bit set and belongs to group <code class="inline">devs</code>. A user whose primary group is <code class="inline">sales</code> creates a new file inside it. What group ends up owning that file, and why?</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <p><code class="inline">devs</code> — not the creating user's own primary group (<code class="inline">sales</code>). Setgid on a directory overrides the normal "new file inherits the creator's primary group" rule and forces inheritance of the directory's own group instead, which is exactly the mechanism that keeps a shared team directory's files group-consistent without manual chgrp after every creation.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>IT251 · Linux+ (XK0-006) · Week 4 deep dive — companion to the Week 4 study page.</p>
+  </div>
+</footer>
+
+<button id="backToTop" class="back-to-top" aria-label="Back to top" title="Back to top">&uarr;</button>
+
+<script>
+  const backToTop = document.getElementById('backToTop');
+  function toggleBackToTop(){ backToTop.classList.toggle('show', window.scrollY > 480); }
+  window.addEventListener('scroll', toggleBackToTop, {passive:true});
+  toggleBackToTop();
+  backToTop.addEventListener('click', () => window.scrollTo({top:0, behavior:'smooth'}));
+</script>

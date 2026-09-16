@@ -1,0 +1,286 @@
+<title>Week 2 Deep Dive — Redirection, rsync, and DNS Order</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --bg:#f2f6f4;
+    --surface:#ffffff;
+    --surface-2:#e6efec;
+    --text:#0c1a15;
+    --muted:#51655d;
+    --border:#cddcd5;
+    --accent:#0f7a5c;
+    --accent-soft:#dcf1e7;
+    --accent-2:#0e7490;
+    --accent-2-soft:#dbeff4;
+    --danger:#b3261e;
+    --danger-soft:#f8dcd9;
+    --correct:#0f7a5c;
+    --correct-soft:#dcf1e7;
+    --shadow: 0 1px 2px rgba(12,26,21,.06), 0 8px 24px rgba(12,26,21,.07);
+    --mono:'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    --sans:'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0a0f0d; --surface:#0f1613; --surface-2:#131c18;
+      --text:#d9f5e8; --muted:#82a99a; --border:#1e2b26;
+      --accent:#3ddc97; --accent-soft:#123024;
+      --accent-2:#22d3ee; --accent-2-soft:#0c2b30;
+      --danger:#ff7a68; --danger-soft:#33150f;
+      --correct:#3ddc97; --correct-soft:#123024;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 12px 32px rgba(0,0,0,.45);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0a0f0d; --surface:#0f1613; --surface-2:#131c18;
+    --text:#d9f5e8; --muted:#82a99a; --border:#1e2b26;
+    --accent:#3ddc97; --accent-soft:#123024;
+    --accent-2:#22d3ee; --accent-2-soft:#0c2b30;
+    --danger:#ff7a68; --danger-soft:#33150f;
+    --correct:#3ddc97; --correct-soft:#123024;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 12px 32px rgba(0,0,0,.45);
+  }
+
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto;} *{animation-duration:.001ms !important; transition-duration:.001ms !important;} }
+  body{ margin:0; background:var(--bg); color:var(--text); font-family:var(--sans); line-height:1.55; -webkit-font-smoothing:antialiased; }
+  a{ color:var(--accent-2); }
+  ::selection{ background:var(--accent-soft); }
+  .wrap{ max-width:1080px; margin:0 auto; padding:0 24px; }
+
+  header.hero{
+    border-bottom:1px solid var(--border);
+    background:repeating-linear-gradient(180deg, var(--surface-2) 0 1px, var(--bg) 1px 28px);
+    padding:56px 0 40px;
+  }
+  .termbar{ display:flex; gap:6px; margin-bottom:20px; }
+  .termbar span{ width:11px; height:11px; border-radius:50%; }
+  .termbar span:nth-child(1){ background:#ff5f57; }
+  .termbar span:nth-child(2){ background:#febc2e; }
+  .termbar span:nth-child(3){ background:#28c840; }
+  .eyebrow{ font-family:var(--mono); font-size:.8rem; color:var(--accent); }
+  .eyebrow::before{ content:"$ "; opacity:.7; }
+  h1{ font-family:var(--mono); font-weight:700; font-size:clamp(2rem,4vw,3rem); line-height:1.08; margin:.4em 0 .3em; text-wrap:balance; letter-spacing:-.01em; }
+  h1 .cursor{ display:inline-block; width:.5ch; background:var(--accent); margin-left:.15em; animation:blink 1.1s steps(1) infinite; }
+  @keyframes blink{ 50%{ opacity:0; } }
+  .hero p.lede{ max-width:68ch; font-size:1.1rem; color:var(--muted); margin:0 0 1.2em; }
+  .parent-link{ display:inline-flex; align-items:center; gap:.5em; font-family:var(--mono); font-size:.85rem; background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:.6em 1em; text-decoration:none; color:var(--accent); box-shadow:var(--shadow); }
+  .parent-link:hover{ border-color:var(--accent); }
+
+  nav.index{ position:sticky; top:0; z-index:20; background:color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter:blur(8px); border-bottom:1px solid var(--border); }
+  nav.index .wrap{ display:flex; gap:4px; overflow-x:auto; padding:10px 24px; scrollbar-width:none; }
+  nav.index .wrap::-webkit-scrollbar{ display:none; }
+  nav.index a{ font-family:var(--mono); font-size:.82rem; text-decoration:none; color:var(--muted); padding:.5em .9em; border-radius:6px; white-space:nowrap; border:1px solid transparent; }
+  nav.index a:hover{ color:var(--text); border-color:var(--border); background:var(--surface); }
+  nav.index a.toc-link{ font-weight:600; color:var(--accent); border-right:1px solid var(--border); border-radius:0; margin-right:8px; padding-right:16px; }
+  nav.index a.toc-link:hover{ color:var(--accent); background:transparent; border-right-color:var(--border); }
+  nav.index a:not(.toc-link)::before{ content:'#'; opacity:.5; margin-right:.3em; }
+
+  .back-to-top{ position:fixed; bottom:22px; right:22px; z-index:40; width:46px; height:46px;
+    background:var(--surface); border:1px solid var(--border); border-radius:10px; box-shadow:var(--shadow);
+    font-family:var(--mono); font-size:1.15rem; color:var(--accent); line-height:1;
+    display:flex; align-items:center; justify-content:center; padding:0; cursor:pointer; text-decoration:none;
+    opacity:0; visibility:hidden; transform:translateY(10px);
+    transition:opacity .25s ease, transform .25s ease, visibility 0s .25s; }
+  .back-to-top.show{ opacity:1; visibility:visible; transform:translateY(0); transition:opacity .25s ease, transform .25s ease, visibility 0s; }
+  .back-to-top:hover{ background:var(--accent-soft); border-color:var(--accent); }
+  .back-to-top:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+  @media print{ nav.index, .back-to-top{ display:none; } }
+
+  section{ padding:52px 0; border-bottom:1px solid var(--border); }
+  section:last-of-type{ border-bottom:none; }
+  .section-head{ margin-bottom:22px; max-width:74ch; }
+  .kicker{ font-family:var(--mono); font-size:.75rem; letter-spacing:.1em; text-transform:uppercase; color:var(--accent-2); margin:0 0 .5em; }
+  .kicker::before{ content:"// "; opacity:.6; }
+  h2{ font-family:var(--mono); font-size:clamp(1.4rem,2.4vw,1.9rem); margin:0 0 .3em; text-wrap:balance; }
+  h3{ font-family:var(--mono); font-size:1.05rem; margin:1.4em 0 .4em; }
+  .section-head p{ color:var(--muted); margin:.4em 0 0; }
+  section p{ max-width:74ch; }
+
+  table.blocks{ width:100%; border-collapse:collapse; font-size:.9rem; margin:22px 0 24px; }
+  table.blocks caption{ caption-side:top; text-align:left; font-family:var(--mono); font-size:.75rem; text-transform:uppercase; letter-spacing:.08em; color:var(--accent-2); margin-bottom:.5em; }
+  table.blocks th, table.blocks td{ border:1px solid var(--border); padding:.6em .85em; text-align:left; vertical-align:top; }
+  table.blocks th{ background:var(--surface-2); font-family:var(--mono); font-size:.78rem; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); }
+  table.blocks td:first-child{ font-family:var(--mono); font-weight:600; color:var(--accent); }
+  table.blocks tbody tr:nth-child(odd){ background:var(--surface); }
+  table.blocks tbody tr:nth-child(even){ background:color-mix(in srgb, var(--surface) 60%, var(--surface-2)); }
+
+  .example{ background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px 22px; margin-bottom:16px; box-shadow:var(--shadow); }
+  .example h3{ font-family:var(--mono); font-size:1.02rem; margin:0 0 8px; }
+  .example .tag{ display:inline-block; font-family:var(--mono); font-size:.68rem; text-transform:uppercase; letter-spacing:.08em; color:var(--accent-2); background:var(--accent-2-soft); border-radius:5px; padding:.25em .6em; margin-bottom:10px; }
+  code.inline{ font-family:var(--mono); background:var(--surface-2); border-radius:4px; padding:.1em .4em; font-size:.92em; }
+  pre.term{ font-family:var(--mono); font-size:.85rem; background:var(--surface-2); border:1px solid var(--border); border-radius:8px; padding:12px 14px; overflow-x:auto; margin:10px 0; white-space:pre; }
+  details.solution{ margin-top:12px; }
+  details.solution summary{ cursor:pointer; font-family:var(--mono); font-size:.82rem; color:var(--accent); list-style:none; display:inline-flex; align-items:center; gap:.4em; }
+  details.solution summary::-webkit-details-marker{ display:none; }
+  details.solution summary::before{ content:"▸"; transition:transform .15s; }
+  details.solution[open] summary::before{ transform:rotate(90deg); }
+  details.solution .solbody{ margin-top:10px; padding:14px 16px; background:var(--surface-2); border-radius:8px; font-size:.92rem; }
+  details.solution .solbody p{ max-width:none; }
+
+  .callout{ border-left:3px solid var(--accent); background:var(--accent-soft); border-radius:0 8px 8px 0; padding:14px 18px; margin:10px 0 24px; font-size:.92rem; max-width:74ch; }
+  .callout b{ font-family:var(--mono); }
+
+  footer{ padding:32px 0 60px; }
+  footer p{ color:var(--muted); font-size:.85rem; font-family:var(--mono); }
+</style>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="termbar"><span></span><span></span><span></span></div>
+    <p class="eyebrow">IT251 · Week 2 · Deep Dive</p>
+    <h1>Redirection Order, Sync Semantics, and Name Resolution<span class="cursor">&nbsp;</span></h1>
+    <p class="lede">Companion to the Week 2 study page. That page covers stdin/stdout/stderr as three streams and shows the basic <code class="inline">2>&amp;1</code> merge. This goes one layer deeper on exactly the part that trips people up hardest: redirection <em>order</em>, plus two more real-world traps in the rsync and DNS material the study page introduces operationally but doesn't fully unpack. Read the Week 2 study page first if stdout/stderr/<code class="inline">2>&amp;1</code> isn't already familiar.</p>
+    <a class="parent-link" href="IT251_Week2_Study_Page.html">&larr; Back to the Week 2 Study Page</a>
+  </div>
+</header>
+
+<nav class="index" aria-label="Section index">
+  <div class="wrap">
+    <a href="IT251_Week2_Study_Page.html" class="toc-link">&larr; Study Page</a>
+    <a href="#redirection">Redirection order</a>
+    <a href="#rsync">rsync trailing slash</a>
+    <a href="#dns">Name resolution order</a>
+    <a href="#exam-traps">Exam traps</a>
+    <a href="#quiz">Scenario quiz</a>
+  </div>
+</nav>
+
+<main class="wrap">
+
+  <section id="redirection">
+    <div class="section-head">
+      <p class="kicker">Annotated output</p>
+      <h2>The redirection-order trap: 2&gt;&amp;1 &gt;file vs. &gt;file 2&gt;&amp;1</h2>
+      <p>This is arguably the single best "why" in all of shell redirection, and it's a genuine exam trap because the two forms <em>look</em> almost identical but do opposite things.</p>
+    </div>
+    <p>Bash processes redirections <strong>left to right</strong>, and each one is really saying "point this file descriptor at whatever the target currently points to" — not "permanently link these two forever." That distinction is the whole trick.</p>
+
+    <h3>Case A: command &gt; file.log 2&gt;&amp;1 (the one you want)</h3>
+    <pre class="term">$ ls /nope > out.log 2>&1
+$ cat out.log
+ls: cannot access '/nope': No such file or directory</pre>
+    <p>Step by step: (1) <code class="inline">&gt; file.log</code> — stdout (fd 1) now points at <code class="inline">file.log</code>. (2) <code class="inline">2&gt;&amp;1</code> — stderr (fd 2) is redirected to point at <strong>wherever fd 1 currently points</strong>, which is <code class="inline">file.log</code>.</p>
+    <p>Result: both streams end up in the file. This is the pattern to memorize.</p>
+
+    <h3>Case B: command 2&gt;&amp;1 &gt; file.log (the one that silently breaks)</h3>
+    <pre class="term">$ ls /nope 2>&1 > out.log
+ls: cannot access '/nope': No such file or directory
+$ cat out.log
+(empty)</pre>
+    <p>Step by step: (1) <code class="inline">2&gt;&amp;1</code> — stderr is redirected to point at <strong>wherever fd 1 currently points right now</strong>, which at this moment is still the terminal (nothing's redirected fd 1 yet). So stderr now goes to the screen. (2) <code class="inline">&gt; out.log</code> — <em>then</em> stdout gets pointed at the file.</p>
+    <div class="callout"><b>Result:</b> stderr already "locked in" the terminal as its target before stdout got reassigned, so the error prints to the screen and the file stays empty (assuming the command produced no stdout). This is why order matters — <code class="inline">2&gt;&amp;1</code> doesn't create a permanent bond between the streams, it's a one-time snapshot of where fd 1 pointed <em>at that instant</em>. <strong>How to never get this wrong again:</strong> always redirect stdout first, then merge stderr into it. If you remember nothing else from this section, remember the working order is <code class="inline">&gt; file 2&gt;&amp;1</code>, not the other way around.</div>
+  </section>
+
+  <section id="rsync">
+    <div class="section-head">
+      <p class="kicker">Annotated output</p>
+      <h2>rsync trailing-slash behavior</h2>
+      <p>The study page's backup example correctly recommends <code class="inline">rsync -a</code> for incremental backups. What it doesn't show is that rsync's behavior changes depending on whether the <strong>source path</strong> ends in a slash — and this is one of the most common real-world rsync mistakes.</p>
+    </div>
+    <pre class="term">$ rsync -a project/  /backup/project/
+# copies the CONTENTS of project/ into /backup/project/
+# i.e. /backup/project/file1, /backup/project/file2, ...
+
+$ rsync -a project   /backup/project/
+# copies project/ ITSELF into /backup/project/
+# i.e. /backup/project/project/file1, /backup/project/project/file2, ...</pre>
+    <p>Read it as: a trailing slash on the source means "copy what's <em>inside</em> this directory"; no trailing slash means "copy this directory itself, including its own name, into the destination." The destination path's trailing slash doesn't have this effect — it's specifically a source-side behavior.</p>
+    <div class="callout"><b>Why this matters in practice:</b> a script that runs nightly with the wrong form doesn't error out — it "succeeds" every time while silently nesting a nearly-identical copy one level deeper than intended, or clobbering just the contents instead of accumulating full snapshots. Because there's no error message, this can run wrong for months before anyone notices. Always test a new rsync invocation with <code class="inline">--dry-run</code> (or <code class="inline">-n</code>) first and read the planned file list before trusting it against real data.</div>
+  </section>
+
+  <section id="dns">
+    <div class="section-head">
+      <p class="kicker">Annotated output</p>
+      <h2>Name resolution order: /etc/nsswitch.conf vs. /etc/resolv.conf</h2>
+      <p>The study page's DNS worked example correctly points at <code class="inline">/etc/resolv.conf</code> for "which nameserver does this box ask." That's the right first move, but it's only half the picture — <code class="inline">resolv.conf</code> only matters at all if the system is even configured to <em>use</em> DNS for a given lookup in the first place, and that's a separate file's job.</p>
+    </div>
+    <p><code class="inline">/etc/nsswitch.conf</code> controls, per lookup type, <em>which sources get checked and in what order</em>. The line that matters for hostname resolution looks like:</p>
+    <pre class="term">hosts: files dns</pre>
+    <p>Read left to right as <em>precedence order</em>: check <code class="inline">files</code> first (meaning <code class="inline">/etc/hosts</code>), then fall back to <code class="inline">dns</code> (meaning whatever's configured in <code class="inline">resolv.conf</code>) only if <code class="inline">files</code> didn't have an answer.</p>
+    <div class="callout"><b>The trap this explains:</b> a student edits <code class="inline">/etc/resolv.conf</code>, confirms the nameserver line looks correct, and a hostname <em>still</em> resolves to the wrong IP. The actual cause is frequently a stale or wrong entry sitting in <code class="inline">/etc/hosts</code> — because <code class="inline">files</code> is checked first per the <code class="inline">nsswitch.conf</code> order above, a hardcoded <code class="inline">/etc/hosts</code> entry wins before DNS is ever consulted, no matter how correct <code class="inline">resolv.conf</code> is. This is exactly the kind of "I fixed the file everyone talks about and it still didn't work" scenario the Troubleshooting domain likes to test — the fix requires knowing there's an ordering file upstream of the nameserver file, not just knowing the nameserver file exists.</div>
+  </section>
+
+  <section id="exam-traps">
+    <div class="section-head">
+      <p class="kicker">Paired confusions</p>
+      <h2>Exam traps</h2>
+    </div>
+    <table class="blocks">
+      <caption>Students conflate... / ...with / What actually discriminates them</caption>
+      <thead><tr><th>Students conflate...</th><th>...with</th><th>What actually discriminates them</th></tr></thead>
+      <tbody>
+        <tr><td><code class="inline">2>&amp;1 &gt;file</code></td><td><code class="inline">&gt;file 2>&amp;1</code></td><td>Redirections apply left-to-right; putting <code class="inline">2>&amp;1</code> <strong>before</strong> the stdout redirect merges stderr into the <em>old</em> target (the terminal), not the file</td></tr>
+        <tr><td>A trailing slash on rsync's destination</td><td>A trailing slash on rsync's source</td><td>Source-side trailing slash controls whether the directory's <strong>contents</strong> or the <strong>directory itself</strong> gets copied; destination slash doesn't have this effect</td></tr>
+        <tr><td>Editing <code class="inline">/etc/resolv.conf</code></td><td>Fixing all hostname-resolution problems</td><td><code class="inline">/etc/nsswitch.conf</code>'s <code class="inline">hosts:</code> line decides whether <code class="inline">/etc/hosts</code> is checked <em>before</em> DNS at all — a stale hosts entry wins regardless of what resolv.conf says</td></tr>
+        <tr><td><code class="inline">curl</code>/<code class="inline">wget</code> failing on a URL</td><td>A DNS problem by default</td><td>Could be DNS, but could just as easily be TLS, a firewall drop, or the service simply not listening — <code class="inline">dig</code>/<code class="inline">nslookup</code> isolates whether resolution itself is the failing step before you look elsewhere</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="quiz">
+    <div class="section-head">
+      <p class="kicker">Check yourself</p>
+      <h2>Scenario quiz</h2>
+      <p>Think it through before you expand the answer.</p>
+    </div>
+
+    <div class="example">
+      <span class="tag">Redirection order</span>
+      <h3>Q1. Errors print to the screen instead of the file</h3>
+      <p>A student runs <code class="inline">find / -name "*.conf" 2>&amp;1 > results.txt</code> expecting a clean terminal and a full results file. Instead, a wall of "Permission denied" errors prints to the screen, and <code class="inline">results.txt</code> only has the successful matches. Explain exactly what happened.</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <p>Redirections apply left to right. <code class="inline">2>&amp;1</code> ran first, while stdout (fd 1) still pointed at the terminal — so stderr got pointed at the terminal too, permanently for the rest of that command. <em>Then</em> <code class="inline">&gt; results.txt</code> redirected stdout to the file, but stderr had already locked onto the terminal in the previous step. The fix is reordering to <code class="inline">find / -name "*.conf" &gt; results.txt 2&gt;&amp;1</code>.</p>
+        </div>
+      </details>
+    </div>
+
+    <div class="example">
+      <span class="tag">rsync</span>
+      <h3>Q2. A nested backup directory nobody expected</h3>
+      <p>A nightly <code class="inline">rsync -a nightly_data /mnt/backup/</code> job has been running for six months with no errors, but a teammate notices <code class="inline">/mnt/backup/</code> now contains <code class="inline">nightly_data/nightly_data/</code> nested inside itself. What caused this, and is data being lost?</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <p>No trailing slash on the source (<code class="inline">nightly_data</code> instead of <code class="inline">nightly_data/</code>) means rsync copies the directory itself into the destination, not just its contents — so each run copies <code class="inline">nightly_data</code> as a subdirectory of the target. No data is being silently lost, but the structure isn't what was intended, and depending on how it's been running repeatedly, it's worth checking whether re-runs have been creating further nested copies rather than just updating one.</p>
+        </div>
+      </details>
+    </div>
+
+    <div class="example">
+      <span class="tag">DNS</span>
+      <h3>Q3. resolv.conf is correct but resolution is still wrong</h3>
+      <p><code class="inline">/etc/resolv.conf</code> lists a nameserver that responds correctly when queried directly with <code class="inline">dig @nameserver hostname</code>, but a plain <code class="inline">ping hostname</code> on the same box still resolves to an old, wrong IP. <code class="inline">/etc/resolv.conf</code> is not the problem — what should you check next, and why?</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <p><code class="inline">/etc/hosts</code> and the <code class="inline">hosts:</code> line in <code class="inline">/etc/nsswitch.conf</code>. If <code class="inline">nsswitch.conf</code> lists <code class="inline">files</code> before <code class="inline">dns</code> (the common default), a stale static entry in <code class="inline">/etc/hosts</code> is checked and matched first, before DNS is ever consulted — which explains why a working, correctly-configured nameserver never gets a chance to answer for that particular hostname.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>IT251 · Linux+ (XK0-006) · Week 2 deep dive — companion to the Week 2 study page.</p>
+  </div>
+</footer>
+
+<button id="backToTop" class="back-to-top" aria-label="Back to top" title="Back to top">&uarr;</button>
+
+<script>
+  const backToTop = document.getElementById('backToTop');
+  function toggleBackToTop(){ backToTop.classList.toggle('show', window.scrollY > 480); }
+  window.addEventListener('scroll', toggleBackToTop, {passive:true});
+  toggleBackToTop();
+  backToTop.addEventListener('click', () => window.scrollTo({top:0, behavior:'smooth'}));
+</script>

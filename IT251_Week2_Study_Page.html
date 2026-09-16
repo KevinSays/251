@@ -440,6 +440,19 @@
     </div>
 
     <div class="example">
+      <span class="tag">Networking</span>
+      <h3>What's actually listening?</h3>
+      <p>A web app is supposed to be up on port 8080, but a browser hit gets "connection refused." Is the process even listening?</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <pre class="term">ss -tuln</pre>
+          <p><code class="inline">-t</code> (TCP) and <code class="inline">-u</code> (UDP) pick the protocols, <code class="inline">-l</code> shows only listening sockets, <code class="inline">-n</code> skips DNS/service-name lookups so ports print as numbers instead of stalling on a reverse lookup. If <code class="inline">:8080</code> doesn't show up in the <code class="inline">Local Address:Port</code> column at all, the app isn't listening there — that's a different problem than a firewall blocking an otherwise-listening port, which is what "connection refused" vs. a hang usually tells you apart.</p>
+        </div>
+      </details>
+    </div>
+
+    <div class="example">
       <span class="tag">Virtualization</span>
       <h3>Which network mode for this VM?</h3>
       <p>You're about to import a vulnerable target VM to practice against alongside your Kali VM. Both need to talk to each other, but neither should be reachable from the campus network.</p>

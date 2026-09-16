@@ -1,0 +1,676 @@
+<title>Troubleshooting Primer</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --bg:#f2f6f4;
+    --surface:#ffffff;
+    --surface-2:#e6efec;
+    --text:#0c1a15;
+    --muted:#51655d;
+    --border:#cddcd5;
+    --accent:#0f7a5c;
+    --accent-soft:#dcf1e7;
+    --accent-2:#0e7490;
+    --accent-2-soft:#dbeff4;
+    --danger:#b3261e;
+    --danger-soft:#f8dcd9;
+    --correct:#0f7a5c;
+    --correct-soft:#dcf1e7;
+    --shadow: 0 1px 2px rgba(12,26,21,.06), 0 8px 24px rgba(12,26,21,.07);
+    --mono:'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    --sans:'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0a0f0d; --surface:#0f1613; --surface-2:#131c18;
+      --text:#d9f5e8; --muted:#82a99a; --border:#1e2b26;
+      --accent:#3ddc97; --accent-soft:#123024;
+      --accent-2:#22d3ee; --accent-2-soft:#0c2b30;
+      --danger:#ff7a68; --danger-soft:#33150f;
+      --correct:#3ddc97; --correct-soft:#123024;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 12px 32px rgba(0,0,0,.45);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0a0f0d; --surface:#0f1613; --surface-2:#131c18;
+    --text:#d9f5e8; --muted:#82a99a; --border:#1e2b26;
+    --accent:#3ddc97; --accent-soft:#123024;
+    --accent-2:#22d3ee; --accent-2-soft:#0c2b30;
+    --danger:#ff7a68; --danger-soft:#33150f;
+    --correct:#3ddc97; --correct-soft:#123024;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 12px 32px rgba(0,0,0,.45);
+  }
+
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto;} *{animation-duration:.001ms !important; transition-duration:.001ms !important;} }
+  body{ margin:0; background:var(--bg); color:var(--text); font-family:var(--sans); line-height:1.55; -webkit-font-smoothing:antialiased; }
+  a{ color:var(--accent-2); }
+  ::selection{ background:var(--accent-soft); }
+  .wrap{ max-width:1080px; margin:0 auto; padding:0 24px; }
+
+  header.hero{
+    border-bottom:1px solid var(--border);
+    background:repeating-linear-gradient(180deg, var(--surface-2) 0 1px, var(--bg) 1px 28px);
+    padding:56px 0 40px;
+  }
+  .termbar{ display:flex; gap:6px; margin-bottom:20px; }
+  .termbar span{ width:11px; height:11px; border-radius:50%; }
+  .termbar span:nth-child(1){ background:#ff5f57; }
+  .termbar span:nth-child(2){ background:#febc2e; }
+  .termbar span:nth-child(3){ background:#28c840; }
+  .eyebrow{ font-family:var(--mono); font-size:.8rem; color:var(--accent); }
+  .eyebrow::before{ content:"$ "; opacity:.7; }
+  h1{ font-family:var(--mono); font-weight:700; font-size:clamp(2rem,4vw,3rem); line-height:1.08; margin:.4em 0 .3em; text-wrap:balance; letter-spacing:-.01em; }
+  h1 .cursor{ display:inline-block; width:.5ch; background:var(--accent); margin-left:.15em; animation:blink 1.1s steps(1) infinite; }
+  @keyframes blink{ 50%{ opacity:0; } }
+  .hero p.lede{ max-width:62ch; font-size:1.1rem; color:var(--muted); margin:0 0 1.6em; }
+  .factrow{ display:flex; flex-wrap:wrap; gap:10px; }
+  .fact{ font-family:var(--mono); font-size:.78rem; background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:.5em .8em; display:flex; gap:.5em; }
+  .fact b{ color:var(--muted); font-weight:500; text-transform:uppercase; letter-spacing:.06em; font-size:.72rem; }
+
+  nav.index{ position:sticky; top:0; z-index:20; background:color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter:blur(8px); border-bottom:1px solid var(--border); }
+  nav.index .wrap{ display:flex; gap:4px; overflow-x:auto; padding:10px 24px; scrollbar-width:none; }
+  nav.index .wrap::-webkit-scrollbar{ display:none; }
+  nav.index a{ font-family:var(--mono); font-size:.82rem; text-decoration:none; color:var(--muted); padding:.5em .9em; border-radius:6px; white-space:nowrap; border:1px solid transparent; }
+  nav.index a:hover{ color:var(--text); border-color:var(--border); background:var(--surface); }
+  nav.index a.toc-link{ font-weight:600; color:var(--accent); border-right:1px solid var(--border); border-radius:0; margin-right:8px; padding-right:16px; }
+  nav.index a.toc-link:hover{ color:var(--accent); background:transparent; border-right-color:var(--border); }
+  nav.index a:not(.toc-link)::before{ content:'#'; opacity:.5; margin-right:.3em; }
+
+  .back-to-top{ position:fixed; bottom:22px; right:22px; z-index:40; width:46px; height:46px;
+    background:var(--surface); border:1px solid var(--border); border-radius:10px; box-shadow:var(--shadow);
+    font-family:var(--mono); font-size:1.15rem; color:var(--accent); line-height:1;
+    display:flex; align-items:center; justify-content:center; padding:0; cursor:pointer; text-decoration:none;
+    opacity:0; visibility:hidden; transform:translateY(10px);
+    transition:opacity .25s ease, transform .25s ease, visibility 0s .25s; }
+  .back-to-top.show{ opacity:1; visibility:visible; transform:translateY(0); transition:opacity .25s ease, transform .25s ease, visibility 0s; }
+  .back-to-top:hover{ background:var(--accent-soft); border-color:var(--accent); }
+  .back-to-top:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+  @media print{ nav.index, .back-to-top{ display:none; } }
+
+  section{ padding:52px 0; border-bottom:1px solid var(--border); }
+  section:last-of-type{ border-bottom:none; }
+  .section-head{ margin-bottom:28px; max-width:70ch; }
+  .kicker{ font-family:var(--mono); font-size:.75rem; letter-spacing:.1em; text-transform:uppercase; color:var(--accent-2); margin:0 0 .5em; }
+  .kicker::before{ content:"// "; opacity:.6; }
+  h2{ font-family:var(--mono); font-size:clamp(1.4rem,2.4vw,1.9rem); margin:0 0 .3em; text-wrap:balance; }
+  .section-head p{ color:var(--muted); margin:.4em 0 0; }
+
+  .obj-list{ display:grid; gap:12px; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); list-style:none; margin:0; padding:0; }
+  .obj-list li{ background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:16px 18px; box-shadow:var(--shadow); font-size:.95rem; }
+  .obj-list li::before{ content:"$"; color:var(--accent); font-family:var(--mono); margin-right:.6em; font-weight:700; }
+
+  figure{ margin:36px 0 0; }
+  figure svg{ width:100%; height:auto; display:block; background:var(--surface); border:1px solid var(--border); border-radius:12px; }
+  figcaption{ font-size:.85rem; color:var(--muted); margin-top:.6em; }
+  .diagram-grid{ display:grid; gap:32px; grid-template-columns:1fr; }
+  @media(min-width:860px){ .diagram-grid{ grid-template-columns:1fr 1.05fr; } }
+
+  table.blocks{ width:100%; border-collapse:collapse; font-size:.9rem; margin:22px 0 24px; }
+  table.blocks caption{ caption-side:top; text-align:left; font-family:var(--mono); font-size:.75rem; text-transform:uppercase; letter-spacing:.08em; color:var(--accent-2); margin-bottom:.5em; }
+  table.blocks th, table.blocks td{ border:1px solid var(--border); padding:.6em .85em; text-align:left; vertical-align:top; }
+  table.blocks th{ background:var(--surface-2); font-family:var(--mono); font-size:.78rem; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); }
+  table.blocks td:first-child{ font-family:var(--mono); font-weight:600; color:var(--accent); white-space:nowrap; }
+  table.blocks tbody tr:nth-child(odd){ background:var(--surface); }
+  table.blocks tbody tr:nth-child(even){ background:color-mix(in srgb, var(--surface) 60%, var(--surface-2)); }
+
+  .toolbar{ display:flex; gap:10px; align-items:center; margin-bottom:20px; flex-wrap:wrap; }
+  button.btn{ font-family:var(--mono); font-size:.82rem; background:var(--surface); color:var(--text); border:1px solid var(--border); border-radius:7px; padding:.6em 1em; cursor:pointer; }
+  button.btn:hover{ border-color:var(--accent); color:var(--accent); }
+  button.btn:focus-visible, a:focus-visible, .flashcard:focus-visible, input:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+  #cardProgress, #autoCardProgress{ font-family:var(--mono); font-size:.8rem; color:var(--muted); }
+
+  .card-grid{ display:grid; gap:16px; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); }
+  .flashcard{ perspective:1200px; height:150px; cursor:pointer; border:none; background:none; padding:0; font-family:inherit; text-align:left; width:100%; }
+  .flashcard-inner{ position:relative; width:100%; height:100%; transition:transform .5s cubic-bezier(.4,.2,.2,1); transform-style:preserve-3d; }
+  .flashcard.flipped .flashcard-inner{ transform:rotateY(180deg); }
+  .flashcard-face{ position:absolute; inset:0; backface-visibility:hidden; border-radius:10px; border:1px solid var(--border); box-shadow:var(--shadow); padding:16px; display:flex; flex-direction:column; justify-content:center; }
+  .flashcard-face.front{ background:var(--surface); }
+  .flashcard-face.back{ background:var(--accent-soft); transform:rotateY(180deg); overflow-y:auto; }
+  .flashcard-face .lbl{ font-family:var(--mono); font-size:.68rem; text-transform:uppercase; letter-spacing:.1em; color:var(--muted); margin-bottom:.5em; }
+  .flashcard-face.front .term{ font-family:var(--mono); font-weight:600; font-size:1.02rem; }
+  .flashcard-face.back .def{ font-size:.88rem; }
+  .flashcard.known .flashcard-face.front{ border-color:var(--correct); }
+
+  .quiz-q{ background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px 22px; margin-bottom:18px; box-shadow:var(--shadow); }
+  .quiz-q .qtext{ font-weight:600; margin:0 0 14px; }
+  .quiz-q .qnum{ font-family:var(--mono); color:var(--accent); margin-right:.5em; }
+  .choices{ display:grid; gap:8px; }
+  .choice{ text-align:left; font-family:var(--sans); font-size:.95rem; background:var(--surface-2); border:1px solid var(--border); border-radius:8px; padding:.7em .9em; cursor:pointer; color:var(--text); }
+  .choice:hover{ border-color:var(--accent); }
+  .choice.correct{ background:var(--correct-soft); border-color:var(--correct); }
+  .choice.incorrect{ background:var(--danger-soft); border-color:var(--danger); }
+  .choice[disabled]{ cursor:default; }
+  .explain{ margin-top:12px; font-size:.88rem; color:var(--muted); border-left:3px solid var(--accent-2); padding-left:12px; display:none; }
+  .explain.show{ display:block; }
+  #quizScore{ font-family:var(--mono); font-size:.85rem; color:var(--muted); margin-bottom:16px; }
+
+  .example{ background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px 22px; margin-bottom:16px; box-shadow:var(--shadow); }
+  .example h3{ font-family:var(--mono); font-size:1.02rem; margin:0 0 8px; }
+  .example .tag{ display:inline-block; font-family:var(--mono); font-size:.68rem; text-transform:uppercase; letter-spacing:.08em; color:var(--accent-2); background:var(--accent-2-soft); border-radius:5px; padding:.25em .6em; margin-bottom:10px; }
+  code.inline{ font-family:var(--mono); background:var(--surface-2); border-radius:4px; padding:.1em .4em; font-size:.92em; }
+  pre.term{ font-family:var(--mono); font-size:.85rem; background:var(--surface-2); border:1px solid var(--border); border-radius:8px; padding:12px 14px; overflow-x:auto; margin:10px 0; }
+  details.solution{ margin-top:12px; }
+  details.solution summary{ cursor:pointer; font-family:var(--mono); font-size:.82rem; color:var(--accent); list-style:none; display:inline-flex; align-items:center; gap:.4em; }
+  details.solution summary::-webkit-details-marker{ display:none; }
+  details.solution summary::before{ content:"▸"; transition:transform .15s; }
+  details.solution[open] summary::before{ transform:rotate(90deg); }
+  details.solution .solbody{ margin-top:10px; padding:14px 16px; background:var(--surface-2); border-radius:8px; font-size:.92rem; }
+
+  #glossarySearch{ width:100%; max-width:420px; font-family:var(--sans); font-size:.95rem; padding:.7em .9em; border-radius:8px; border:1px solid var(--border); background:var(--surface); color:var(--text); margin-bottom:16px; }
+  .alpha-nav{ display:flex; flex-wrap:wrap; gap:4px; margin-bottom:24px; }
+  .alpha-nav a{ font-family:var(--mono); font-size:.78rem; width:1.9em; height:1.9em; display:flex; align-items:center; justify-content:center; border:1px solid var(--border); border-radius:5px; text-decoration:none; color:var(--muted); }
+  .alpha-nav a.has{ color:var(--text); }
+  .alpha-nav a.has:hover{ border-color:var(--accent); color:var(--accent); }
+  .glossary-letter{ font-family:var(--mono); color:var(--accent); font-size:1.1rem; margin:22px 0 8px; }
+  dl.glossary{ margin:0; }
+  dl.glossary .gitem{ border-top:1px solid var(--border); padding:12px 0; }
+  dl.glossary dt{ font-family:var(--mono); font-weight:600; }
+  dl.glossary dd{ margin:.3em 0 0; color:var(--muted); font-size:.92rem; }
+  .gitem.hidden{ display:none; }
+
+  .callout{ border-left:3px solid var(--accent); background:var(--accent-soft); border-radius:0 8px 8px 0; padding:14px 18px; margin:10px 0 24px; font-size:.92rem; }
+  .callout b{ font-family:var(--mono); }
+
+  footer{ padding:32px 0 60px; }
+  footer p{ color:var(--muted); font-size:.85rem; font-family:var(--mono); }
+</style>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="termbar"><span></span><span></span><span></span></div>
+    <p class="eyebrow">IT251 · Week 7</p>
+    <h1>Troubleshooting Primer<span class="cursor">&nbsp;</span></h1>
+    <p class="lede">Midterm review week's other job: a real look at Domain 2 (Troubleshooting, 22% of the exam) before the written midterm — logs, connection state, packet capture, and the performance tools that answer "what's actually slow?"</p>
+    <div class="factrow">
+      <span class="fact"><b>7.1</b> Lecture</span>
+      <span class="fact"><b>7.2</b> Open Lab</span>
+      <span class="fact"><b>Covers</b> Domain 2: Troubleshooting (first dedicated pass)</span>
+      <span class="fact"><b>Midterm</b> Week 8 — Modules 1&ndash;4 written, Domain 2 tools included</span>
+    </div>
+  </div>
+</header>
+
+<nav class="index" aria-label="Section index">
+  <div class="wrap">
+    <a href="index.html" class="toc-link">&larr; Table of Contents</a>
+    <a href="#overview">Overview</a>
+    <a href="#diagrams">Concepts</a>
+    <a href="#flashcards">Flashcards</a>
+    <a href="#quiz">Quiz</a>
+    <a href="#examples">Examples</a>
+    <a href="#glossary">Glossary</a>
+    <a href="#automation">Automation Preview</a>
+  </div>
+</nav>
+
+<main class="wrap">
+
+  <section id="overview">
+    <div class="section-head">
+      <p class="kicker">Overview</p>
+      <h2>What Week 7 covers</h2>
+      <p>Everything up to now has been "here's how a piece works." This week flips the question to "it's broken — where do you look first?" Troubleshooting is 22% of the XK0-006 exam, second only to System Management, and it's tested as scenario-based questions, not recall — which means the actual skill here is knowing which tool answers which kind of question, fast, under a "something's wrong" prompt instead of a "how do I" prompt.</p>
+    </div>
+    <ul class="obj-list">
+      <li>Read boot and service logs with <code class="inline">journalctl</code>, including scoping to a unit or a specific boot</li>
+      <li>Read kernel/hardware messages with <code class="inline">dmesg</code></li>
+      <li>Use <code class="inline">ss</code> to check connection <em>state</em>, not just what's listening</li>
+      <li>Capture and read basic packet traffic with <code class="inline">tcpdump</code></li>
+      <li>Trace a network path with <code class="inline">traceroute</code>/<code class="inline">tracepath</code></li>
+      <li>Read CPU/memory/I/O load with <code class="inline">top</code>, <code class="inline">vmstat</code>, <code class="inline">iostat</code>, and <code class="inline">free</code></li>
+    </ul>
+    <div class="callout"><b>Why this week, not a whole new module:</b> a lot of this is remedial to material you already have — <code class="inline">journalctl</code> showed up briefly in Week 5, <code class="inline">ss</code> in Week 2, <code class="inline">/var/log</code> in Week 1. This session collects those threads, fills in the pieces that were missing (<code class="inline">dmesg</code>, <code class="inline">tcpdump</code>, <code class="inline">traceroute</code>, structured performance reading), and reframes all of it around "diagnose," which is how the exam actually asks about it. As always, this page is a conceptual supplement — your hands-on reps for these tools happen in ExtremeLabs, and Ascend has the full-depth reading if a topic here needs more than survey-level.</div>
+  </section>
+
+  <section id="diagrams">
+    <div class="section-head">
+      <p class="kicker">Concepts</p>
+      <h2>Two ways to see it</h2>
+      <p>The triage map shows <em>which category of symptom sends you to which tool family</em>. The network-path diagram shows <em>the order</em> you narrow down a connectivity problem — outward from the local box before you assume the problem is remote.</p>
+    </div>
+    <div class="diagram-grid">
+      <figure>
+        <svg viewBox="0 0 460 260" role="img" aria-label="Triage map: boot or service problems go to journalctl and dmesg; network problems go to ss, tcpdump, ping, and traceroute; performance problems go to top, vmstat, iostat, and free.">
+          <g font-family="JetBrains Mono" font-size="11.5" font-weight="600">
+            <rect x="10" y="10" width="130" height="40" rx="6" fill="var(--accent-soft)" stroke="var(--accent)"/>
+            <text x="75" y="34" text-anchor="middle" fill="var(--accent)">Boot / service</text>
+            <rect x="10" y="60" width="130" height="52" rx="6" fill="none" stroke="currentColor" opacity=".85"/>
+            <text x="75" y="82" text-anchor="middle" fill="currentColor" font-size="10.5">journalctl</text>
+            <text x="75" y="98" text-anchor="middle" fill="currentColor" font-size="10.5">dmesg</text>
+
+            <rect x="165" y="10" width="130" height="40" rx="6" fill="var(--accent-2-soft)" stroke="var(--accent-2)"/>
+            <text x="230" y="34" text-anchor="middle" fill="var(--accent-2)">Network</text>
+            <rect x="165" y="60" width="130" height="66" rx="6" fill="none" stroke="currentColor" opacity=".85"/>
+            <text x="230" y="80" text-anchor="middle" fill="currentColor" font-size="10.5">ss / ping</text>
+            <text x="230" y="96" text-anchor="middle" fill="currentColor" font-size="10.5">traceroute</text>
+            <text x="230" y="112" text-anchor="middle" fill="currentColor" font-size="10.5">tcpdump</text>
+
+            <rect x="320" y="10" width="130" height="40" rx="6" fill="var(--danger-soft)" stroke="var(--danger)"/>
+            <text x="385" y="34" text-anchor="middle" fill="var(--danger)">Performance</text>
+            <rect x="320" y="60" width="130" height="66" rx="6" fill="none" stroke="currentColor" opacity=".85"/>
+            <text x="385" y="80" text-anchor="middle" fill="currentColor" font-size="10.5">top / free</text>
+            <text x="385" y="96" text-anchor="middle" fill="currentColor" font-size="10.5">vmstat</text>
+            <text x="385" y="112" text-anchor="middle" fill="currentColor" font-size="10.5">iostat</text>
+          </g>
+          <line x1="75" y1="50" x2="75" y2="60" stroke="currentColor" opacity=".5"/>
+          <line x1="230" y1="50" x2="230" y2="60" stroke="currentColor" opacity=".5"/>
+          <line x1="385" y1="50" x2="385" y2="60" stroke="currentColor" opacity=".5"/>
+          <text x="10" y="155" font-family="IBM Plex Sans" font-size="10.5" fill="var(--muted)">The category of symptom picks the tool family —</text>
+          <text x="10" y="171" font-family="IBM Plex Sans" font-size="10.5" fill="var(--muted)">"it's slow" and "it won't connect" send you to</text>
+          <text x="10" y="187" font-family="IBM Plex Sans" font-size="10.5" fill="var(--muted)">completely different starting points.</text>
+        </svg>
+        <figcaption>First question in any scenario: what kind of symptom is this, before you touch a single command.</figcaption>
+      </figure>
+
+      <figure>
+        <svg viewBox="0 0 420 260" role="img" aria-label="Network troubleshooting order: check local socket state with ss, check reachability with ping, check the path with traceroute, then inspect packets with tcpdump if it still doesn't add up.">
+          <g font-family="JetBrains Mono" font-size="11.5" font-weight="600" fill="currentColor">
+            <rect x="10" y="10" width="180" height="40" rx="6" fill="var(--accent-soft)" stroke="var(--accent)"/>
+            <text x="100" y="34" text-anchor="middle" fill="var(--accent)">1. ss — is it even listening?</text>
+          </g>
+          <rect x="10" y="66" width="180" height="40" rx="6" fill="none" stroke="currentColor"/>
+          <text x="100" y="90" text-anchor="middle" font-family="JetBrains Mono" font-size="11">2. ping — reachable at all?</text>
+          <rect x="10" y="122" width="180" height="40" rx="6" fill="none" stroke="currentColor"/>
+          <text x="100" y="146" text-anchor="middle" font-family="JetBrains Mono" font-size="11">3. traceroute — where's the path break?</text>
+          <rect x="10" y="178" width="180" height="40" rx="6" fill="var(--accent-2-soft)" stroke="var(--accent-2)"/>
+          <text x="100" y="202" text-anchor="middle" fill="var(--accent-2)" font-family="JetBrains Mono" font-size="11">4. tcpdump — what's on the wire?</text>
+          <line x1="100" y1="50" x2="100" y2="66" stroke="currentColor" opacity=".5"/>
+          <line x1="100" y1="106" x2="100" y2="122" stroke="currentColor" opacity=".5"/>
+          <line x1="100" y1="162" x2="100" y2="178" stroke="currentColor" opacity=".5"/>
+          <text x="210" y="34" font-family="IBM Plex Sans" font-size="10" fill="var(--muted)">Local-first: rule out</text>
+          <text x="210" y="48" font-family="IBM Plex Sans" font-size="10" fill="var(--muted)">"not even listening" before</text>
+          <text x="210" y="62" font-family="IBM Plex Sans" font-size="10" fill="var(--muted)">blaming the network.</text>
+          <text x="210" y="200" font-family="IBM Plex Sans" font-size="10" fill="var(--muted)">tcpdump is the last resort —</text>
+          <text x="210" y="214" font-family="IBM Plex Sans" font-size="10" fill="var(--muted)">most problems resolve before</text>
+          <text x="210" y="228" font-family="IBM Plex Sans" font-size="10" fill="var(--muted)">you need packet-level detail.</text>
+        </svg>
+        <figcaption>Work outward from the local box — a "the network is broken" ticket is usually a local misconfiguration until proven otherwise.</figcaption>
+      </figure>
+    </div>
+
+    <table class="blocks">
+      <caption>Domain 2 tool cheat sheet</caption>
+      <thead><tr><th>Tool</th><th>Answers</th><th>Example</th></tr></thead>
+      <tbody>
+        <tr><td>journalctl</td><td>Structured systemd logs — by unit, by boot, or live</td><td><code class="inline">journalctl -u sshd -b -f</code></td></tr>
+        <tr><td>dmesg</td><td>Kernel ring buffer — hardware, driver, and boot-time messages</td><td><code class="inline">dmesg -T | tail -30</code></td></tr>
+        <tr><td>ss</td><td>Socket state — what's listening, what's connected, in what state</td><td><code class="inline">ss -tanp</code></td></tr>
+        <tr><td>tcpdump</td><td>Actual packets crossing an interface, live or to a file</td><td><code class="inline">sudo tcpdump -i eth0 port 443</code></td></tr>
+        <tr><td>traceroute</td><td>The hop-by-hop path to a destination, and where it stalls</td><td><code class="inline">traceroute 8.8.8.8</code></td></tr>
+        <tr><td>top / htop</td><td>Live per-process CPU/memory, sorted, refreshing</td><td><code class="inline">top</code></td></tr>
+        <tr><td>vmstat</td><td>System-wide CPU/memory/swap summary, sampled over time</td><td><code class="inline">vmstat 2 5</code></td></tr>
+        <tr><td>iostat</td><td>Per-device disk I/O and %util — is a disk the bottleneck?</td><td><code class="inline">iostat -x 2</code></td></tr>
+        <tr><td>free</td><td>Memory and swap in use, free, and cached, at a glance</td><td><code class="inline">free -h</code></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="flashcards">
+    <div class="section-head">
+      <p class="kicker">Study</p>
+      <h2>Flashcards</h2>
+      <p>Click a card to flip it. Double-click to mark it known once you've got it cold.</p>
+    </div>
+    <div class="toolbar">
+      <button class="btn" id="shuffleBtn">Shuffle</button>
+      <button class="btn" id="resetKnownBtn">Reset progress</button>
+      <span id="cardProgress"></span>
+    </div>
+    <div class="card-grid" id="cardGrid"></div>
+  </section>
+
+  <section id="quiz">
+    <div class="section-head">
+      <p class="kicker">Check yourself</p>
+      <h2>Sample questions</h2>
+      <p>Pick an answer to see if you're right — same style as the checkpoint quizzes.</p>
+    </div>
+    <div id="quizScore"></div>
+    <div id="quizList"></div>
+    <button class="btn" id="resetQuizBtn">Reset quiz</button>
+  </section>
+
+  <section id="examples">
+    <div class="section-head">
+      <p class="kicker">Applied</p>
+      <h2>Worked examples</h2>
+      <p>Think it through before you expand the answer.</p>
+    </div>
+
+    <div class="example">
+      <span class="tag">Boot logs</span>
+      <h3>It crashed before you could read the screen</h3>
+      <p>A box rebooted unexpectedly overnight. By the time you're logged back in, the on-screen boot messages are long gone. How do you see what happened during <em>that</em> boot specifically, not the current one?</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <pre class="term">journalctl -b -1</pre>
+          <p><code class="inline">-b</code> scopes to one boot; <code class="inline">-1</code> means "the boot before this one" (<code class="inline">-2</code> the one before that, and so on — systemd numbers boots for exactly this reason). Add <code class="inline">-p err</code> to cut the noise down to errors and worse while you're hunting for what actually failed.</p>
+        </div>
+      </details>
+    </div>
+
+    <div class="example">
+      <span class="tag">Hardware</span>
+      <h3>A USB drive isn't showing up</h3>
+      <p>You plug in a USB drive. Nothing appears in <code class="inline">lsblk</code>. Where do you look to see whether the kernel even noticed the device was plugged in?</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <pre class="term">dmesg -T | tail -30</pre>
+          <p><code class="inline">dmesg</code> reads the kernel ring buffer — the low-level hardware/driver messages that show up the instant a device is detected (or fails to be), before anything at the filesystem or systemd level gets involved. <code class="inline">-T</code> converts the raw kernel timestamps to human-readable ones. If there's nothing about the device here at all, the problem is likely the cable/port/hardware, not Linux.</p>
+        </div>
+      </details>
+    </div>
+
+    <div class="example">
+      <span class="tag">Connection state</span>
+      <h3>Not "connection refused" — just hanging</h3>
+      <p>A client trying to reach a service on this box doesn't get refused — the connection just hangs and eventually times out. <code class="inline">ss -tuln</code> confirms the service is listening. What's the next thing to check locally before blaming the network?</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <pre class="term">ss -tanp</pre>
+          <p>Dropping <code class="inline">-l</code> (listening-only) and adding <code class="inline">-a</code> (all sockets) and <code class="inline">-p</code> (owning process) shows every connection's actual <strong>state</strong> — <code class="inline">SYN-SENT</code>, <code class="inline">ESTABLISHED</code>, and so on. A pile of connections stuck in <code class="inline">SYN-RECV</code> points at a firewall silently dropping the handshake rather than rejecting it outright — "refused" and "silently dropped" look identical to the user but mean different fixes.</p>
+        </div>
+      </details>
+    </div>
+
+    <div class="example">
+      <span class="tag">Network path</span>
+      <h3>Reaches some sites, not others</h3>
+      <p>From this box, <code class="inline">ping 1.1.1.1</code> works, but a specific internal server times out. Both are pingable IPs, so where does the packet actually stop?</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <pre class="term">traceroute 10.20.30.40</pre>
+          <p><code class="inline">traceroute</code> shows the hop-by-hop path and where replies stop coming back — the last hop that answered is the last point you know traffic actually reached. That turns "the network is broken" into "hop 4, which is this specific router/firewall, is where it dies," which is a ticket someone can actually act on.</p>
+        </div>
+      </details>
+    </div>
+
+    <div class="example">
+      <span class="tag">Packet capture</span>
+      <h3>Is it even arriving?</h3>
+      <p><code class="inline">ss</code> shows a service listening, <code class="inline">traceroute</code> shows a clean path, but a client still can't connect. What's the last-resort tool, and what does it prove that the others can't?</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <pre class="term">sudo tcpdump -i eth0 port 443 -n</pre>
+          <p><code class="inline">tcpdump</code> shows the actual packets crossing an interface — it answers "is traffic arriving at all" at a level below what any application or socket-state tool can see. If nothing shows up here for a supposedly-open port, the packet isn't reaching this NIC — a firewall rule upstream, a security group, or the wrong interface is a much stronger suspect than the service itself.</p>
+        </div>
+      </details>
+    </div>
+
+    <div class="example">
+      <span class="tag">Performance</span>
+      <h3>"The server is slow" — slow how?</h3>
+      <p>A vague ticket says a server is slow. You need to figure out in under a minute whether this is CPU-bound, memory-bound, or disk-bound before digging further.</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <pre class="term">top          # quick live overview, sorted by CPU
+vmstat 2 5   # 5 samples, 2 seconds apart — CPU/memory/swap trend
+free -h      # how much memory is actually free vs. cached
+iostat -x 2  # per-device %util — is a disk saturated?</pre>
+          <p>Run them in that order: <code class="inline">top</code> for a fast overall read (watch load average and which process dominates), <code class="inline">vmstat</code>'s <code class="inline">wa</code> column for I/O wait (high <code class="inline">wa</code> with idle CPU points at disk, not CPU), <code class="inline">free</code> to rule out a memory/swap thrash, and <code class="inline">iostat -x</code> to confirm which device is actually saturated if disk looks like the culprit. Guessing which resource is the bottleneck without checking is how you "fix" the wrong thing.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section id="glossary">
+    <div class="section-head">
+      <p class="kicker">Reference</p>
+      <h2>Glossary &amp; index</h2>
+      <p>Every term from this week, searchable and indexed A–Z.</p>
+    </div>
+    <input type="text" id="glossarySearch" placeholder="Search terms…" aria-label="Search glossary">
+    <div class="alpha-nav" id="alphaNav"></div>
+    <dl class="glossary" id="glossaryList"></dl>
+  </section>
+
+  <section id="automation">
+    <div class="section-head">
+      <p class="kicker">Looking ahead</p>
+      <h2>Automation preview: bash vs. Python</h2>
+      <p>Domain 5 (Automation, Orchestration &amp; Scripting, 17%) is new to XK0-006 and doesn't get its own week until Week 13 — including Python, which may be new to you entirely. You already know the bash side of these four constructs from Weeks 2, 4, and 5's cron/scripting examples. These cards are the early on-ramp: same idea, different syntax, so Week 13 isn't the first time you've seen it.</p>
+    </div>
+    <div class="toolbar">
+      <button class="btn" id="autoShuffleBtn">Shuffle</button>
+      <span id="autoCardProgress">4 syntax-comparison cards — click to flip</span>
+    </div>
+    <div class="card-grid" id="autoCardGrid"></div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>IT251 · Linux+ (XK0-006) · Troubleshooting primer (Domain 2) + automation on-ramp · Week 7 reference — more weeks added as the course progresses.</p>
+  </div>
+</footer>
+
+<script>
+  const TERMS = [
+    {t:"journalctl", d:"The systemd-native log viewer — reads the structured binary journal instead of plain-text log files."},
+    {t:"journalctl -b", d:"Scopes output to one boot. -b -1 is the boot before this one, -b -2 the one before that."},
+    {t:"journalctl -u <unit>", d:"Scopes output to a single systemd unit's logs — e.g. journalctl -u sshd."},
+    {t:"journalctl -f", d:"Follows the journal live, like tail -f for systemd logs."},
+    {t:"journalctl -p <level>", d:"Filters by minimum priority (e.g. -p err) — cuts noise down to errors and worse."},
+    {t:"dmesg", d:"Prints the kernel ring buffer — hardware detection, driver, and boot-time messages, below the level of systemd or application logs."},
+    {t:"dmesg -T", d:"Same as dmesg, but converts raw kernel timestamps into human-readable ones."},
+    {t:"/var/log/", d:"The traditional home for plain-text application and system logs, still used alongside (not fully replaced by) the systemd journal."},
+    {t:"ss -tuln", d:"Lists listening TCP/UDP sockets by port, skipping DNS lookups (-n) for speed — answers 'is anything listening here?'"},
+    {t:"ss -tanp", d:"Lists all TCP sockets with their connection state and owning process — answers 'what state is this connection actually in?', not just whether it's listening."},
+    {t:"Socket state (SYN-SENT, ESTABLISHED, ...)", d:"The TCP handshake/connection lifecycle stage a socket is currently in — a pile of connections stuck in SYN-RECV/SYN-SENT points at a dropped handshake, often a firewall, not a refused connection."},
+    {t:"tcpdump", d:"Captures and displays packets crossing a network interface, live or saved to a file — the lowest-level, last-resort network diagnostic tool."},
+    {t:"ping", d:"Sends ICMP echo requests to test basic reachability — doesn't confirm a specific service or port is reachable, only that the host answers at all."},
+    {t:"traceroute / tracepath", d:"Shows the hop-by-hop path packets take to a destination, and which hop stops responding — turns 'the network is broken' into 'it dies at this specific hop.'"},
+    {t:"top / htop", d:"Live, refreshing view of per-process CPU and memory usage, sorted — the fast first look at 'what's using resources right now.' htop adds a friendlier, scrollable interface over the same data."},
+    {t:"Load average", d:"A rolling average (1/5/15 min) of how many processes were runnable or waiting on I/O — compare it against CPU core count, not against zero, to judge whether a box is actually overloaded."},
+    {t:"vmstat", d:"Prints a system-wide summary of CPU, memory, and swap activity, sampled at an interval — vmstat 2 5 takes 5 samples, 2 seconds apart."},
+    {t:"iowait (wa)", d:"The vmstat/top column showing % of CPU time spent idle while waiting on disk I/O — high wa with otherwise-idle CPU points at a disk bottleneck, not a CPU one."},
+    {t:"iostat", d:"Reports per-device disk I/O statistics, including %util — iostat -x gives the extended, more diagnostic view."},
+    {t:"free", d:"Shows memory and swap: used, free, and cached, at a glance. free -h prints human-readable units."},
+    {t:"OOM killer", d:"The kernel's Out-Of-Memory killer — when memory is critically exhausted, it kills a process (logged in dmesg/journalctl) to keep the system alive, rather than letting everything hang."},
+    {t:"uptime", d:"Prints how long the system has been running plus the same load-average figures shown by top — a one-line quick check."},
+  ];
+
+  const QUIZ = [
+    {
+      q:"You need to see logs from the boot before the current one, not the current boot. What's the command?",
+      choices:["journalctl -f","journalctl -b -1","dmesg -T","journalctl -u current"],
+      correct:1,
+      explain:"journalctl -b scopes to one boot; -1 means the boot before this one. -f follows the current, live journal instead."
+    },
+    {
+      q:"A USB device doesn't appear in lsblk after being plugged in. Where do you check whether the kernel even noticed it?",
+      choices:["journalctl -u usb","dmesg","/etc/fstab","ss -tuln"],
+      correct:1,
+      explain:"dmesg reads the kernel ring buffer — hardware detection happens here, below the level systemd or filesystem tools operate at."
+    },
+    {
+      q:"ss -tuln shows a service is listening, but a client's connection just hangs instead of being refused. What should you check next?",
+      choices:["Reboot the server","ss -tanp, to see the actual connection state","Reinstall the service","dmesg -T"],
+      correct:1,
+      explain:"Dropping -l and adding -a/-p shows every connection's real state — a pile stuck in SYN-RECV/SYN-SENT points at a firewall silently dropping the handshake, not a refused connection."
+    },
+    {
+      q:"ping to a destination works, but traceroute shows replies stop at hop 4. What does that tell you?",
+      choices:[
+        "The destination host is completely unreachable",
+        "The path is fine up through hop 4; something at or after that hop is dropping traffic",
+        "traceroute failed and should be ignored",
+        "The DNS server is misconfigured"
+      ],
+      correct:1,
+      explain:"traceroute shows the last hop that responded — traffic reliably reached that point, so the break is at or just past it, which is exactly the actionable detail a vague 'network is down' ticket lacks."
+    },
+    {
+      q:"ss and traceroute both look clean, but a client still can't connect to an open port. What's the next, lower-level tool?",
+      choices:["top","tcpdump","free -h","uptime"],
+      correct:1,
+      explain:"tcpdump shows whether packets are actually arriving at the interface at all — a level below anything a socket-state or path tool can see."
+    },
+    {
+      q:"vmstat shows a high wa (iowait) percentage while CPU usage itself is mostly idle. What does that point to?",
+      choices:["A CPU-bound process","A memory leak","A disk I/O bottleneck","A DNS problem"],
+      correct:2,
+      explain:"High iowait with otherwise-idle CPU means processes are waiting on disk, not competing for CPU cycles — check iostat -x next to confirm which device is saturated."
+    },
+    {
+      q:"What's the fastest way to see how much memory is actually free vs. cached on a box?",
+      choices:["top","free -h","vmstat 1","dmesg"],
+      correct:1,
+      explain:"free -h gives a direct, human-readable used/free/cached breakdown in one line — top shows similar numbers but as part of a larger live display."
+    },
+    {
+      q:"A process suddenly disappears and the box stays up. journalctl shows a kernel message about reclaiming memory around that time. What likely happened?",
+      choices:["The process exited normally","The OOM killer terminated it to prevent the system from crashing under memory pressure","A firewall rule blocked it","This is unrelated and just a coincidence"],
+      correct:1,
+      explain:"The OOM killer steps in when memory is critically exhausted, sacrificing a process (logged in dmesg/journalctl) to keep the rest of the system running."
+    },
+  ];
+
+  const grid = document.getElementById('cardGrid');
+  TERMS.forEach((item, i) => {
+    const card = document.createElement('button');
+    card.className = 'flashcard';
+    card.setAttribute('aria-label', 'Flashcard: ' + item.t + '. Press to flip.');
+    card.dataset.i = i;
+    card.innerHTML = `
+      <div class="flashcard-inner">
+        <div class="flashcard-face front"><div class="lbl">Term</div><div class="term">${item.t}</div></div>
+        <div class="flashcard-face back"><div class="lbl">Definition</div><div class="def">${item.d}</div></div>
+      </div>`;
+    card.addEventListener('click', () => card.classList.toggle('flipped'));
+    card.addEventListener('dblclick', () => { card.classList.toggle('known'); updateProgress(); });
+    grid.appendChild(card);
+  });
+  function updateProgress(){
+    const known = document.querySelectorAll('#cardGrid .flashcard.known').length;
+    document.getElementById('cardProgress').textContent = `${known} / ${TERMS.length} marked known (double-click a card to mark it)`;
+  }
+  updateProgress();
+  document.getElementById('shuffleBtn').addEventListener('click', () => {
+    const cards = Array.from(grid.children);
+    cards.sort(() => Math.random() - 0.5);
+    cards.forEach(c => { c.classList.remove('flipped'); grid.appendChild(c); });
+  });
+  document.getElementById('resetKnownBtn').addEventListener('click', () => {
+    document.querySelectorAll('#cardGrid .flashcard.known').forEach(c => c.classList.remove('known'));
+    updateProgress();
+  });
+
+  const quizList = document.getElementById('quizList');
+  let score = 0, answered = 0;
+  function renderQuiz(){
+    quizList.innerHTML = ''; score = 0; answered = 0;
+    QUIZ.forEach((item, qi) => {
+      const box = document.createElement('div');
+      box.className = 'quiz-q';
+      box.innerHTML = `<p class="qtext"><span class="qnum">Q${qi+1}.</span>${item.q}</p><div class="choices"></div><p class="explain"></p>`;
+      const choicesEl = box.querySelector('.choices');
+      item.choices.forEach((c, ci) => {
+        const b = document.createElement('button');
+        b.className = 'choice'; b.textContent = c;
+        b.addEventListener('click', () => {
+          if (box.dataset.done) return;
+          box.dataset.done = '1'; answered++;
+          if (ci === item.correct) score++;
+          Array.from(choicesEl.children).forEach((el, ei) => {
+            el.disabled = true;
+            if (ei === item.correct) el.classList.add('correct');
+            else if (ei === ci) el.classList.add('incorrect');
+          });
+          box.querySelector('.explain').textContent = item.explain;
+          box.querySelector('.explain').classList.add('show');
+          updateScore();
+        });
+        choicesEl.appendChild(b);
+      });
+      quizList.appendChild(box);
+    });
+    updateScore();
+  }
+  function updateScore(){
+    document.getElementById('quizScore').textContent =
+      answered === 0 ? `${QUIZ.length} questions — click an answer to check yourself` : `Score: ${score} / ${answered} answered`;
+  }
+  renderQuiz();
+  document.getElementById('resetQuizBtn').addEventListener('click', renderQuiz);
+
+  const glossaryList = document.getElementById('glossaryList');
+  const alphaNav = document.getElementById('alphaNav');
+  const letters = [...new Set(TERMS.map(t => t.t[0].toUpperCase()))];
+  'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').forEach(L => {
+    const a = document.createElement('a');
+    a.textContent = L;
+    if (letters.includes(L)) { a.href = '#g-' + L; a.className = 'has'; }
+    else { a.href = 'javascript:void(0)'; }
+    alphaNav.appendChild(a);
+  });
+  let currentLetter = '';
+  TERMS.forEach(item => {
+    const L = item.t[0].toUpperCase();
+    if (L !== currentLetter) {
+      currentLetter = L;
+      const h = document.createElement('div');
+      h.className = 'glossary-letter'; h.id = 'g-' + L; h.textContent = L;
+      glossaryList.appendChild(h);
+    }
+    const wrap = document.createElement('div');
+    wrap.className = 'gitem';
+    wrap.innerHTML = `<dt>${item.t}</dt><dd>${item.d}</dd>`;
+    wrap.dataset.search = (item.t + ' ' + item.d).toLowerCase();
+    glossaryList.appendChild(wrap);
+  });
+  document.getElementById('glossarySearch').addEventListener('input', (e) => {
+    const q = e.target.value.toLowerCase().trim();
+    document.querySelectorAll('.gitem').forEach(el => {
+      el.classList.toggle('hidden', q && !el.dataset.search.includes(q));
+    });
+  });
+
+  const AUTO_TERMS = [
+    {t:"Variables", d:"bash: name=\"value\" then reference with $name (or \"${name}\").\nPython: name = \"value\" then reference with name — no sigil needed."},
+    {t:"Conditionals", d:"bash: if [ \"$x\" -gt 5 ]; then ...; fi\nPython: if x > 5: ... — indentation replaces then/fi as the block delimiter."},
+    {t:"Loops", d:"bash: for f in *.log; do echo \"$f\"; done\nPython: for f in files: print(f) — bash loops over words/globs by default; Python loops over an actual list/iterable."},
+    {t:"Positional args", d:"bash: $1, $2, ... and $@ for all args, inside the script itself.\nPython: sys.argv[1], sys.argv[2], ... (sys.argv[0] is the script name) — same idea, list-indexed instead of dollar-numbered."},
+  ];
+  const autoGrid = document.getElementById('autoCardGrid');
+  AUTO_TERMS.forEach((item) => {
+    const card = document.createElement('button');
+    card.className = 'flashcard';
+    card.setAttribute('aria-label', 'Flashcard: ' + item.t + '. Press to flip.');
+    card.innerHTML = `
+      <div class="flashcard-inner">
+        <div class="flashcard-face front"><div class="lbl">Construct</div><div class="term">${item.t}</div></div>
+        <div class="flashcard-face back"><div class="lbl">bash vs. Python</div><div class="def" style="white-space:pre-line">${item.d}</div></div>
+      </div>`;
+    card.addEventListener('click', () => card.classList.toggle('flipped'));
+    autoGrid.appendChild(card);
+  });
+  document.getElementById('autoShuffleBtn').addEventListener('click', () => {
+    const cards = Array.from(autoGrid.children);
+    cards.sort(() => Math.random() - 0.5);
+    cards.forEach(c => { c.classList.remove('flipped'); autoGrid.appendChild(c); });
+  });
+</script>
+
+<button id="backToTop" class="back-to-top" aria-label="Back to top" title="Back to top">&uarr;</button>
+
+<script>
+  const backToTop = document.getElementById('backToTop');
+  function toggleBackToTop(){ backToTop.classList.toggle('show', window.scrollY > 480); }
+  window.addEventListener('scroll', toggleBackToTop, {passive:true});
+  toggleBackToTop();
+  backToTop.addEventListener('click', () => window.scrollTo({top:0, behavior:'smooth'}));
+</script>

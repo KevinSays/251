@@ -237,6 +237,7 @@
       <p class="kicker">Concepts</p>
       <h2>Two ways to see it</h2>
       <p>The boot sequence shows <em>what happens in order</em>. The FHS shows <em>where things live once you're up</em>. The storage stack shows <em>what's underneath a mount point</em>.</p>
+      <p>Not every box in the diagram below is equally universal. Firmware → bootloader → kernel → systemd, in that order, is true on virtually every modern distro — that sequence is safe to memorize as a fact about Linux. But some of the specific tools filling those boxes vary by distro: GRUB2 is near-universal, but which initramfs tool rebuilds that stage (<code class="inline">dracut</code> vs. <code class="inline">update-initramfs</code>) and which filesystem the installer defaults to (ext4, XFS, Btrfs) are distro-family decisions, not fixed facts about Linux itself. Get in the habit of asking "is this true everywhere, or just on the distro in front of me?"</p>
     </div>
     <div class="diagram-grid">
       <figure>
@@ -551,7 +552,7 @@ resize2fs /dev/vg_data/lv_var   # ext4; use xfs_growfs for XFS</pre>
     {t:"Package manager", d:"Tool that installs, updates, and removes software and resolves dependencies — apt/dpkg (Debian family), dnf/rpm (RHEL family), pacman (Arch), zypper (SUSE)."},
     {t:"POST", d:"Power-On Self-Test — the firmware's hardware check that runs before handing off to the bootloader."},
     {t:"/proc", d:"A pseudo-filesystem exposing live kernel and process information — not real files on disk."},
-    {t:"RAID", d:"Redundant Array of Independent Disks — combines multiple physical disks for redundancy (mirroring), performance (striping), or both. Full levels/utilities covered in Ascend 1.3.5, survey-level here."},
+    {t:"RAID", d:"Redundant Array of Independent Disks — combines multiple physical disks for redundancy (mirroring), performance (striping), or both. Full levels and utilities get the complete treatment in Ascend's own module 1.3.5 — Ascend is your primary course textbook/reading resource, and this site is a supplement to it, not a replacement, so RAID stays survey-level here."},
     {t:"Runlevel / Target", d:"A defined system state (e.g., multi-user, graphical). systemd calls these 'targets'; legacy SysV init called them 'runlevels.'"},
     {t:"systemd", d:"The init system (PID 1) used by virtually all modern distros — starts services in parallel based on dependency ordering, replacing legacy SysV init."},
     {t:"/sys", d:"A pseudo-filesystem exposing the kernel's live view of devices and drivers."},

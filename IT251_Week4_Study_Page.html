@@ -485,6 +485,19 @@ kill -SIGKILL &lt;pid&gt;   # force — no cleanup, last resort</pre>
     </div>
 
     <div class="example">
+      <span class="tag">Accounts</span>
+      <h3>Where's the system/user cutoff, actually?</h3>
+      <p>You've been told UID 1000+ means "regular user" and below that means "system account" — but that's policy, not a hard rule enforced by the kernel. Where does a given distro actually define that line?</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <pre class="term">grep -E '^(UID|GID)_MIN|^(UID|GID)_MAX' /etc/login.defs</pre>
+          <p>This prints the distro's configured cutoffs, typically something like <code class="inline">UID_MIN 1000</code> and <code class="inline">UID_MAX 60000</code>. Tools like <code class="inline">useradd</code> read these values when deciding what UID to hand out next — change them here and the next new account picks up the new range. It's why "1000+" is a safe default assumption but not something to bet an exam answer on without checking the file when it matters.</p>
+        </div>
+      </details>
+    </div>
+
+    <div class="example">
       <span class="tag">Device types</span>
       <h3>Block or character?</h3>
       <p><code class="inline">ls -l /dev</code> shows two entries: <code class="inline">brw-rw---- ... sda</code> and <code class="inline">crw-rw-rw- ... null</code>. What does the leading <code class="inline">b</code> vs. <code class="inline">c</code> actually tell you?</p>
