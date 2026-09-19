@@ -1,0 +1,310 @@
+<title>Linux Fundamentals — an OSCP Lens</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --bg:#f2f6f4; --surface:#ffffff; --surface-2:#e6efec;
+    --text:#0c1a15; --muted:#51655d; --border:#cddcd5;
+    --accent:#0f7a5c; --accent-soft:#dcf1e7;
+    --accent-2:#0e7490; --accent-2-soft:#dbeff4;
+    --danger:#b3261e; --danger-soft:#f8dcd9;
+    --shadow: 0 1px 2px rgba(12,26,21,.06), 0 8px 24px rgba(12,26,21,.07);
+    --mono:'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    --sans:'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0a0f0d; --surface:#0f1613; --surface-2:#131c18;
+      --text:#d9f5e8; --muted:#82a99a; --border:#1e2b26;
+      --accent:#3ddc97; --accent-soft:#123024;
+      --accent-2:#22d3ee; --accent-2-soft:#0c2b30;
+      --danger:#ff7a68; --danger-soft:#33150f;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 12px 32px rgba(0,0,0,.45);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0a0f0d; --surface:#0f1613; --surface-2:#131c18;
+    --text:#d9f5e8; --muted:#82a99a; --border:#1e2b26;
+    --accent:#3ddc97; --accent-soft:#123024;
+    --accent-2:#22d3ee; --accent-2-soft:#0c2b30;
+    --danger:#ff7a68; --danger-soft:#33150f;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 12px 32px rgba(0,0,0,.45);
+  }
+
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto;} *{animation-duration:.001ms !important; transition-duration:.001ms !important;} }
+  body{ margin:0; background:var(--bg); color:var(--text); font-family:var(--sans); line-height:1.55; -webkit-font-smoothing:antialiased; }
+  a{ color:var(--accent-2); }
+  ::selection{ background:var(--accent-soft); }
+  .wrap{ max-width:1080px; margin:0 auto; padding:0 24px; }
+
+  header.hero{
+    border-bottom:1px solid var(--border);
+    background:repeating-linear-gradient(180deg, var(--surface-2) 0 1px, var(--bg) 1px 28px);
+    padding:56px 0 40px;
+  }
+  .termbar{ display:flex; gap:6px; margin-bottom:20px; }
+  .termbar span{ width:11px; height:11px; border-radius:50%; }
+  .termbar span:nth-child(1){ background:#ff5f57; }
+  .termbar span:nth-child(2){ background:#febc2e; }
+  .termbar span:nth-child(3){ background:#28c840; }
+  .eyebrow{ font-family:var(--mono); font-size:.8rem; color:var(--accent); }
+  .eyebrow::before{ content:"$ "; opacity:.7; }
+  h1{ font-family:var(--mono); font-weight:700; font-size:clamp(2rem,4vw,3rem); line-height:1.08; margin:.4em 0 .3em; text-wrap:balance; letter-spacing:-.01em; }
+  h1 .cursor{ display:inline-block; width:.5ch; background:var(--accent); margin-left:.15em; animation:blink 1.1s steps(1) infinite; }
+  @keyframes blink{ 50%{ opacity:0; } }
+  .hero p.lede{ max-width:62ch; font-size:1.1rem; color:var(--muted); margin:0 0 1.6em; }
+  .factrow{ display:flex; flex-wrap:wrap; gap:10px; }
+  .fact{ font-family:var(--mono); font-size:.78rem; background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:.5em .8em; display:flex; gap:.5em; }
+  .fact b{ color:var(--muted); font-weight:500; text-transform:uppercase; letter-spacing:.06em; font-size:.72rem; }
+
+  nav.index{ position:sticky; top:0; z-index:20; background:color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter:blur(8px); border-bottom:1px solid var(--border); }
+  nav.index .wrap{ display:flex; gap:4px; overflow-x:auto; padding:10px 24px; scrollbar-width:none; }
+  nav.index .wrap::-webkit-scrollbar{ display:none; }
+  nav.index a{ font-family:var(--mono); font-size:.82rem; text-decoration:none; color:var(--muted); padding:.5em .9em; border-radius:6px; white-space:nowrap; border:1px solid transparent; }
+  nav.index a:hover{ color:var(--text); border-color:var(--border); background:var(--surface); }
+  nav.index a.toc-link{ font-weight:600; color:var(--accent); border-right:1px solid var(--border); border-radius:0; margin-right:8px; padding-right:16px; }
+  nav.index a.toc-link:hover{ color:var(--accent); background:transparent; border-right-color:var(--border); }
+  nav.index a:not(.toc-link)::before{ content:'#'; opacity:.5; margin-right:.3em; }
+
+  .back-to-top{ position:fixed; bottom:22px; right:22px; z-index:40; width:46px; height:46px;
+    background:var(--surface); border:1px solid var(--border); border-radius:10px; box-shadow:var(--shadow);
+    font-family:var(--mono); font-size:1.15rem; color:var(--accent); line-height:1;
+    display:flex; align-items:center; justify-content:center; padding:0; cursor:pointer; text-decoration:none;
+    opacity:0; visibility:hidden; transform:translateY(10px);
+    transition:opacity .25s ease, transform .25s ease, visibility 0s .25s; }
+  .back-to-top.show{ opacity:1; visibility:visible; transform:translateY(0); transition:opacity .25s ease, transform .25s ease, visibility 0s; }
+  .back-to-top:hover{ background:var(--accent-soft); border-color:var(--accent); }
+  .back-to-top:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+  @media print{ nav.index, .back-to-top{ display:none; } }
+
+  section{ padding:52px 0; border-bottom:1px solid var(--border); }
+  section:last-of-type{ border-bottom:none; }
+  .section-head{ margin-bottom:28px; max-width:70ch; }
+  .kicker{ font-family:var(--mono); font-size:.75rem; letter-spacing:.1em; text-transform:uppercase; color:var(--accent-2); margin:0 0 .5em; }
+  .kicker::before{ content:"// "; opacity:.6; }
+  h2{ font-family:var(--mono); font-size:clamp(1.4rem,2.4vw,1.9rem); margin:0 0 .3em; text-wrap:balance; }
+  h3{ font-family:var(--mono); font-size:1.05rem; margin:1.6em 0 .5em; }
+  .section-head p{ color:var(--muted); margin:.4em 0 0; }
+
+  .note-box{ background:var(--surface); border:1px solid var(--border); border-left:3px solid var(--accent-2);
+    border-radius:6px; padding:16px 18px; margin:22px 0; box-shadow:var(--shadow); }
+  .note-box .tag{ font-family:var(--mono); font-size:.78rem; letter-spacing:.08em; color:var(--accent-2); margin:0 0 6px; text-transform:uppercase; }
+  .note-box p{ margin:0; font-size:.92rem; line-height:1.6; color:var(--muted); }
+
+  .callout{ border-left:3px solid var(--accent); background:var(--accent-soft); border-radius:0 8px 8px 0; padding:14px 18px; margin:10px 0 24px; font-size:.92rem; }
+  .callout b{ font-family:var(--mono); }
+  .callout.warn{ border-left-color:var(--danger); background:var(--danger-soft); }
+
+  .example{ background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px 22px; margin-bottom:16px; box-shadow:var(--shadow); }
+  .example h3{ font-family:var(--mono); font-size:1.02rem; margin:0 0 8px; }
+  .example .tag{ display:inline-block; font-family:var(--mono); font-size:.68rem; text-transform:uppercase; letter-spacing:.08em; color:var(--accent-2); background:var(--accent-2-soft); border-radius:5px; padding:.25em .6em; margin-bottom:10px; }
+  code.inline{ font-family:var(--mono); background:var(--surface-2); border-radius:4px; padding:.1em .4em; font-size:.92em; }
+  pre.term{ font-family:var(--mono); font-size:.85rem; background:var(--surface-2); border:1px solid var(--border); border-radius:8px; padding:12px 14px; overflow-x:auto; margin:10px 0; white-space:pre; }
+
+  table.ref{ width:100%; border-collapse:collapse; font-size:.9rem; margin:10px 0 24px; }
+  table.ref th, table.ref td{ border:1px solid var(--border); padding:.6em .85em; text-align:left; vertical-align:top; }
+  table.ref th{ background:var(--surface-2); font-family:var(--mono); font-size:.76rem; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); }
+  table.ref tbody tr:nth-child(odd){ background:var(--surface); }
+  table.ref tbody tr:nth-child(even){ background:color-mix(in srgb, var(--surface) 60%, var(--surface-2)); }
+
+  footer{ padding:32px 0 60px; }
+  footer p{ color:var(--muted); font-size:.85rem; font-family:var(--mono); }
+</style>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="termbar"><span></span><span></span><span></span></div>
+    <p class="eyebrow">IT251 · Reference</p>
+    <h1>Linux Fundamentals, an OSCP Lens<span class="cursor">&nbsp;</span></h1>
+    <p class="lede">Same Linux you already know from Weeks 1&ndash;5 &mdash; kernel, shell, FHS, permissions, processes &mdash; but looked at through the eyes of someone who just landed a shell on a box they don't administer. Sysadmins read this material to keep a system healthy; penetration testers read the exact same material to figure out what a system is hiding.</p>
+    <div class="factrow">
+      <span class="fact"><b>Angle</b> OSCP / pentest-flavored refresher</span>
+      <span class="fact"><b>Builds on</b> Weeks 1&ndash;5</span>
+    </div>
+  </div>
+</header>
+
+<nav class="index" aria-label="Section index">
+  <div class="wrap">
+    <a href="index.html" class="toc-link">&larr; Table of Contents</a>
+    <a href="#why">why-this-lens</a>
+    <a href="#kernel">kernel-and-userspace</a>
+    <a href="#cli">command-line</a>
+    <a href="#fhs">filesystem</a>
+    <a href="#commands">useful-commands</a>
+    <a href="#reference">quick-reference</a>
+  </div>
+</nav>
+
+<main class="wrap">
+
+  <section id="why">
+    <div class="section-head">
+      <p class="kicker">Framing</p>
+      <h2>Why the same material reads differently</h2>
+      <p>Everything below is Linux+ material you've already touched this term. A sysadmin cares about it because it's their job to keep the box running. A pentester cares about the exact same facts because after an exploit lands, the very first thing you have is usually a bare, ugly shell on someone else's machine &mdash; no menus, no GUI, and no idea yet what you're standing on. Every fact in this page doubles as an answer to the question a pentester is actually asking in that moment: <em>what is this box, what can I see, and what can I touch?</em></p>
+    </div>
+    <div class="note-box">
+      <p class="tag">Attribution</p>
+      <p>Organized with reference to Kali Linux's official <em>Linux Fundamentals</em> documentation, itself adapted from <em>The Debian Administrator's Handbook</em> (Raphaël Hertzog &amp; Roland Mas, CC BY-SA 3.0). No text from that source is reproduced here &mdash; this page uses it only as a topic checklist, and every explanation, example, and framing below was written fresh for IT251.</p>
+    </div>
+    <div class="callout warn">
+      <b>Scope reminder:</b> the enumeration ideas on this page are things you run against boxes you own, boxes built for practice (this course's labs, HTB, TryHackMe, VulnHub), or systems you have explicit written authorization to test &mdash; the same rule Week 4's Pentest Tooling page already laid out. Running any of this against a system you don't have permission to touch is unauthorized access, full stop.
+    </div>
+  </section>
+
+  <section id="kernel">
+    <div class="section-head">
+      <p class="kicker">Foundations</p>
+      <h2>The kernel, user space, and why that split matters to you</h2>
+      <p>"Linux" technically names only the kernel &mdash; the program that talks to hardware, schedules processes, and enforces permissions. Everything you actually type is user space: GNU utilities, the shell, whatever service got you a foothold. Week 1 covered this split as part of the boot sequence (firmware &rarr; bootloader &rarr; kernel &rarr; systemd). The pentest reason to care: the kernel version is a dated, fingerprint-able fact about a box, and an old kernel is a map of every local privilege-escalation exploit that shipped for it.</p>
+    </div>
+    <div class="example">
+      <span class="tag">First move</span>
+      <h3>Fingerprint the box before you do anything else</h3>
+      <pre class="term">$ uname -a
+Linux target 5.4.0-100-generic #113-Ubuntu SMP ... x86_64 GNU/Linux
+$ cat /etc/os-release</pre>
+      <p>That single line tells you the kernel release and architecture &mdash; enough to go check searchsploit or a CVE database for a matching local-root exploit before you spend an hour hunting for one by hand. It's the same command Week 1 introduced for basic system enumeration; here it's the opening move of an engagement instead of a troubleshooting step.</p>
+    </div>
+    <div class="example">
+      <span class="tag">Device files</span>
+      <h3>/dev, /proc, and /sys aren't just plumbing</h3>
+      <p><code class="inline">/proc/</code> is a live, readable window into every running process &mdash; command lines, open files, environment variables, memory maps &mdash; all exposed as plain text files, no special tooling required. <code class="inline">cat /proc/&lt;pid&gt;/cmdline</code> can hand you a password that got passed as a command-line argument instead of piped in safely. That's not a bug in the kernel; it's the kernel doing exactly what it's supposed to do (expose process state to user space) in a way that happens to leak secrets when an application is careless.</p>
+    </div>
+  </section>
+
+  <section id="cli">
+    <div class="section-head">
+      <p class="kicker">Access</p>
+      <h2>The command line is the whole interface, not a shortcut to one</h2>
+      <p>Week 2 covered shell config load order and environment variables as things you configure on your own machine. On someone else's box, post-exploit, that same shell knowledge answers a much blunter question: is this shell actually usable, and can I trust anything it tells me?</p>
+    </div>
+    <div class="example">
+      <span class="tag">Reality check</span>
+      <h3>A reverse shell is not a terminal</h3>
+      <p>A raw reverse or bind shell from a web exploit is missing almost everything a normal terminal gives you for free: no job control, no tab completion, no arrow-key history, and it dies the instant a network hiccup drops the TCP connection. Upgrading it to a real TTY is routine, current OSCP practice &mdash; not a party trick:</p>
+      <pre class="term">$ python3 -c 'import pty; pty.spawn("/bin/bash")'
+# Ctrl-Z to background it, then on your attacking box:
+$ stty raw -echo; fg
+# back in the shell:
+$ export TERM=xterm-256color
+$ stty rows &lt;n&gt; columns &lt;n&gt;</pre>
+      <p>Notice this only works because <code class="inline">pty</code> is a Python standard-library module wrapping a kernel feature (pseudo-terminals) &mdash; the same "everything is a file" device-file model /dev/ exposes. Fundamentals, not magic.</p>
+    </div>
+    <div class="example">
+      <span class="tag">PATH abuse</span>
+      <h3><code class="inline">$PATH</code> is a search order, and search orders can be gamed</h3>
+      <p>Week 2 explained <code class="inline">$PATH</code> as "which directory the shell checks, in order, to resolve a bare command name." From an offensive angle: if a privileged script or SUID binary calls another program by name (not full path) and a directory earlier in <em>your</em> $PATH is writable, you can drop a malicious file with that name and get it executed with elevated rights instead. This is a real GTFOBins-style technique, not a hypothetical &mdash; and it only makes sense once you already understand PATH resolution as a mechanism, which you do.</p>
+    </div>
+  </section>
+
+  <section id="fhs">
+    <div class="section-head">
+      <p class="kicker">Terrain</p>
+      <h2>The FHS is a map &mdash; and pentesters read maps for loot, not tidiness</h2>
+      <p>Lab 3's scavenger hunt already had you locate files across the Filesystem Hierarchy Standard. The directories don't change meaning on an engagement; what changes is what you're looking for in each one.</p>
+    </div>
+    <table class="ref">
+      <thead><tr><th>Directory</th><th>Sysadmin reads it as</th><th>Pentester reads it as</th></tr></thead>
+      <tbody>
+        <tr><td><code class="inline">/etc/</code></td><td>Configuration files</td><td>Application configs that often embed plaintext credentials, plus <code class="inline">/etc/passwd</code> and <code class="inline">/etc/shadow</code> for account and hash enumeration</td></tr>
+        <tr><td><code class="inline">/home/</code>, <code class="inline">/root/</code></td><td>Personal files</td><td>SSH keys in <code class="inline">~/.ssh/</code>, shell history files, saved credentials in dotfiles</td></tr>
+        <tr><td><code class="inline">/var/</code></td><td>Logs, spools, caches</td><td>Web server logs and webroots (<code class="inline">/var/www/</code>) &mdash; often where your initial foothold's source code lives</td></tr>
+        <tr><td><code class="inline">/tmp/</code></td><td>Scratch space, cleared at boot</td><td>World-writable by default &mdash; a natural place to stage a payload or exploit binary you upload</td></tr>
+        <tr><td><code class="inline">/opt/</code></td><td>Third-party applications</td><td>Often the least-patched software on the box, since it bypasses the distro's own package manager</td></tr>
+        <tr><td><code class="inline">/dev/</code>, <code class="inline">/proc/</code>, <code class="inline">/sys/</code></td><td>Kernel-exported device and process data</td><td>Free, tool-free enumeration &mdash; readable without installing anything on the target</td></tr>
+      </tbody>
+    </table>
+    <div class="note-box">
+      <p class="tag">Still one hierarchy</p>
+      <p>None of this changes the FHS itself &mdash; it's the same single rooted tree Week 1 covered, and the same directories mean the same things on every distro that follows the standard. What changes is the question you're asking as you walk it.</p>
+    </div>
+  </section>
+
+  <section id="commands">
+    <div class="section-head">
+      <p class="kicker">Toolbox</p>
+      <h2>Useful commands, sorted by what a foothold shell needs first</h2>
+      <p>The source material this page is organized against groups commands by category: text/search, processes, permissions, system info, hardware. That's still the right grouping &mdash; here's the same categories with the pentest "why."</p>
+    </div>
+
+    <div class="example">
+      <span class="tag">Text &amp; search</span>
+      <h3><code class="inline">grep</code>, <code class="inline">find</code> &mdash; hunting instead of filtering</h3>
+      <p>Lab 4 used <code class="inline">grep</code> and <code class="inline">find</code> against known data to practice pattern matching. Point the exact same commands at an unfamiliar filesystem and they become a search for anything interesting a previous admin left behind:</p>
+      <pre class="term">$ grep -ri "password" /etc /var/www 2&gt;/dev/null
+$ find / -perm -4000 -type f 2&gt;/dev/null</pre>
+      <p>That second command lists every SUID binary on the box &mdash; programs that run with their <em>owner's</em> permissions rather than the caller's. Cross-reference an unfamiliar result against GTFOBins; if it's listed there, GTFOBins hands you the exact command to leverage it into a root shell. This is current, standard practice, not a dated trick.</p>
+    </div>
+
+    <div class="example">
+      <span class="tag">Processes</span>
+      <h3><code class="inline">ps aux</code> &mdash; who else is on this box, doing what</h3>
+      <p>Week 4 covered process states and job control for managing your own work. On a foothold box, <code class="inline">ps aux</code> answers a different question: what's running as root that you could interact with, and is there a cron job (Lab 4 territory again) quietly running a script as root on a schedule that you can tamper with before it fires?</p>
+    </div>
+
+    <div class="example">
+      <span class="tag">Permissions</span>
+      <h3>rwx, setuid, and setgid &mdash; the same bits, an offensive reading</h3>
+      <p>Week 3/4 covered <code class="inline">chmod</code>/<code class="inline">chown</code> and the setuid/setgid/sticky bits as an access-control system to configure correctly. From the other side of that system: a setuid-root binary is a standing offer &mdash; if you can make it do something its author didn't intend, you inherit root's permissions for as long as it runs. That's precisely why <code class="inline">find / -perm -4000</code> above is one of the first commands run on almost every Linux privilege-escalation path. Same octal math (<code class="inline">chmod 4755</code>), opposite intent.</p>
+    </div>
+
+    <div class="example">
+      <span class="tag">System info</span>
+      <h3><code class="inline">id</code>, <code class="inline">whoami</code>, <code class="inline">hostname</code> &mdash; know your own footing first</h3>
+      <p>Before enumerating the box, enumerate yourself. <code class="inline">id</code> shows your UID, GID, and every group you belong to &mdash; a user in the <code class="inline">docker</code> or <code class="inline">lxd</code> group, for instance, usually has an easy path to root even without a single exploit, because those groups grant control over containers that can mount the host filesystem. This is the same command Week 1 used for basic account checks; on a foothold shell it's the very first thing you run, before anything else.</p>
+    </div>
+
+    <div class="example">
+      <span class="tag">Hardware</span>
+      <h3><code class="inline">lspci</code>, <code class="inline">lsusb</code> &mdash; lower priority, still occasionally the answer</h3>
+      <p>Hardware enumeration matters far less against a remote server than it does on a physical machine or lab VM you have console access to, but it hasn't gone away: it's how you notice you're inside a VM in the first place (a hint about isolation and what else might be reachable), and it's still how Week 1's device-file material (block vs. character devices) gets confirmed on a system you didn't build yourself.</p>
+    </div>
+  </section>
+
+  <section id="reference">
+    <div class="section-head">
+      <p class="kicker">Cheat sheet</p>
+      <h2>Quick reference: fundamentals command, pentest reason</h2>
+    </div>
+    <table class="ref">
+      <thead><tr><th>Command</th><th>What Weeks 1&ndash;5 taught it as</th><th>Why a pentester runs it</th></tr></thead>
+      <tbody>
+        <tr><td><code class="inline">uname -a</code></td><td>Basic system info</td><td>Kernel version &rarr; matching local-root exploits</td></tr>
+        <tr><td><code class="inline">id</code></td><td>Account/group check</td><td>Group memberships (<code class="inline">docker</code>, <code class="inline">sudo</code>, <code class="inline">lxd</code>) as privesc shortcuts</td></tr>
+        <tr><td><code class="inline">ps aux</code></td><td>Process/job management</td><td>What's running as root you might be able to influence</td></tr>
+        <tr><td><code class="inline">find / -perm -4000</code></td><td>File search + permission bits</td><td>SUID binaries to check against GTFOBins</td></tr>
+        <tr><td><code class="inline">grep -r</code></td><td>Text pattern matching</td><td>Hunting configs/scripts for embedded credentials</td></tr>
+        <tr><td><code class="inline">crontab -l</code>, <code class="inline">/etc/cron*</code></td><td>Scheduled jobs</td><td>Root-run scheduled scripts as a persistence or privesc target</td></tr>
+        <tr><td><code class="inline">cat /proc/&lt;pid&gt;/cmdline</code></td><td>Kernel/process internals</td><td>Secrets leaked via command-line arguments</td></tr>
+      </tbody>
+    </table>
+    <div class="note-box">
+      <p class="tag">The point</p>
+      <p>Nothing above is a separate body of knowledge from the Linux+ material you're already learning. Enumeration is Linux fundamentals, asked with a different motive.</p>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>IT251 &middot; Linux+ (XK0-006) &middot; Linux fundamentals, OSCP lens &mdash; organized with reference to Kali Linux's official Linux Fundamentals documentation (itself adapted from <em>The Debian Administrator's Handbook</em>, Hertzog &amp; Mas, CC BY-SA 3.0); no text reproduced verbatim, all content original to IT251. Cross-references: <a href="IT251_Study_Page.html">Week 1</a> &middot; <a href="IT251_Week2_Study_Page.html">Week 2</a> &middot; <a href="IT251_Week4_Study_Page.html">Week 4</a> &middot; <a href="IT251_Week4_Pentest_Tooling.html">Pentest Tooling lab</a>.</p>
+  </div>
+</footer>
+
+<button id="backToTop" class="back-to-top" aria-label="Back to top" title="Back to top">&uarr;</button>
+
+<script>
+  const backToTop = document.getElementById('backToTop');
+  function toggleBackToTop(){ backToTop.classList.toggle('show', window.scrollY > 480); }
+  window.addEventListener('scroll', toggleBackToTop, {passive:true});
+  toggleBackToTop();
+  backToTop.addEventListener('click', () => window.scrollTo({top:0, behavior:'smooth'}));
+</script>
