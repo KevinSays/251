@@ -167,6 +167,29 @@ Wants=network-online.target
 After=network-online.target</pre>
     <div class="callout"><code class="inline">After=</code> alone here would mean "wait until network-online.target has <em>started</em> (or failed and given up) before launching" — but without <code class="inline">Wants=</code>, systemd has no reason to make sure network-online.target is even <em>pulled in</em> as part of the boot sequence at all if nothing else already wants it. And <code class="inline">Wants=</code> alone, without <code class="inline">After=</code>, would mean "pull this dependency in, but don't guarantee it starts first" — the app could still race ahead and try to bind a socket before the network is actually up, purely because nothing told systemd to sequence them. Ordering and requirement are genuinely orthogonal — you can have either without the other, and most real service files pair <code class="inline">After=</code> with <code class="inline">Wants=</code> (or the stronger <code class="inline">Requires=</code>) specifically because one directive alone leaves a gap the other closes.</div>
     <p><strong>Where this shows up as a real bug:</strong> a service that "usually works, but sometimes fails right after boot" — intermittent, not consistent — is a classic symptom of a missing <code class="inline">After=</code> on a service that assumes some other resource (network, a database, a mount) is already up. It works most of the time because that other unit usually finishes first anyway, by luck of however fast that particular boot happened to go, and fails intermittently when timing shifts. This is exactly the same shape of bug as the active/enabled trap the study page already teaches — a real behavior driven by two independent settings, where changing only one half doesn't fix the underlying gap.</p>
+    <div class="example">
+      <span class="tag">Analogy</span>
+      <h3>Planning a dinner party</h3>
+      <p><code class="inline">Wants=</code> is sending the caterer an invitation. <code class="inline">Requires=</code> is "if the caterer cancels, the dinner is cancelled." <code class="inline">After=</code> is "don't seat the guests until the caterer has arrived."</p><p>Inviting the caterer doesn't mean anyone waits for them: without <code class="inline">After=</code>, guests sit down and start asking for food while the van is still on the highway. Waiting for a caterer you never invited means waiting for nobody: <code class="inline">After=</code> on its own doesn't pull anything in. It only matters if something else already invited that unit. You need both: invite them, <em>and</em> wait for them.</p>
+    </div>
+    <h3>Another example: all four combinations, side by side</h3>
+    <p>Say <code class="inline">app.service</code> depends on <code class="inline">db.service</code>. What each combination of directives in <code class="inline">app.service</code> actually does:</p>
+    <table class="blocks">
+      <thead><tr><th>In app.service</th><th>Is db started too?</th><th>Does app wait for db?</th><th>If db fails or is stopped...</th></tr></thead>
+      <tbody>
+        <tr><td><em>(nothing)</em></td><td>Only if something else starts it</td><td>No</td><td>app doesn't care</td></tr>
+        <tr><td><code class="inline">Wants=db.service</code></td><td>Yes</td><td><strong>No</strong>. They start in parallel</td><td>app keeps running</td></tr>
+        <tr><td><code class="inline">After=db.service</code></td><td><strong>No</strong>. Only orders it <em>if</em> something else starts db</td><td>Yes, if db is starting at all</td><td>app doesn't care</td></tr>
+        <tr><td><code class="inline">Wants=</code> + <code class="inline">After=</code></td><td>Yes</td><td>Yes</td><td>app still starts or keeps running</td></tr>
+        <tr><td><code class="inline">Requires=</code> + <code class="inline">After=</code></td><td>Yes</td><td>Yes</td><td>app won't start if db fails to start; <code class="inline">systemctl stop db</code> stops app too</td></tr>
+      </tbody>
+    </table>
+    <p>One row catches people: <code class="inline">Requires=</code> <strong>without</strong> <code class="inline">After=</code>. The two units start in parallel, so if db fails a moment later, app may already be up. That's why the man page's advice is to pair <code class="inline">Requires=</code> with <code class="inline">After=</code> too.</p>
+    <h3>Try it on your VM</h3>
+    <pre class="term">$ systemctl show -p Wants -p Requires -p After cron.service    # Fedora: crond.service
+$ systemctl list-dependencies cron.service                    # what it pulls in (Wants/Requires)
+$ systemd-analyze critical-chain                              # the boot's ordering chain, with timings</pre>
+    <p><code class="inline">show</code> prints both axes for a real unit: its requirement lists and its ordering list, separately. (Expect a long <code class="inline">After=</code> line. systemd adds many ordering dependencies automatically.) <code class="inline">critical-chain</code> draws the ordering axis for the whole boot: <code class="inline">@</code> is when a unit became active, <code class="inline">+</code> is how long it took to start. You'll also see units marked <code class="inline">static</code> in <code class="inline">systemctl status</code>. Those have no <code class="inline">[Install]</code> section, so they can't be enabled. They only start because some other unit <code class="inline">Wants=</code> or <code class="inline">Requires=</code> them.</p>
   </section>
 
   <section id="systemctl-status">
@@ -194,10 +217,64 @@ Sep 14 08:02:11 web01 systemd[1]: Started A high performance web server.</pre>
     <p>Reading it top to bottom:</p>
     <p><strong>The colored dot (●)</strong> is a fast visual summary before you read anything else — green for active/running, red for failed, white/grey for inactive or stopped. Worth knowing this exists even in a text-only environment where color may not render, because the word after <code class="inline">Active:</code> carries the same information regardless.</p>
     <p><strong>Loaded:</strong> answers "does systemd know about this unit and where did its definition come from" — the file path tells you whether you're looking at a package-provided unit (<code class="inline">/usr/lib/systemd/system/</code>) or a local override (<code class="inline">/etc/systemd/system/</code>, which the study page's glossary already notes takes precedence). The enabled/disabled word here is the <strong>boot-time axis</strong> from the active/enabled diagram — it's telling you the same fact <code class="inline">systemctl is-enabled</code> would.</p>
-    <p><strong>Active:</strong> is the <strong>current-state axis</strong> — and it's actually two pieces of information in one line: the high-level state (active, inactive, failed, activating) and, in parentheses, a lower-level sub-state (running, exited, dead) that clarifies what that high-level state actually looks like for this unit type. A one-shot script-running unit can show <code class="inline">active (exited)</code> — meaning it ran, succeeded, and correctly isn't still running anything, which is entirely normal for that unit type and not evidence of a stalled service, unlike a long-running daemon unit where exited instead of running usually does mean something's wrong.</p>
+    <p><strong>Active:</strong> is the <strong>current-state axis</strong> — and it's actually two pieces of information in one line: the high-level state (active, inactive, failed, activating) and, in parentheses, a lower-level sub-state (running, exited, dead) that clarifies what that high-level state actually looks like for this unit type. A one-shot script-running unit with <code class="inline">RemainAfterExit=yes</code> can show <code class="inline">active (exited)</code> — meaning it ran, succeeded, and correctly isn't still running anything, which is entirely normal for that unit type and not evidence of a stalled service, unlike a long-running daemon unit where exited instead of running usually does mean something's wrong.</p>
     <p><strong>Main PID:</strong> is the process systemd is actually tracking and will signal on stop/restart — useful when a service forks child workers, since this tells you which PID is the one systemd considers authoritative, distinct from the worker PIDs shown further down in the CGroup tree.</p>
     <p><strong>The CGroup: tree</strong> shows every process systemd considers part of this unit, not just the main one — this is how systemd can cleanly stop a multi-process service (like nginx's master + worker model shown here) as one unit instead of hunting down each PID by hand, and it's the same cgroups mechanism the study page's container material already connects to resource limits.</p>
     <p><strong>The last lines</strong> are a tail of that unit's own journal entries (the same data <code class="inline">journalctl -u nginx</code> would show in full) — a quick, unscoped preview without needing a separate command, useful for a fast first look before reaching for the full Week 7 journalctl toolkit if something looks wrong.</p>
+    <div class="example">
+      <span class="tag">Analogy</span>
+      <h3>A patient's chart at the foot of a hospital bed</h3>
+      <p><code class="inline">Loaded:</code> is the admission paperwork: who this is, where their file lives, and whether they're scheduled to come back (<code class="inline">enabled</code>). <code class="inline">Active:</code> is the current vitals. <code class="inline">Main PID:</code> is the attending physician, the one person systemd deals with. The <code class="inline">CGroup:</code> tree is everyone else in the room. The log lines at the bottom are the latest nurse's notes. You read the chart top to bottom <em>before</em> you start poking the patient, and you read it the same way whether the patient is healthy or not.</p>
+    </div>
+    <h3>Another example: a failed unit, read the same way</h3>
+    <pre class="term">$ systemctl status myapp
+× myapp.service - My web app
+     Loaded: loaded (/etc/systemd/system/myapp.service; enabled; preset: disabled)
+     Active: failed (Result: exit-code) since Mon 2026-09-28 09:14:03 UTC; 12s ago
+   Duration: 88ms
+    Process: 2210 ExecStart=/usr/bin/python3 /opt/myapp/app.py (code=exited, status=1/FAILURE)
+   Main PID: 2210 (code=exited, status=1/FAILURE)
+        CPU: 143ms
+
+Sep 28 09:14:03 web01 python3[2210]: OSError: [Errno 98] Address already in use
+Sep 28 09:14:03 web01 systemd[1]: myapp.service: Main process exited, code=exited, status=1/FAILURE
+Sep 28 09:14:03 web01 systemd[1]: myapp.service: Failed with result 'exit-code'.</pre>
+    <p>Same chart, bad news. The dot is now <code class="inline">×</code> (red). <code class="inline">Loaded:</code> shows a local unit in <code class="inline">/etc/systemd/system/</code>. It's still <code class="inline">enabled</code>, so it will try again at the next boot and fail again. <code class="inline">Active: failed</code> gives the reason in parentheses. The <code class="inline">Process:</code> line is the most useful line on the page: the program <em>did</em> run (it lasted 88 ms) and exited with status 1, its own error. So the answer is in the program's own output. The last log lines show that output: another process already has the port. That's Lab 6, Ticket 2.</p>
+    <table class="blocks">
+      <thead><tr><th>Exit status in the Process: line</th><th>What it means</th><th>Where to look</th></tr></thead>
+      <tbody>
+        <tr><td><code class="inline">status=1/FAILURE</code> (or any small number)</td><td>The program ran and exited with an error</td><td>The program's own log lines: <code class="inline">journalctl -u &lt;unit&gt;</code></td></tr>
+        <tr><td><code class="inline">status=203/EXEC</code></td><td>systemd couldn't launch the program at all</td><td>The <code class="inline">ExecStart=</code> path and the file's execute permission, not the app's logs (there are none)</td></tr>
+        <tr><td><code class="inline">status=217/USER</code></td><td>The <code class="inline">User=</code> in the unit doesn't exist</td><td>The <code class="inline">User=</code> line; <code class="inline">id &lt;username&gt;</code></td></tr>
+        <tr><td><code class="inline">status=200/CHDIR</code></td><td>The <code class="inline">WorkingDirectory=</code> doesn't exist or isn't accessible</td><td>The <code class="inline">WorkingDirectory=</code> path</td></tr>
+        <tr><td><code class="inline">code=killed, status=9/KILL</code></td><td>Something sent it SIGKILL, often the kernel's OOM killer</td><td><code class="inline">dmesg</code> or <code class="inline">journalctl -k</code> for "Out of memory"</td></tr>
+      </tbody>
+    </table>
+    <p>Statuses in the 200s are systemd's own codes for "I couldn't even set this up." Small numbers come from the program itself. That one distinction tells you whether to read the unit file or the application's logs.</p>
+    <h3>Another example: two healthy one-shot units that look different</h3>
+    <pre class="term"># backup.service, WITH RemainAfterExit=yes
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/backup.sh
+RemainAfterExit=yes
+
+$ systemctl status backup
+● backup.service - Nightly backup
+     Active: active (exited) since Mon 2026-09-28 02:00:04 UTC; 7h ago
+    Process: 881 ExecStart=/usr/local/bin/backup.sh (code=exited, status=0/SUCCESS)
+
+# Same unit WITHOUT RemainAfterExit=yes
+$ systemctl status backup
+○ backup.service - Nightly backup
+     Active: inactive (dead) since Mon 2026-09-28 02:00:09 UTC; 7h ago
+    Process: 881 ExecStart=/usr/local/bin/backup.sh (code=exited, status=0/SUCCESS)
+Sep 28 02:00:09 web01 systemd[1]: backup.service: Deactivated successfully.</pre>
+    <p>Both runs succeeded. <code class="inline">status=0/SUCCESS</code> is the proof in both. <code class="inline">RemainAfterExit=yes</code> tells systemd to keep calling the unit "active" after its program exits, which suits setup-style units ("the firewall rules are loaded"). Without it, a successful one-shot unit goes back to <code class="inline">inactive (dead)</code> with <em>Deactivated successfully</em> in the log. <strong>Neither <code class="inline">active (exited)</code> nor <code class="inline">inactive (dead)</code> means failure on its own. The exit status in the <code class="inline">Process:</code> line is what tells you.</strong></p>
+    <h3>Try it on your VM</h3>
+    <pre class="term">$ systemctl --failed                                           # anything broken right now?
+$ systemctl list-units --type=service --state=exited           # healthy units in active (exited)
+$ systemctl status systemd-tmpfiles-setup                      # read one: Loaded, Active, Process</pre>
+    <p><code class="inline">--state=exited</code> lists the one-shot units that ran at boot and stayed "active." Every system has a dozen or more, and none of them is a problem. Pick one and read its status top to bottom. Notice <code class="inline">static</code> in its <code class="inline">Loaded:</code> line.</p>
   </section>
 
   <section id="exam-traps">
@@ -211,8 +288,12 @@ Sep 14 08:02:11 web01 systemd[1]: Started A high performance web server.</pre>
       <tbody>
         <tr><td><code class="inline">After=</code></td><td><code class="inline">Wants=</code>/<code class="inline">Requires=</code></td><td><code class="inline">After=</code>/<code class="inline">Before=</code> control <strong>ordering only</strong>; <code class="inline">Wants=</code>/<code class="inline">Requires=</code> control <strong>whether failure matters</strong> — a unit can have either without the other, and usually needs both together</td></tr>
         <tr><td><code class="inline">Wants=</code> without <code class="inline">After=</code></td><td>A guarantee the wanted unit starts first</td><td><code class="inline">Wants=</code> only ensures the dependency is pulled in — it says nothing about sequencing; without <code class="inline">After=</code>, the two can start in either order</td></tr>
-        <tr><td><code class="inline">active (exited)</code></td><td>A service that crashed or stopped unexpectedly</td><td>Entirely normal for a <strong>one-shot</strong> unit that ran to completion and correctly has nothing left running — the sub-state in parentheses is what tells you which case you're in</td></tr>
+        <tr><td><code class="inline">active (exited)</code></td><td>A service that crashed or stopped unexpectedly</td><td>Normal for a <strong>one-shot</strong> unit with <code class="inline">RemainAfterExit=yes</code> that ran to completion and correctly has nothing left running — the sub-state in parentheses is what tells you which case you're in</td></tr>
         <tr><td>Killing worker PIDs shown in the CGroup tree</td><td>The correct way to stop a multi-process service</td><td><code class="inline">systemctl stop</code> operates on the whole cgroup as one unit via the <strong>Main PID</strong>; manually killing worker PIDs can leave systemd's tracked state inconsistent with reality</td></tr>
+        <tr><td><code class="inline">Requires=</code></td><td>A guarantee the required unit starts first</td><td><code class="inline">Requires=</code> alone starts both in parallel, so the dependent can already be running when the required unit fails. Pair it with <code class="inline">After=</code></td></tr>
+        <tr><td><code class="inline">After=</code> on its own</td><td>Starting the other unit</td><td><code class="inline">After=</code> only orders units that are <em>already</em> being started. It pulls nothing in. If nothing else starts the other unit, <code class="inline">After=</code> does nothing</td></tr>
+        <tr><td><code class="inline">status=203/EXEC</code></td><td>A bug in the application</td><td>A 200-range status is systemd failing to set up or launch the program (203 = couldn't execute it). The program never ran, so check <code class="inline">ExecStart=</code> and permissions, not the app's logs</td></tr>
+        <tr><td><code class="inline">inactive (dead)</code> after a one-shot job</td><td>The job never ran, or failed</td><td>Without <code class="inline">RemainAfterExit=yes</code>, a successful one-shot unit ends as <code class="inline">inactive (dead)</code>. Check the <code class="inline">Process:</code> line for <code class="inline">status=0/SUCCESS</code></td></tr>
       </tbody>
     </table>
   </section>
@@ -221,7 +302,7 @@ Sep 14 08:02:11 web01 systemd[1]: Started A high performance web server.</pre>
     <div class="section-head">
       <p class="kicker">Check yourself</p>
       <h2>Scenario quiz</h2>
-      <p>Think it through before you expand the answer.</p>
+      <p>Think it through before you expand the answer. Q1–Q3 check the core readings; Q4–Q6 build on the added examples.</p>
     </div>
 
     <div class="example">
@@ -243,7 +324,7 @@ Sep 14 08:02:11 web01 systemd[1]: Started A high performance web server.</pre>
       <details class="solution">
         <summary>Show answer</summary>
         <div class="solbody">
-          <p>Not necessarily — for a one-shot unit (the typical type for a backup job that runs once and finishes), <code class="inline">active (exited)</code> means it ran successfully to completion and correctly has no ongoing process, which is the expected end state. The distinguishing check is whether the unit's <code class="inline">ExecStart</code> is a one-shot type and whether the exit code was 0 (visible via <code class="inline">systemctl status</code>'s recent journal lines or a full <code class="inline">journalctl -u</code> check) — exited alone isn't evidence of failure, only the combination of unit type and exit code tells you that.</p>
+          <p>Not necessarily — for a one-shot unit (the typical type for a backup job that runs once and finishes), <code class="inline">active (exited)</code> means it ran successfully to completion and correctly has no ongoing process, which is the expected end state. The distinguishing check is whether the unit is <code class="inline">Type=oneshot</code> (with <code class="inline">RemainAfterExit=yes</code>, which is what keeps it showing as active) and whether the exit code was 0 (visible via <code class="inline">systemctl status</code>'s recent journal lines or a full <code class="inline">journalctl -u</code> check) — exited alone isn't evidence of failure, only the combination of unit type and exit code tells you that.</p>
         </div>
       </details>
     </div>
@@ -256,6 +337,42 @@ Sep 14 08:02:11 web01 systemd[1]: Started A high performance web server.</pre>
         <summary>Show answer</summary>
         <div class="solbody">
           <p>systemd tracks the unit as a whole via its Main PID and cgroup membership, not by any single worker PID — manually killing one worker can leave systemd's view of the unit's state (active/running) out of sync with what's actually happening (a service now missing a worker, possibly respawning it unpredictably depending on the unit's <code class="inline">Restart=</code> policy, or left in a degraded state systemd doesn't detect). <code class="inline">systemctl restart</code> operates through systemd's own tracking, ensuring the whole unit's process group is stopped and started coherently instead of leaving a partial state behind.</p>
+        </div>
+      </details>
+    </div>
+
+    <div class="example">
+      <span class="tag">Reading status</span>
+      <h3>Q4. 203/EXEC after an upgrade</h3>
+      <p>After a package upgrade, a service fails and <code class="inline">systemctl status</code> shows <code class="inline">Process: 4410 ExecStart=/opt/tool/bin/tool-server (code=exited, status=203/EXEC)</code>. A teammate starts reading the application's log files. Is that the right place to look?</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <p>No. <code class="inline">203/EXEC</code> means systemd couldn't execute the program at all, so it never ran and wrote no logs. The upgrade most likely moved or renamed the binary, or it lost its execute bit. Check the path from <code class="inline">ExecStart=</code> with <code class="inline">ls -l /opt/tool/bin/tool-server</code> (does it exist? is it executable?), and look for where the new version put it (e.g. <code class="inline">rpm -ql</code> or <code class="inline">dpkg -L</code> for the package). Then fix <code class="inline">ExecStart=</code> with <code class="inline">systemctl edit</code>, run <code class="inline">daemon-reload</code> if you edited the file directly, and restart.</p>
+        </div>
+      </details>
+    </div>
+
+    <div class="example">
+      <span class="tag">Ordering vs. requirement</span>
+      <h3>Q5. Stopping the database for maintenance</h3>
+      <p><code class="inline">app.service</code> has <code class="inline">Requires=db.service</code> and <code class="inline">After=db.service</code>. An admin runs <code class="inline">systemctl stop db</code> for maintenance, then <code class="inline">systemctl start db</code> twenty minutes later. What state is <code class="inline">app.service</code> in, and would <code class="inline">Wants=</code> have behaved differently?</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <p>Stopping <code class="inline">db</code> also stopped <code class="inline">app</code>, because <code class="inline">Requires=</code> propagates an explicit stop (or restart) of the required unit to the units that require it. Starting <code class="inline">db</code> again does <strong>not</strong> start <code class="inline">app</code> back up. It stays stopped until someone starts it (<code class="inline">systemctl restart db</code> instead of stop/start would have restarted both). With <code class="inline">Wants=</code>, <code class="inline">app</code> would have kept running through the maintenance window and hit connection errors until <code class="inline">db</code> returned. Which is better depends on whether <code class="inline">app</code> can survive without its database.</p>
+        </div>
+      </details>
+    </div>
+
+    <div class="example">
+      <span class="tag">One-shot units</span>
+      <h3>Q6. "The backup didn't run"</h3>
+      <p>A teammate checks <code class="inline">systemctl status backup</code> the morning after, sees <code class="inline">Active: inactive (dead)</code>, and concludes last night's backup never ran. What do you check before agreeing?</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <p>Look at the <code class="inline">Process:</code> line and the log tail in that same output. A line like <code class="inline">(code=exited, status=0/SUCCESS)</code> plus <em>Deactivated successfully</em> means it ran and succeeded. It's a <code class="inline">Type=oneshot</code> unit without <code class="inline">RemainAfterExit=yes</code>, so <code class="inline">inactive (dead)</code> is its normal resting state. <code class="inline">journalctl -u backup --since yesterday</code> shows the full run. If there's no <code class="inline">Process:</code> line and no log entries at all, it really didn't run, and the next question is what was supposed to trigger it (a timer: <code class="inline">systemctl list-timers</code>; or cron).</p>
         </div>
       </details>
     </div>
