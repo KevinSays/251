@@ -1,6 +1,6 @@
 # Week 7 Deep Dive — Reading Performance Tools for Real
 
-*Companion to `IT251_Week7_Study_Page.html` (Week 7). That page introduces `journalctl`, `dmesg`, `ss`, `tcpdump`, `traceroute`, and the performance quartet (`top`/`vmstat`/`iostat`/`free`) at the glossary/command level. Troubleshooting carries the single largest chunk of exam weight of any domain (22%), and almost all of it is tested as "here's some real output, what's actually wrong" — so this is the longest of the six deep dives, and it's built entirely around reading annotated output rather than introducing new commands. Have the Week 7 study page's command list and the "connection state" example down before this.*
+*Companion to `IT251_Week7_Study_Page.html` (Week 7). That page introduces `journalctl`, `dmesg`, `ss`, `tcpdump`, `traceroute`, and the performance quartet (`top`/`vmstat`/`iostat`/`free`) at the glossary/command level. Troubleshooting carries the second-largest chunk of exam weight (22%, behind only System Management), and almost all of it is tested as "here's some real output, what's actually wrong" — so this is the longest of the six deep dives, and it's built entirely around reading annotated output rather than introducing new commands. Each section pairs the annotated output with an everyday analogy and a second, contrasting example — and a few include a "try it on your VM" you can run in two minutes. Have the Week 7 study page's command list and the "connection state" example down before this.*
 
 ---
 
@@ -21,6 +21,44 @@ $ nproc
 On a 4-core box, a load average of `8.42` means, roughly, twice as much runnable/waiting work as the machine has cores to run it concurrently — a real, current overload. That exact same `8.42` on a 16-core box would indicate the machine is comfortably under half-utilized. **The trap:** a student who's only ever seen load average discussed as "low is good, high is bad" without the core-count context will misjudge both directions — flagging a healthy 16-core box as overloaded, or missing a genuinely struggling 2-core box because "8" didn't sound alarming in isolation.
 
 **The shape of the three numbers together is its own diagnostic.** `8.42, 6.10, 3.05` — rising from the 15-minute number toward the 1-minute number — describes a load spike that's actively getting worse right now. The reverse pattern (`3.05, 6.10, 8.42`, high 15-minute, low 1-minute) describes a spike that already happened and is now resolving. Same three raw numbers in different order tell an admin whether to be worried about *now* or just documenting what happened *earlier*.
+
+> **Analogy — Checkout lanes at a grocery store.**
+>
+> Cores are the open registers. Load average is everyone being rung up **plus** everyone standing in line. Eight shoppers at a store with 4 open registers means every register is busy and there's a line of one behind each — the store is overloaded. The same 8 shoppers at a 16-register store leave half the registers idle. The shopper count alone tells you nothing until you know how many registers are open (`nproc`).
+>
+> The three numbers are a traffic report: "right now," "five minutes ago," and "fifteen minutes ago." Reading them together tells you whether the line is growing or shrinking.
+
+### Another example: high load, idle CPU
+
+```
+$ uptime
+ 09:15:44 up 12 days,  2:03,  1 user,  load average: 11.87, 11.40, 10.95
+$ nproc
+4
+$ top -bn1 | grep '%Cpu'
+%Cpu(s):  1.2 us,  0.8 sy,  0.0 ni, 95.6 id,  2.4 wa,  0.0 hi,  0.0 si,  0.0 st
+$ ps -eo stat,pid,comm | awk '$1 ~ /^D/'
+D     2211 df
+D     2305 ls
+D     2388 rsync
+...
+```
+
+Load near 12 on a 4-core box — yet the CPU is 95% idle. That's not a contradiction: on Linux, load average also counts processes in **uninterruptible sleep** (state `D`), which almost always means "stuck waiting on storage." The classic cause is a network mount (NFS) whose server has gone away: every process that touches it — even a plain `df` — hangs in `D` and adds 1 to the load.
+
+Confirm with `dmesg | tail` (look for *nfs: server … not responding*) and `mount | grep nfs`. The fix path is the storage or the network, not the CPU. **Load average measures demand for CPU *and* for I/O — the CPU numbers in `top` tell you which.**
+
+### Try it on your VM
+
+```
+$ nproc                 # say it prints 2
+$ yes > /dev/null &     # one process that burns a full core
+$ yes > /dev/null &     # a second one
+$ watch -n 5 uptime     # watch the 1-minute number climb toward 2 (Ctrl+C to exit)
+$ kill %1 %2            # stop both
+```
+
+Within about a minute the 1-minute number approaches your core count while the 15-minute number barely moves — that lag is exactly why the three numbers exist. After `kill`, watch the 1-minute number fall first.
 
 ---
 
@@ -43,6 +81,32 @@ procs -----------memory---------- ---swap-- -----io---- -system-- ------cpu-----
 
 **Exam-relevant read of the sample above:** `wa` at 57–70% with `us`+`sy` only around 25–31% describes a box where the CPU is mostly idle-but-blocked, not busy — that's a disk bottleneck signature, not a compute-bound one, and the fix path is entirely different (check disk I/O with `iostat`, not add CPU or optimize code).
 
+> **Analogy — A restaurant kitchen.**
+>
+> `r` is orders waiting for a free cook. `b` is cooks standing at the oven waiting for it to finish. `wa` is the time cooks spend idle *because* they're waiting on the oven — the kitchen isn't short of cooks, it's short of oven. `si`/`so` is what happens when the counter (RAM) is full: cooks keep running to the walk-in freezer (disk) to put things away and fetch them back, and everything slows down even though nobody is slacking.
+
+### Another example: three bottlenecks, side by side
+
+```
+# A) CPU-bound (4 cores)
+ r  b   swpd   free   buff  cache   si   so    bi    bo   in   cs us sy id wa st
+ 9  0      0 2051200  60400 930100    0    0     0    12 4210 3890 88 11  1  0  0
+
+# B) Disk-bound
+ r  b   swpd   free   buff  cache   si   so    bi    bo   in   cs us sy id wa st
+ 1  6      0 1893400  60410 931200    0    0 48200   310 1650 2100  4  3 21 72  0
+
+# C) Memory pressure (swapping)
+ r  b   swpd   free   buff  cache   si   so    bi    bo   in   cs us sy id wa st
+ 3  4 1843200  52100   1200  40300  420 1250  1680  5200 2300 3900 10 12 20 58  0
+```
+
+**A:** `r` of 9 on 4 cores, `us`+`sy` at 99, `wa` at 0 — more work than cores. Find the hog with `top`.
+
+**B:** `b` of 6, huge `bi` (blocks read in), `wa` at 72 — the CPU is waiting on disk reads. Next stop: `iostat -x` to find the device.
+
+**C:** the trap. High `wa` makes it look like B, but `si`/`so` are non-zero, `free` is tiny, and `cache` has been squeezed to almost nothing — the kernel already gave up its cache and started swapping. The disk is busy *because* memory ran out. The root cause is memory: find the hog with `top` sorted by memory (`M`), not a faster disk. **When `wa` is high, check `si`/`so` before blaming the disk.**
+
 ---
 
 ## 3. `iostat -x` and the NVMe `%util` trap
@@ -58,6 +122,22 @@ The extended (`-x`) view is what you want for real diagnosis — the plain `iost
 **Here's the trap, confirmed against current sources (Red Hat's own support documentation flags this explicitly for NVMe):** `%util` is calculated as "percentage of time the device had at least one I/O request in flight." That definition is a genuinely reliable busy-signal for a traditional spinning disk, which can only service one request at a time — if it's doing *anything*, it's fully occupied. It is **not** reliable for NVMe/SSD devices, which service many requests in parallel across hardware queues. An NVMe drive comfortably handling a queue depth of 16 out of a possible 1000+ can show `%util: 100.00` the entire time, because *some* request was always in flight — while the drive itself is nowhere near actually saturated.
 
 **What to trust instead, on NVMe/SSD:** `r_await`/`w_await` (average time, in milliseconds, a read/write request actually waited) and `aqu-sz` (average queue depth). In the sample above, `%util` reads a flat 100%, which looks alarming — but `r_await`/`w_await` under 1ms and a modest `aqu-sz` of 3.10 (far below a modern NVMe drive's real queue capacity) both say the drive is running fast and lightly loaded. This is a real, current gotcha worth stating explicitly because it inverts the intuitive reading: on this specific hardware, **the number that looks the scariest is the one to trust least**, and the two numbers that look the most boring (sub-millisecond awaits) are the ones actually telling you the truth.
+
+> **Analogy — A drive-through window vs. a food court.**
+>
+> A spinning disk is a single drive-through window: if anyone is being served, the window is fully busy. An NVMe drive is a food court with 64 counters. `%util` only asks "was at least one customer being served somewhere?" — so one customer at one counter all day reads as "100% busy" while 63 counters sit idle. To know whether the food court is actually overwhelmed, ask how long people wait (`await`) and how long the lines are (`aqu-sz`).
+
+### Another example: when 100% really is saturated
+
+```
+$ iostat -x 2 3
+Device            r/s     w/s   rkB/s   wkB/s  r_await  w_await  aqu-sz  %util
+sda              148.0    62.0   9472    3968    41.20    58.70   10.40   99.60
+```
+
+Same `%util` as the NVMe sample, opposite conclusion. This is a spinning disk (a few hundred random operations per second is about its ceiling), requests are waiting 40–60 ms instead of 0.3 ms, and the queue is 10 deep. This drive genuinely can't keep up.
+
+**The rule that works on both kinds of hardware: `await` tells the truth; `%util` only tells the truth on spinning disks.** To see which kind you have: `lsblk -d -o NAME,ROTA` — `1` means rotational (spinning), `0` means SSD/NVMe. One catch in class: VirtualBox virtual disks usually report `ROTA=1` even when the host has an SSD, unless the disk is marked "Solid-state drive" in the VM's storage settings.
 
 ---
 
@@ -78,6 +158,35 @@ The trap here is almost always the same: a student sees `free: 1.8Gi` out of 15G
 
 **Rule to memorize:** never diagnose memory pressure from the `free` column alone — check `available` first, and cross-check against swap usage before concluding anything about real memory shortage.
 
+> **Analogy — Your desk and the filing cabinet.**
+>
+> RAM is your desk; the disk is a filing cabinet down the hall. `buff/cache` is folders you've left open on the desk because you'll probably need them again — the desk *looks* full, but you'd sweep them aside the moment you needed room. `available` is how much desk you could clear right now. Swap is moving work to a storage unit across town: you only do it when the desk is genuinely full, and every trip costs you.
+
+### Another example: a real memory shortage
+
+```
+$ free -h
+               total        used        free      shared  buff/cache   available
+Mem:           3.8Gi       3.5Gi       112Mi        24Mi       210Mi       180Mi
+Swap:          2.0Gi       1.9Gi       102Mi
+$ sudo dmesg | grep -i "out of memory"
+[81234.551203] Out of memory: Killed process 2314 (java) total-vm:4812340kB, anon-rss:2901244kB, ...
+```
+
+Compare with the healthy sample above. Here `available` is only 180Mi, `buff/cache` has already been squeezed down to 210Mi (the kernel has reclaimed almost everything it can), and swap is nearly full. That's a real shortage — and the kernel's last resort, the **OOM killer**, has started killing processes. This is where `dmesg` from the study page earns its place: it's the only place the OOM killer leaves its note.
+
+### Try it on your VM
+
+```
+$ free -h                                     # note buff/cache
+$ find / -type f > /dev/null 2>&1             # read a lot of filesystem metadata
+$ free -h                                     # buff/cache grew; available barely moved
+$ sync; echo 3 | sudo tee /proc/sys/vm/drop_caches   # ask the kernel to drop its cache
+$ free -h                                     # buff/cache shrinks, free grows
+```
+
+Nothing was lost when the cache dropped — it was only ever a copy of what's already on disk. (Dropping caches is harmless but pointless on a real server; it just makes the next few reads slower. It's here to prove the point.)
+
 ---
 
 ## 5. `ss` connection-state reference
@@ -95,6 +204,39 @@ The study page already covers `ss -tuln` (what's listening) and `ss -tanp` (conn
 
 **The diagnostic pattern worth internalizing:** `SYN-SENT` piling up says "something between me and the destination is silently dropping packets" (firewall, dead route) — this is the "not connection refused, just hanging" scenario the study page's own worked example already describes, and this table is the vocabulary behind that diagnosis. `CLOSE-WAIT` piling up says something completely different — "the network is fine, but my own application has a bug." Same symptom category (a socket table full of something that isn't `ESTABLISHED`), two unrelated root causes, and the state name is what tells them apart.
 
+> **Analogy — Phone calls.**
+>
+> `LISTEN` is a phone on the hook, waiting to ring. `ESTABLISHED` is two people talking. `SYN-SENT` is dialing and hearing it ring… and ring… with no answer and no voicemail — something is silently swallowing the call (a firewall dropping packets). Compare **connection refused**, which is the instant recording "the number you have dialed is not in service": the host is there and answered, there's just nothing listening on that port.
+>
+> `CLOSE-WAIT` is the other person saying goodbye and hanging up while you're still holding the phone to your ear — your side never hung up, which is why a pile of them means an application bug. `TIME-WAIT` is both of you having hung up, with the line held for a moment in case a delayed word arrives.
+
+### Another example: turning a wall of sockets into one number
+
+```
+$ ss -tan | awk 'NR>1 {print $1}' | sort | uniq -c | sort -rn
+    412 CLOSE-WAIT
+     58 ESTAB
+     31 TIME-WAIT
+      3 LISTEN
+$ sudo ss -tanp state close-wait | head -3
+Recv-Q Send-Q  Local Address:Port   Peer Address:Port  Process
+1      0       10.0.0.5:8080        10.0.0.21:51344    users:(("java",pid=2314,fd=187))
+1      0       10.0.0.5:8080        10.0.0.21:51362    users:(("java",pid=2314,fd=203))
+```
+
+The one-liner counts sockets by state: `sort` groups identical lines together, then `uniq -c` counts each group. 412 `CLOSE-WAIT` stands out immediately, and filtering by that state shows every one belongs to the same `java` process, with file-descriptor numbers (`fd=`) climbing into the hundreds — a descriptor leak in progress. (`ss` drops the State column when you filter to a single state.) Watch it grow with `ls /proc/2314/fd | wc -l`.
+
+### Another example: refused vs. timed out
+
+```
+$ curl http://127.0.0.1:9999
+curl: (7) Failed to connect to 127.0.0.1:9999 after 0 ms: Could not connect to server
+$ curl --max-time 5 http://192.0.2.1
+curl: (28) Connection timed out after 5001 milliseconds
+```
+
+The first fails in **0 ms** — the host answered "nothing here" (a TCP reset); older curl versions print "Connection refused" here. Check whether the service is running and listening (`ss -tln`). The second fails only when the timer runs out — nothing answered at all, so check routing, firewalls, and whether the name resolves to the right address. That second one is the same failure as Lab 6's name-resolution ticket. The exit codes (7 vs. 28) are the stable part; the wording varies between curl versions.
+
 ---
 
 ## 6. Exam traps: paired confusions
@@ -106,6 +248,9 @@ The study page already covers `ss -tuln` (what's listening) and `ss -tanp` (conn
 | `iostat`'s `%util` at 100% on NVMe | The drive is saturated | On NVMe/SSD, `%util` measures "any request in flight," which parallel hardware queues make unreliable — trust `r_await`/`w_await`/`aqu-sz` instead |
 | `free`'s low `free` column | Low available memory | `buff/cache` is reclaimable disk cache, not unavailable memory — check the `available` column and swap usage instead |
 | `SYN-SENT` piling up in `ss` output | `CLOSE-WAIT` piling up | `SYN-SENT` points at a network/firewall problem preventing handshakes; `CLOSE-WAIT` points at an **application bug** not closing sockets — same "not ESTABLISHED" symptom, unrelated causes |
+| A high load average | The CPU being busy | Linux load also counts processes stuck in uninterruptible sleep (`D` state) waiting on I/O — high load with an idle CPU points at storage or a hung network mount, not the CPU |
+| High `wa` while swapping | A slow disk | If `si`/`so` are non-zero, the disk traffic *is* swap — the root cause is memory, and a faster disk only hides it |
+| "Connection refused" | A connection timeout | Refused is instant: the host answered and nothing is listening on that port (check the service, `ss -tln`). A timeout is silence: packets are being dropped or going nowhere (check firewall, routing, name resolution) |
 
 ---
 
@@ -127,4 +272,22 @@ Check <code>r_await</code>/<code>w_await</code> and <code>aqu-sz</code> before t
 
 <details><summary>Answer</summary>
 Not a network problem — a growing pile of <code>CLOSE-WAIT</code> connections almost always points at an application bug: the remote end already closed its side of the connection, but the local application process isn't calling close() on its own socket, leaving it stuck. Left unaddressed, this is a slow file-descriptor leak that will eventually exhaust the process's available file descriptors. The fix is in the application code (or a restart as a stopgap), not the network configuration — contrast this with <code>SYN-SENT</code> piling up, which would actually point at a network/firewall issue.
+</details>
+
+**Q4.** A server feels slow. Live `vmstat` rows show `wa` around 55%, `si` around 300, `so` around 900, `free` under 60 MB, and `cache` tiny. A teammate wants to order faster disks. What do you tell them?
+
+<details><summary>Answer</summary>
+Faster disks would treat the symptom, not the cause. Non-zero <code>si</code>/<code>so</code> means the system is actively swapping, and the tiny <code>free</code> and squeezed <code>cache</code> confirm memory has run out. The high <code>wa</code> is the CPU waiting on <em>swap</em> I/O. The root cause is memory: find what's using it (<code>top</code> sorted by memory, <code>free -h</code>, and <code>dmesg</code> for OOM-killer messages), then fix that process or add RAM.
+</details>
+
+**Q5.** A 4-core file server shows `load average: 14.02, 13.88, 13.50`, but `top` shows the CPU 96% idle. Running `df` hangs and never returns. What's the most likely cause, and where do you look?
+
+<details><summary>Answer</summary>
+Processes stuck in uninterruptible sleep (<code>D</code> state) — Linux counts them in the load average even though they use no CPU. <code>df</code> hanging is the giveaway: it's trying to read a mounted filesystem that isn't answering, most likely a network mount (NFS) whose server is down or unreachable. Look at <code>ps -eo stat,pid,comm | awk '$1 ~ /^D/'</code>, <code>dmesg | tail</code> for "server not responding", and <code>mount</code> to identify the network mounts. The fix is the storage server or the network path, not the CPU.
+</details>
+
+**Q6.** From the same client, `curl` to an internal API on port 8443 fails instantly, while `curl` to a second internal service only fails after two minutes. Where do you start on each?
+
+<details><summary>Answer</summary>
+The instant failure means the API host answered and refused — the host is up and reachable, but nothing is listening on 8443. Start on that host: is the service running (<code>systemctl status</code>), and is it listening on the port you expect (<code>ss -tln</code>)? The slow failure means nothing answered at all — packets are being dropped or sent somewhere wrong. Start with the path: does the name resolve to the right address (<code>getent hosts</code>), is there a route (<code>traceroute</code>), and is a firewall silently dropping the traffic?
 </details>

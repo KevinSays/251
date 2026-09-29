@@ -135,7 +135,7 @@
     <div class="termbar"><span></span><span></span><span></span></div>
     <p class="eyebrow">IT251 · Week 7 · Deep Dive</p>
     <h1>Reading Performance Tools for Real<span class="cursor">&nbsp;</span></h1>
-    <p class="lede">Companion to the Week 7 study page. That page introduces <code class="inline">journalctl</code>, <code class="inline">dmesg</code>, <code class="inline">ss</code>, <code class="inline">tcpdump</code>, <code class="inline">traceroute</code>, and the performance quartet (<code class="inline">top</code>/<code class="inline">vmstat</code>/<code class="inline">iostat</code>/<code class="inline">free</code>) at the glossary/command level. Troubleshooting carries the single largest chunk of exam weight of any domain (22%), and almost all of it is tested as "here's some real output, what's actually wrong" — so this is the longest of the six deep dives, and it's built entirely around reading annotated output rather than introducing new commands. Have the Week 7 study page's command list and the "connection state" example down before this.</p>
+    <p class="lede">Companion to the Week 7 study page. That page introduces <code class="inline">journalctl</code>, <code class="inline">dmesg</code>, <code class="inline">ss</code>, <code class="inline">tcpdump</code>, <code class="inline">traceroute</code>, and the performance quartet (<code class="inline">top</code>/<code class="inline">vmstat</code>/<code class="inline">iostat</code>/<code class="inline">free</code>) at the glossary/command level. Troubleshooting carries the second-largest chunk of exam weight (22%, behind only System Management), and almost all of it is tested as "here's some real output, what's actually wrong" — so this is the longest of the six deep dives, and it's built entirely around reading annotated output rather than introducing new commands. Each section pairs the annotated output with an everyday analogy and a second, contrasting example — and a few include a "try it on your VM" you can run in two minutes. Have the Week 7 study page's command list and the "connection state" example down before this.</p>
     <a class="parent-link" href="IT251_Week7_Study_Page.html">&larr; Back to the Week 7 Study Page</a>
   </div>
 </header>
@@ -167,6 +167,32 @@
 4</pre>
     <div class="callout"><b>The trap:</b> on a 4-core box, a load average of 8.42 means, roughly, twice as much runnable/waiting work as the machine has cores to run it concurrently — a real, current overload. That exact same 8.42 on a 16-core box would indicate the machine is comfortably under half-utilized. A student who's only ever seen load average discussed as "low is good, high is bad" without the core-count context will misjudge both directions — flagging a healthy 16-core box as overloaded, or missing a genuinely struggling 2-core box because "8" didn't sound alarming in isolation.</div>
     <p><strong>The shape of the three numbers together is its own diagnostic.</strong> 8.42, 6.10, 3.05 — rising from the 15-minute number toward the 1-minute number — describes a load spike that's actively getting worse right now. The reverse pattern (3.05, 6.10, 8.42, high 15-minute, low 1-minute) describes a spike that already happened and is now resolving. Same three raw numbers in different order tell an admin whether to be worried about <em>now</em> or just documenting what happened <em>earlier</em>.</p>
+    <div class="example">
+      <span class="tag">Analogy</span>
+      <h3>Checkout lanes at a grocery store</h3>
+      <p>Cores are the open registers. Load average is everyone being rung up <strong>plus</strong> everyone standing in line. Eight shoppers at a store with 4 open registers means every register is busy and there's a line of one behind each — the store is overloaded. The same 8 shoppers at a 16-register store leave half the registers idle. The shopper count alone tells you nothing until you know how many registers are open (<code class="inline">nproc</code>).</p><p>The three numbers are a traffic report: "right now," "five minutes ago," and "fifteen minutes ago." Reading them together tells you whether the line is growing or shrinking.</p>
+    </div>
+    <h3>Another example: high load, idle CPU</h3>
+    <pre class="term">$ uptime
+ 09:15:44 up 12 days,  2:03,  1 user,  load average: 11.87, 11.40, 10.95
+$ nproc
+4
+$ top -bn1 | grep '%Cpu'
+%Cpu(s):  1.2 us,  0.8 sy,  0.0 ni, 95.6 id,  2.4 wa,  0.0 hi,  0.0 si,  0.0 st
+$ ps -eo stat,pid,comm | awk '$1 ~ /^D/'
+D     2211 df
+D     2305 ls
+D     2388 rsync
+...</pre>
+    <p>Load near 12 on a 4-core box — yet the CPU is 95% idle. That's not a contradiction: on Linux, load average also counts processes in <strong>uninterruptible sleep</strong> (state <code class="inline">D</code>), which almost always means "stuck waiting on storage." The classic cause is a network mount (NFS) whose server has gone away: every process that touches it — even a plain <code class="inline">df</code> — hangs in <code class="inline">D</code> and adds 1 to the load.</p>
+    <p>Confirm with <code class="inline">dmesg | tail</code> (look for <em>nfs: server … not responding</em>) and <code class="inline">mount | grep nfs</code>. The fix path is the storage or the network, not the CPU. <strong>Load average measures demand for CPU <em>and</em> for I/O — the CPU numbers in <code class="inline">top</code> tell you which.</strong></p>
+    <h3>Try it on your VM</h3>
+    <pre class="term">$ nproc                 # say it prints 2
+$ yes &gt; /dev/null &amp;     # one process that burns a full core
+$ yes &gt; /dev/null &amp;     # a second one
+$ watch -n 5 uptime     # watch the 1-minute number climb toward 2 (Ctrl+C to exit)
+$ kill %1 %2            # stop both</pre>
+    <p>Within about a minute the 1-minute number approaches your core count while the 15-minute number barely moves — that lag is exactly why the three numbers exist. After <code class="inline">kill</code>, watch the 1-minute number fall first.</p>
   </section>
 
   <section id="vmstat">
@@ -185,6 +211,26 @@ procs -----------memory---------- ---swap-- -----io---- -system-- ------cpu-----
     <p><strong>si</strong>/<strong>so</strong> (swap): pages swapped <strong>in</strong>/<strong>out</strong> per second. Any sustained non-zero <code class="inline">so</code> (swapping <em>out</em> to disk) is a real red flag — it means the system is under real memory pressure and actively pushing memory pages to disk to make room, which is dramatically slower than RAM and often the actual root cause behind a system that "feels slow" for no obvious reason in <code class="inline">top</code>.</p>
     <p><strong>wa</strong> (cpu): percent of CPU time spent idle specifically <em>while waiting on disk I/O</em> — not general idle time. This is the column that answers "is my slowness a CPU problem or a disk problem" better than almost anything else in this table: high <code class="inline">wa</code> with otherwise-low <code class="inline">us</code>/<code class="inline">sy</code> means the CPU has work it could be doing but is stalled waiting on storage, not that the CPU itself is overloaded.</p>
     <div class="callout"><b>Exam-relevant read of the sample above:</b> <code class="inline">wa</code> at 57&ndash;70% with <code class="inline">us</code>+<code class="inline">sy</code> only around 25&ndash;31% describes a box where the CPU is mostly idle-but-blocked, not busy — that's a disk bottleneck signature, not a compute-bound one, and the fix path is entirely different (check disk I/O with <code class="inline">iostat</code>, not add CPU or optimize code).</div>
+    <div class="example">
+      <span class="tag">Analogy</span>
+      <h3>A restaurant kitchen</h3>
+      <p><code class="inline">r</code> is orders waiting for a free cook. <code class="inline">b</code> is cooks standing at the oven waiting for it to finish. <code class="inline">wa</code> is the time cooks spend idle <em>because</em> they're waiting on the oven — the kitchen isn't short of cooks, it's short of oven. <code class="inline">si</code>/<code class="inline">so</code> is what happens when the counter (RAM) is full: cooks keep running to the walk-in freezer (disk) to put things away and fetch them back, and everything slows down even though nobody is slacking.</p>
+    </div>
+    <h3>Another example: three bottlenecks, side by side</h3>
+    <pre class="term"># A) CPU-bound (4 cores)
+ r  b   swpd   free   buff  cache   si   so    bi    bo   in   cs us sy id wa st
+ 9  0      0 2051200  60400 930100    0    0     0    12 4210 3890 88 11  1  0  0
+
+# B) Disk-bound
+ r  b   swpd   free   buff  cache   si   so    bi    bo   in   cs us sy id wa st
+ 1  6      0 1893400  60410 931200    0    0 48200   310 1650 2100  4  3 21 72  0
+
+# C) Memory pressure (swapping)
+ r  b   swpd   free   buff  cache   si   so    bi    bo   in   cs us sy id wa st
+ 3  4 1843200  52100   1200  40300  420 1250  1680  5200 2300 3900 10 12 20 58  0</pre>
+    <p><strong>A:</strong> <code class="inline">r</code> of 9 on 4 cores, <code class="inline">us</code>+<code class="inline">sy</code> at 99, <code class="inline">wa</code> at 0 — more work than cores. Find the hog with <code class="inline">top</code>.</p>
+    <p><strong>B:</strong> <code class="inline">b</code> of 6, huge <code class="inline">bi</code> (blocks read in), <code class="inline">wa</code> at 72 — the CPU is waiting on disk reads. Next stop: <code class="inline">iostat -x</code> to find the device.</p>
+    <p><strong>C:</strong> the trap. High <code class="inline">wa</code> makes it look like B, but <code class="inline">si</code>/<code class="inline">so</code> are non-zero, <code class="inline">free</code> is tiny, and <code class="inline">cache</code> has been squeezed to almost nothing — the kernel already gave up its cache and started swapping. The disk is busy <em>because</em> memory ran out. The root cause is memory: find the hog with <code class="inline">top</code> sorted by memory (<code class="inline">M</code>), not a faster disk. <strong>When <code class="inline">wa</code> is high, check <code class="inline">si</code>/<code class="inline">so</code> before blaming the disk.</strong></p>
   </section>
 
   <section id="iostat">
@@ -198,6 +244,17 @@ nvme0n1          420.0   180.0  53760   23040     0.31     0.42    3.10  100.00<
     <p>The extended (<code class="inline">-x</code>) view is what you want for real diagnosis — the plain <code class="inline">iostat</code> output without <code class="inline">-x</code> doesn't give you <code class="inline">%util</code>, await, or queue depth at all.</p>
     <div class="callout"><b>Here's the trap, confirmed against current sources</b> (Red Hat's own support documentation flags this explicitly for NVMe): <code class="inline">%util</code> is calculated as "percentage of time the device had at least one I/O request in flight." That definition is a genuinely reliable busy-signal for a traditional spinning disk, which can only service one request at a time — if it's doing <em>anything</em>, it's fully occupied. It is <strong>not</strong> reliable for NVMe/SSD devices, which service many requests in parallel across hardware queues. An NVMe drive comfortably handling a queue depth of 16 out of a possible 1000+ can show <code class="inline">%util: 100.00</code> the entire time, because <em>some</em> request was always in flight — while the drive itself is nowhere near actually saturated.</div>
     <p><strong>What to trust instead, on NVMe/SSD:</strong> <code class="inline">r_await</code>/<code class="inline">w_await</code> (average time, in milliseconds, a read/write request actually waited) and <code class="inline">aqu-sz</code> (average queue depth). In the sample above, <code class="inline">%util</code> reads a flat 100%, which looks alarming — but <code class="inline">r_await</code>/<code class="inline">w_await</code> under 1ms and a modest <code class="inline">aqu-sz</code> of 3.10 (far below a modern NVMe drive's real queue capacity) both say the drive is running fast and lightly loaded. This is a real, current gotcha worth stating explicitly because it inverts the intuitive reading: on this specific hardware, <strong>the number that looks the scariest is the one to trust least</strong>, and the two numbers that look the most boring (sub-millisecond awaits) are the ones actually telling you the truth.</p>
+    <div class="example">
+      <span class="tag">Analogy</span>
+      <h3>A drive-through window vs. a food court</h3>
+      <p>A spinning disk is a single drive-through window: if anyone is being served, the window is fully busy. An NVMe drive is a food court with 64 counters. <code class="inline">%util</code> only asks "was at least one customer being served somewhere?" — so one customer at one counter all day reads as "100% busy" while 63 counters sit idle. To know whether the food court is actually overwhelmed, ask how long people wait (<code class="inline">await</code>) and how long the lines are (<code class="inline">aqu-sz</code>).</p>
+    </div>
+    <h3>Another example: when 100% really is saturated</h3>
+    <pre class="term">$ iostat -x 2 3
+Device            r/s     w/s   rkB/s   wkB/s  r_await  w_await  aqu-sz  %util
+sda              148.0    62.0   9472    3968    41.20    58.70   10.40   99.60</pre>
+    <p>Same <code class="inline">%util</code> as the NVMe sample, opposite conclusion. This is a spinning disk (a few hundred random operations per second is about its ceiling), requests are waiting 40–60 ms instead of 0.3 ms, and the queue is 10 deep. This drive genuinely can't keep up.</p>
+    <p><strong>The rule that works on both kinds of hardware: <code class="inline">await</code> tells the truth; <code class="inline">%util</code> only tells the truth on spinning disks.</strong> To see which kind you have: <code class="inline">lsblk -d -o NAME,ROTA</code> — <code class="inline">1</code> means rotational (spinning), <code class="inline">0</code> means SSD/NVMe. One catch in class: VirtualBox virtual disks usually report <code class="inline">ROTA=1</code> even when the host has an SSD, unless the disk is marked "Solid-state drive" in the VM's storage settings.</p>
   </section>
 
   <section id="free">
@@ -214,6 +271,26 @@ Swap:          2.0Gi          0B        2.0Gi</pre>
     <p><strong>available</strong> is the column that answers the real question — "how much memory could a new process actually get right now, including what would be reclaimed from cache if needed." Here, available (12Gi) is far closer to the true free capacity than the raw free column (1.8Gi) suggests.</p>
     <p><strong>Swap: used 0B</strong> is the number that would actually indicate real memory pressure if it were climbing — a healthy system with plenty of headroom, even one showing a small raw free number, will have swap sitting at or near zero, exactly as shown here. This is the same signal as vmstat's <code class="inline">so</code> column from a different angle — if swap usage is flat at zero, the low raw free number is a caching artifact, not a shortage.</p>
     <div class="callout"><b>Rule to memorize:</b> never diagnose memory pressure from the free column alone — check available first, and cross-check against swap usage before concluding anything about real memory shortage.</div>
+    <div class="example">
+      <span class="tag">Analogy</span>
+      <h3>Your desk and the filing cabinet</h3>
+      <p>RAM is your desk; the disk is a filing cabinet down the hall. <code class="inline">buff/cache</code> is folders you've left open on the desk because you'll probably need them again — the desk <em>looks</em> full, but you'd sweep them aside the moment you needed room. <code class="inline">available</code> is how much desk you could clear right now. Swap is moving work to a storage unit across town: you only do it when the desk is genuinely full, and every trip costs you.</p>
+    </div>
+    <h3>Another example: a real memory shortage</h3>
+    <pre class="term">$ free -h
+               total        used        free      shared  buff/cache   available
+Mem:           3.8Gi       3.5Gi       112Mi        24Mi       210Mi       180Mi
+Swap:          2.0Gi       1.9Gi       102Mi
+$ sudo dmesg | grep -i "out of memory"
+[81234.551203] Out of memory: Killed process 2314 (java) total-vm:4812340kB, anon-rss:2901244kB, ...</pre>
+    <p>Compare with the healthy sample above. Here <code class="inline">available</code> is only 180Mi, <code class="inline">buff/cache</code> has already been squeezed down to 210Mi (the kernel has reclaimed almost everything it can), and swap is nearly full. That's a real shortage — and the kernel's last resort, the <strong>OOM killer</strong>, has started killing processes. This is where <code class="inline">dmesg</code> from the study page earns its place: it's the only place the OOM killer leaves its note.</p>
+    <h3>Try it on your VM</h3>
+    <pre class="term">$ free -h                                     # note buff/cache
+$ find / -type f &gt; /dev/null 2&gt;&amp;1             # read a lot of filesystem metadata
+$ free -h                                     # buff/cache grew; available barely moved
+$ sync; echo 3 | sudo tee /proc/sys/vm/drop_caches   # ask the kernel to drop its cache
+$ free -h                                     # buff/cache shrinks, free grows</pre>
+    <p>Nothing was lost when the cache dropped — it was only ever a copy of what's already on disk. (Dropping caches is harmless but pointless on a real server; it just makes the next few reads slower. It's here to prove the point.)</p>
   </section>
 
   <section id="ss">
@@ -235,6 +312,28 @@ Swap:          2.0Gi          0B        2.0Gi</pre>
       </tbody>
     </table>
     <div class="callout"><b>The diagnostic pattern worth internalizing:</b> SYN-SENT piling up says "something between me and the destination is silently dropping packets" (firewall, dead route) — this is the "not connection refused, just hanging" scenario the study page's own worked example already describes, and this table is the vocabulary behind that diagnosis. CLOSE-WAIT piling up says something completely different — "the network is fine, but my own application has a bug." Same symptom category (a socket table full of something that isn't ESTABLISHED), two unrelated root causes, and the state name is what tells them apart.</div>
+    <div class="example">
+      <span class="tag">Analogy</span>
+      <h3>Phone calls</h3>
+      <p><code class="inline">LISTEN</code> is a phone on the hook, waiting to ring. <code class="inline">ESTABLISHED</code> is two people talking. <code class="inline">SYN-SENT</code> is dialing and hearing it ring… and ring… with no answer and no voicemail — something is silently swallowing the call (a firewall dropping packets). Compare <strong>connection refused</strong>, which is the instant recording "the number you have dialed is not in service": the host is there and answered, there's just nothing listening on that port.</p><p><code class="inline">CLOSE-WAIT</code> is the other person saying goodbye and hanging up while you're still holding the phone to your ear — your side never hung up, which is why a pile of them means an application bug. <code class="inline">TIME-WAIT</code> is both of you having hung up, with the line held for a moment in case a delayed word arrives.</p>
+    </div>
+    <h3>Another example: turning a wall of sockets into one number</h3>
+    <pre class="term">$ ss -tan | awk 'NR&gt;1 {print $1}' | sort | uniq -c | sort -rn
+    412 CLOSE-WAIT
+     58 ESTAB
+     31 TIME-WAIT
+      3 LISTEN
+$ sudo ss -tanp state close-wait | head -3
+Recv-Q Send-Q  Local Address:Port   Peer Address:Port  Process
+1      0       10.0.0.5:8080        10.0.0.21:51344    users:(("java",pid=2314,fd=187))
+1      0       10.0.0.5:8080        10.0.0.21:51362    users:(("java",pid=2314,fd=203))</pre>
+    <p>The one-liner counts sockets by state: <code class="inline">sort</code> groups identical lines together, then <code class="inline">uniq -c</code> counts each group. 412 <code class="inline">CLOSE-WAIT</code> stands out immediately, and filtering by that state shows every one belongs to the same <code class="inline">java</code> process, with file-descriptor numbers (<code class="inline">fd=</code>) climbing into the hundreds — a descriptor leak in progress. (<code class="inline">ss</code> drops the State column when you filter to a single state.) Watch it grow with <code class="inline">ls /proc/2314/fd | wc -l</code>.</p>
+    <h3>Another example: refused vs. timed out</h3>
+    <pre class="term">$ curl http://127.0.0.1:9999
+curl: (7) Failed to connect to 127.0.0.1:9999 after 0 ms: Could not connect to server
+$ curl --max-time 5 http://192.0.2.1
+curl: (28) Connection timed out after 5001 milliseconds</pre>
+    <p>The first fails in <strong>0 ms</strong> — the host answered "nothing here" (a TCP reset); older curl versions print "Connection refused" here. Check whether the service is running and listening (<code class="inline">ss -tln</code>). The second fails only when the timer runs out — nothing answered at all, so check routing, firewalls, and whether the name resolves to the right address. That second one is the same failure as Lab 6's name-resolution ticket. The exit codes (7 vs. 28) are the stable part; the wording varies between curl versions.</p>
   </section>
 
   <section id="exam-traps">
@@ -251,6 +350,9 @@ Swap:          2.0Gi          0B        2.0Gi</pre>
         <tr><td>iostat's %util at 100% on NVMe</td><td>The drive is saturated</td><td>On NVMe/SSD, %util measures "any request in flight," which parallel hardware queues make unreliable — trust r_await/w_await/aqu-sz instead</td></tr>
         <tr><td>free's low free column</td><td>Low available memory</td><td>buff/cache is reclaimable disk cache, not unavailable memory — check the available column and swap usage instead</td></tr>
         <tr><td>SYN-SENT piling up in ss output</td><td>CLOSE-WAIT piling up</td><td>SYN-SENT points at a network/firewall problem preventing handshakes; CLOSE-WAIT points at an <strong>application bug</strong> not closing sockets — same "not ESTABLISHED" symptom, unrelated causes</td></tr>
+        <tr><td>A high load average</td><td>The CPU being busy</td><td>Linux load also counts processes stuck in uninterruptible sleep (<code class="inline">D</code> state) waiting on I/O — high load with an idle CPU points at storage or a hung network mount, not the CPU</td></tr>
+        <tr><td>High <code class="inline">wa</code> while swapping</td><td>A slow disk</td><td>If <code class="inline">si</code>/<code class="inline">so</code> are non-zero, the disk traffic <em>is</em> swap — the root cause is memory, and a faster disk only hides it</td></tr>
+        <tr><td>"Connection refused"</td><td>A connection timeout</td><td>Refused is instant: the host answered and nothing is listening on that port (check the service, <code class="inline">ss -tln</code>). A timeout is silence: packets are being dropped or going nowhere (check firewall, routing, name resolution)</td></tr>
       </tbody>
     </table>
   </section>
@@ -259,7 +361,7 @@ Swap:          2.0Gi          0B        2.0Gi</pre>
     <div class="section-head">
       <p class="kicker">Check yourself</p>
       <h2>Scenario quiz</h2>
-      <p>Think it through before you expand the answer.</p>
+      <p>Think it through before you expand the answer. Q1–Q3 check the core readings; Q4–Q6 build on the added examples.</p>
     </div>
 
     <div class="example">
@@ -294,6 +396,42 @@ Swap:          2.0Gi          0B        2.0Gi</pre>
         <summary>Show answer</summary>
         <div class="solbody">
           <p>Not a network problem — a growing pile of CLOSE-WAIT connections almost always points at an application bug: the remote end already closed its side of the connection, but the local application process isn't calling close() on its own socket, leaving it stuck. Left unaddressed, this is a slow file-descriptor leak that will eventually exhaust the process's available file descriptors. The fix is in the application code (or a restart as a stopgap), not the network configuration — contrast this with SYN-SENT piling up, which would actually point at a network/firewall issue.</p>
+        </div>
+      </details>
+    </div>
+
+    <div class="example">
+      <span class="tag">vmstat</span>
+      <h3>Q4. "We need faster disks"</h3>
+      <p>A server feels slow. Live <code class="inline">vmstat</code> rows show <code class="inline">wa</code> around 55%, <code class="inline">si</code> around 300, <code class="inline">so</code> around 900, <code class="inline">free</code> under 60 MB, and <code class="inline">cache</code> tiny. A teammate wants to order faster disks. What do you tell them?</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <p>Faster disks would treat the symptom, not the cause. Non-zero <code class="inline">si</code>/<code class="inline">so</code> means the system is actively swapping, and the tiny <code class="inline">free</code> and squeezed <code class="inline">cache</code> confirm memory has run out. The high <code class="inline">wa</code> is the CPU waiting on <em>swap</em> I/O. The root cause is memory: find what's using it (<code class="inline">top</code> sorted by memory, <code class="inline">free -h</code>, and <code class="inline">dmesg</code> for OOM-killer messages), then fix that process or add RAM.</p>
+        </div>
+      </details>
+    </div>
+
+    <div class="example">
+      <span class="tag">Load average</span>
+      <h3>Q5. Load 14, CPU idle</h3>
+      <p>A 4-core file server shows <code class="inline">load average: 14.02, 13.88, 13.50</code>, but <code class="inline">top</code> shows the CPU 96% idle. Running <code class="inline">df</code> hangs and never returns. What's the most likely cause, and where do you look?</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <p>Processes stuck in uninterruptible sleep (<code class="inline">D</code> state) — Linux counts them in the load average even though they use no CPU. <code class="inline">df</code> hanging is the giveaway: it's trying to read a mounted filesystem that isn't answering, most likely a network mount (NFS) whose server is down or unreachable. Look at <code class="inline">ps -eo stat,pid,comm | awk '$1 ~ /^D/'</code>, <code class="inline">dmesg | tail</code> for "server not responding", and <code class="inline">mount</code> to identify the network mounts. The fix is the storage server or the network path, not the CPU.</p>
+        </div>
+      </details>
+    </div>
+
+    <div class="example">
+      <span class="tag">Connectivity</span>
+      <h3>Q6. Two failures, two different speeds</h3>
+      <p>From the same client, <code class="inline">curl</code> to an internal API on port 8443 fails instantly, while <code class="inline">curl</code> to a second internal service only fails after two minutes. Where do you start on each?</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <p>The instant failure means the API host answered and refused — the host is up and reachable, but nothing is listening on 8443. Start on that host: is the service running (<code class="inline">systemctl status</code>), and is it listening on the port you expect (<code class="inline">ss -tln</code>)? The slow failure means nothing answered at all — packets are being dropped or sent somewhere wrong. Start with the path: does the name resolve to the right address (<code class="inline">getent hosts</code>), is there a route (<code class="inline">traceroute</code>), and is a firewall silently dropping the traffic?</p>
         </div>
       </details>
     </div>
