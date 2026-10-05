@@ -1,0 +1,474 @@
+<title>Do You Know Modules 1–4?</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --bg:#f2f6f4;
+    --surface:#ffffff;
+    --surface-2:#e6efec;
+    --text:#0c1a15;
+    --muted:#51655d;
+    --border:#cddcd5;
+    --accent:#0f7a5c;
+    --accent-soft:#dcf1e7;
+    --accent-2:#0e7490;
+    --accent-2-soft:#dbeff4;
+    --danger:#b3261e;
+    --danger-soft:#f8dcd9;
+    --correct:#0f7a5c;
+    --correct-soft:#dcf1e7;
+    --shadow: 0 1px 2px rgba(12,26,21,.06), 0 8px 24px rgba(12,26,21,.07);
+    --mono:'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    --sans:'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0a0f0d; --surface:#0f1613; --surface-2:#131c18;
+      --text:#d9f5e8; --muted:#82a99a; --border:#1e2b26;
+      --accent:#3ddc97; --accent-soft:#123024;
+      --accent-2:#22d3ee; --accent-2-soft:#0c2b30;
+      --danger:#ff7a68; --danger-soft:#33150f;
+      --correct:#3ddc97; --correct-soft:#123024;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 12px 32px rgba(0,0,0,.45);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0a0f0d; --surface:#0f1613; --surface-2:#131c18;
+    --text:#d9f5e8; --muted:#82a99a; --border:#1e2b26;
+    --accent:#3ddc97; --accent-soft:#123024;
+    --accent-2:#22d3ee; --accent-2-soft:#0c2b30;
+    --danger:#ff7a68; --danger-soft:#33150f;
+    --correct:#3ddc97; --correct-soft:#123024;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 12px 32px rgba(0,0,0,.45);
+  }
+
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto;} *{animation-duration:.001ms !important; transition-duration:.001ms !important;} }
+  body{ margin:0; background:var(--bg); color:var(--text); font-family:var(--sans); line-height:1.55; -webkit-font-smoothing:antialiased; }
+  a{ color:var(--accent-2); }
+  ::selection{ background:var(--accent-soft); }
+  .wrap{ max-width:1080px; margin:0 auto; padding:0 24px; }
+  [hidden]{ display:none !important; }
+
+  header.hero{
+    border-bottom:1px solid var(--border);
+    background:repeating-linear-gradient(180deg, var(--surface-2) 0 1px, var(--bg) 1px 28px);
+    padding:56px 0 40px;
+  }
+  .termbar{ display:flex; gap:6px; margin-bottom:20px; }
+  .termbar span{ width:11px; height:11px; border-radius:50%; }
+  .termbar span:nth-child(1){ background:#ff5f57; }
+  .termbar span:nth-child(2){ background:#febc2e; }
+  .termbar span:nth-child(3){ background:#28c840; }
+  .eyebrow{ font-family:var(--mono); font-size:.8rem; color:var(--accent); }
+  .eyebrow::before{ content:"$ "; opacity:.7; }
+  h1{ font-family:var(--mono); font-weight:700; font-size:clamp(2rem,4vw,3rem); line-height:1.08; margin:.4em 0 .3em; text-wrap:balance; letter-spacing:-.01em; }
+  h1 .cursor{ display:inline-block; width:.5ch; background:var(--accent); margin-left:.15em; animation:blink 1.1s steps(1) infinite; }
+  @keyframes blink{ 50%{ opacity:0; } }
+  .hero p.lede{ max-width:62ch; font-size:1.1rem; color:var(--muted); margin:0 0 1.6em; }
+  .factrow{ display:flex; flex-wrap:wrap; gap:10px; }
+  .fact{ font-family:var(--mono); font-size:.78rem; background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:.5em .8em; display:flex; gap:.5em; }
+  .fact b{ color:var(--muted); font-weight:500; text-transform:uppercase; letter-spacing:.06em; font-size:.72rem; }
+
+  nav.index{ position:sticky; top:0; z-index:20; background:color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter:blur(8px); border-bottom:1px solid var(--border); }
+  nav.index .wrap{ display:flex; gap:4px; overflow-x:auto; padding:10px 24px; scrollbar-width:none; }
+  nav.index .wrap::-webkit-scrollbar{ display:none; }
+  nav.index a{ font-family:var(--mono); font-size:.82rem; text-decoration:none; color:var(--muted); padding:.5em .9em; border-radius:6px; white-space:nowrap; border:1px solid transparent; }
+  nav.index a:hover{ color:var(--text); border-color:var(--border); background:var(--surface); }
+  nav.index a.toc-link{ font-weight:600; color:var(--accent); border-right:1px solid var(--border); border-radius:0; margin-right:8px; padding-right:16px; }
+  nav.index a.toc-link:hover{ color:var(--accent); background:transparent; border-right-color:var(--border); }
+  nav.index a:not(.toc-link)::before{ content:'#'; opacity:.5; margin-right:.3em; }
+
+  section{ padding:52px 0; border-bottom:1px solid var(--border); }
+  section:last-of-type{ border-bottom:none; }
+  .section-head{ margin-bottom:28px; max-width:70ch; }
+  .kicker{ font-family:var(--mono); font-size:.75rem; letter-spacing:.1em; text-transform:uppercase; color:var(--accent-2); margin:0 0 .5em; }
+  .kicker::before{ content:"// "; opacity:.6; }
+  h2{ font-family:var(--mono); font-size:clamp(1.4rem,2.4vw,1.9rem); margin:0 0 .3em; text-wrap:balance; }
+  h3{ font-family:var(--mono); font-size:1.05rem; margin:0 0 12px; }
+  .section-head p{ color:var(--muted); margin:.4em 0 0; }
+
+  .callout{ border-left:3px solid var(--accent); background:var(--accent-soft); border-radius:0 8px 8px 0; padding:14px 18px; margin:0 0 24px; font-size:.92rem; max-width:80ch; }
+  .callout b{ font-family:var(--mono); }
+
+  button.btn{ font-family:var(--mono); font-size:.82rem; background:var(--surface); color:var(--text); border:1px solid var(--border); border-radius:7px; padding:.6em 1em; cursor:pointer; }
+  button.btn:hover{ border-color:var(--accent); color:var(--accent); }
+  button.btn.primary{ background:var(--accent); color:var(--bg); border-color:var(--accent); font-weight:600; }
+  button.btn.primary:hover{ filter:brightness(1.1); color:var(--bg); }
+  button.btn.mock{ background:var(--accent-2-soft); color:var(--accent-2); border-color:var(--accent-2); font-weight:600; }
+  button.btn.mock:hover{ background:var(--accent-2); color:var(--bg); }
+  button.btn:disabled{ opacity:.45; cursor:not-allowed; }
+  button.btn:focus-visible, a:focus-visible, input:focus-visible, .mod-check:focus-within, .choice:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+
+  .setup-card{ background:var(--surface); border:1px solid var(--border); border-radius:12px; box-shadow:var(--shadow); padding:22px 24px; }
+  .mod-toolbar{ display:flex; gap:8px; margin-bottom:14px; }
+  .mod-grid{ display:grid; gap:10px; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); margin-bottom:8px; }
+  .mod-check{ display:flex; align-items:flex-start; gap:10px; background:var(--surface-2); border:1px solid var(--border); border-radius:9px; padding:.75em .9em; font-size:.92rem; cursor:pointer; }
+  .mod-check:hover{ border-color:var(--accent); }
+  .mod-check input{ flex-shrink:0; width:16px; height:16px; margin-top:.2em; accent-color:var(--accent); }
+  .mod-label{ display:flex; flex-direction:column; gap:2px; }
+  .mod-name{ line-height:1.3; font-weight:500; }
+  .mod-count{ font-family:var(--mono); font-size:.74rem; color:var(--muted); }
+  .count-row{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin:20px 0; padding-top:18px; border-top:1px solid var(--border); }
+  .count-row label{ font-family:var(--mono); font-weight:600; font-size:.82rem; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); }
+  .count-row input[type=number]{ font-family:var(--mono); font-size:1rem; width:5em; padding:.45em .6em; border:1px solid var(--border); border-radius:7px; background:var(--surface-2); color:var(--text); }
+  #countHint{ font-family:var(--mono); font-size:.8rem; color:var(--muted); }
+  .start-row{ display:flex; gap:14px; flex-wrap:wrap; align-items:flex-start; }
+  .start-opt{ display:flex; flex-direction:column; gap:6px; }
+  .start-opt .btn{ font-size:.92rem; padding:.7em 1.3em; }
+  .start-opt .hint{ font-family:var(--mono); font-size:.74rem; color:var(--muted); max-width:30ch; }
+
+  #scorebar{ display:flex; flex-wrap:wrap; gap:14px; align-items:center; justify-content:space-between; margin-bottom:16px; }
+  #quizScore{ font-family:var(--mono); font-size:.95rem; font-weight:600; }
+  .breakdown{ margin:0 0 28px; background:var(--surface); border:1px solid var(--border); border-radius:12px; box-shadow:var(--shadow); overflow-x:auto; }
+  .breakdown table{ width:100%; border-collapse:collapse; font-size:.88rem; }
+  .breakdown th{ font-family:var(--mono); font-weight:600; text-transform:uppercase; letter-spacing:.05em; font-size:.74rem; color:var(--muted); text-align:left; padding:10px 14px; border-bottom:1px solid var(--border); background:var(--surface-2); }
+  .breakdown td{ padding:8px 14px; border-bottom:1px solid var(--border); }
+  .breakdown tr:last-child td{ border-bottom:none; }
+  .breakdown .num{ font-family:var(--mono); text-align:right; }
+  .breakdown td.review{ font-family:var(--mono); font-size:.8rem; white-space:nowrap; }
+
+  .quiz-q{ background:var(--surface); border:1px solid var(--border); border-radius:12px; box-shadow:var(--shadow); padding:18px 20px; margin-bottom:16px; }
+  .quiz-q .modtag{ display:inline-block; font-family:var(--mono); font-size:.68rem; text-transform:uppercase; letter-spacing:.08em; color:var(--accent-2); background:var(--accent-2-soft); border-radius:5px; padding:.25em .6em; margin-bottom:10px; }
+  .quiz-q .qtext{ font-weight:600; margin:0 0 13px; }
+  .quiz-q .qnum{ font-family:var(--mono); color:var(--accent); margin-right:.5em; }
+  .choices{ display:grid; gap:8px; }
+  .choices.tf{ grid-template-columns:repeat(2, minmax(0, 12em)); }
+  .choice{ text-align:left; font-family:var(--sans); font-size:.92rem; background:var(--surface-2); border:1px solid var(--border); border-radius:8px; padding:.65em .9em; cursor:pointer; color:var(--text); }
+  .choice:hover{ border-color:var(--accent); }
+  .choice.correct{ background:var(--correct-soft); border-color:var(--correct); border-width:2px; }
+  .choice.incorrect{ background:var(--danger-soft); border-color:var(--danger); border-width:2px; }
+  .choice[disabled]{ cursor:default; }
+  .explain{ margin:12px 0 0; padding:12px 14px; background:var(--surface-2); border-left:3px solid var(--accent-2); border-radius:0 8px 8px 0; font-size:.9rem; display:none; }
+  .explain.show{ display:block; }
+
+  footer{ padding:32px 0 60px; }
+  footer p{ color:var(--muted); font-size:.85rem; font-family:var(--mono); }
+
+  .back-to-top{ position:fixed; bottom:22px; right:22px; z-index:40; width:46px; height:46px;
+    background:var(--surface); border:1px solid var(--border); border-radius:10px; box-shadow:var(--shadow);
+    font-family:var(--mono); font-size:1.15rem; color:var(--accent); line-height:1;
+    display:flex; align-items:center; justify-content:center; padding:0; cursor:pointer; text-decoration:none;
+    opacity:0; visibility:hidden; transform:translateY(10px);
+    transition:opacity .25s ease, transform .25s ease, visibility 0s .25s; }
+  .back-to-top.show{ opacity:1; visibility:visible; transform:translateY(0); transition:opacity .25s ease, transform .25s ease, visibility 0s; }
+  .back-to-top:hover{ background:var(--accent-soft); border-color:var(--accent); }
+  .back-to-top:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+
+  @media (max-width:560px){ .wrap{ padding:0 16px; } nav.index .wrap{ padding:10px 16px; } .choices.tf{ grid-template-columns:1fr 1fr; } }
+  @media print{ nav.index, .back-to-top{ display:none; } .setup-card, .quiz-q, .breakdown{ box-shadow:none; } }
+</style>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="termbar"><span></span><span></span><span></span></div>
+    <p class="eyebrow">IT251 · Week 8 · Midterm Prep</p>
+    <h1>Do You Know Modules 1&ndash;4?<span class="cursor">&nbsp;</span></h1>
+    <p class="lede">A self-check covering everything from System Management through Services &amp; User Management II. Pick which modules to drill and how many questions you want, and find out where to focus your review before the written midterm in Ascend.</p>
+    <div class="factrow">
+      <span class="fact"><b>Bank size</b> 152 practice questions</span>
+      <span class="fact"><b>Coverage</b> Modules 1&ndash;4</span>
+      <span class="fact"><b>Feedback</b> Instant, per question</span>
+    </div>
+  </div>
+</header>
+
+<nav class="index" aria-label="Section index">
+  <div class="wrap">
+    <a href="index.html" class="toc-link">&larr; Table of Contents</a>
+    <a href="#setup">Build a practice test</a>
+    <a href="IT251_Week6_Study_Page.html">Week 6 Review</a>
+  </div>
+</nav>
+
+<main class="wrap">
+
+  <section id="setup">
+    <div class="section-head">
+      <p class="kicker">Step 1</p>
+      <h2>Build your practice test</h2>
+      <p>Uncheck any modules you don't want to drill right now, set how many questions you'd like, then start.</p>
+    </div>
+    <div class="callout"><b>Heads up:</b> these are original practice questions written for this site. They cover the same topics, commands, and terms as Ascend's Module 1&ndash;4 quizzes, but they aren't copies of them. The real midterm is taken in Ascend, so do your Ascend quizzes too.</div>
+    <div class="setup-card">
+      <h3>Modules to include</h3>
+      <div class="mod-toolbar">
+        <button class="btn" id="selectAllBtn" type="button">Select all</button>
+        <button class="btn" id="selectNoneBtn" type="button">Select none</button>
+      </div>
+      <div class="mod-grid" id="modGrid">
+        <label class="mod-check">
+          <input type="checkbox" class="module-check" value="Module 1 - System Management" checked>
+          <span class="mod-label">
+            <span class="mod-name">Module 1 - System Management</span>
+            <span class="mod-count">Week 1 &middot; 37 available</span>
+          </span>
+        </label>
+        <label class="mod-check">
+          <input type="checkbox" class="module-check" value="Module 2 - System Management II" checked>
+          <span class="mod-label">
+            <span class="mod-name">Module 2 - System Management II</span>
+            <span class="mod-count">Week 2 &middot; 40 available</span>
+          </span>
+        </label>
+        <label class="mod-check">
+          <input type="checkbox" class="module-check" value="Module 3 - Services &amp; User Management I" checked>
+          <span class="mod-label">
+            <span class="mod-name">Module 3 - Services &amp; User Management I</span>
+            <span class="mod-count">Week 4 &middot; 34 available</span>
+          </span>
+        </label>
+        <label class="mod-check">
+          <input type="checkbox" class="module-check" value="Module 4 - Services &amp; User Management II" checked>
+          <span class="mod-label">
+            <span class="mod-name">Module 4 - Services &amp; User Management II</span>
+            <span class="mod-count">Week 5 &middot; 41 available</span>
+          </span>
+        </label>
+      </div>
+      <div class="count-row">
+        <label for="qCount">Questions</label>
+        <input type="number" id="qCount" min="1" value="20">
+        <span id="countHint"></span>
+      </div>
+      <div class="start-row">
+        <div class="start-opt">
+          <button class="btn primary" id="startBtn" type="button">Start practice test</button>
+          <span class="hint">Uses your module and count picks above</span>
+        </div>
+        <div class="start-opt">
+          <button class="btn mock" id="mockBtn" type="button">OH, I know 1&ndash;4</button>
+          <span class="hint">All 4 modules, 50 questions, weighted like Ascend's Quizzes 1&ndash;4</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="quizArea" hidden>
+    <div class="section-head">
+      <p class="kicker">Step 2</p>
+      <h2>Answer &amp; check yourself</h2>
+      <p>Pick an answer to see if you're right, with a short explanation either way. Your per-module tally updates as you go, so use it to choose which study page to revisit.</p>
+    </div>
+    <div id="scorebar">
+      <div id="quizScore" aria-live="polite"></div>
+      <button class="btn" id="newTestBtn" type="button">New practice test</button>
+    </div>
+    <div class="breakdown">
+      <table>
+        <thead><tr><th>Module</th><th class="num">Correct</th><th class="num">Drawn</th><th>Review</th></tr></thead>
+        <tbody id="breakdownBody"></tbody>
+      </table>
+    </div>
+    <div id="quizList"></div>
+    <button class="btn" id="newTestBtn2" type="button">New practice test</button>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>IT251 &middot; Linux+ (XK0-006) &middot; Practice self-check covering Modules 1&ndash;4. Original questions, aligned to the Ascend course modules.</p>
+  </div>
+</footer>
+
+<button id="backToTop" class="back-to-top" aria-label="Back to top" title="Back to top">&uarr;</button>
+
+<script>
+  const QUESTIONS = [{"module": "Module 1 - System Management", "q": "Which sequence correctly orders the Linux boot process?", "choices": ["Firmware (BIOS/UEFI) → bootloader (GRUB) → kernel + initramfs → systemd → login prompt", "Bootloader (GRUB) → firmware (BIOS/UEFI) → systemd → kernel → login prompt", "Firmware (BIOS/UEFI) → systemd → kernel + initramfs → bootloader (GRUB) → login prompt", "Kernel → firmware (BIOS/UEFI) → bootloader (GRUB) → systemd → login prompt"], "correct": 0, "explain": "Firmware hands off to GRUB, GRUB loads the kernel and initramfs, and the kernel starts systemd (PID 1), which brings up services and the login prompt."}, {"module": "Module 1 - System Management", "q": "A server's root filesystem lives on an LVM volume, so the kernel needs the LVM driver before it can mount /. Where does that driver come from early in boot?", "choices": ["The initramfs (initrd) image that GRUB loads alongside the kernel", "/etc/fstab", "The user's ~/.bashrc", "The GRUB menu file, grub.cfg"], "correct": 0, "explain": "The initramfs is a small temporary root filesystem holding the drivers and tools needed to find and mount the real root filesystem."}, {"module": "Module 1 - System Management", "q": "A coworker hand-edited /boot/grub2/grub.cfg to add a kernel parameter, and the change vanished after the next kernel update. What should they have done instead?", "choices": ["Edit /etc/default/grub, then regenerate grub.cfg with grub2-mkconfig (update-grub on Debian/Ubuntu)", "Edit /etc/fstab and reboot", "Add the parameter to /boot/vmlinuz with a text editor", "Run depmod -a after editing grub.cfg"], "correct": 0, "explain": "grub.cfg is generated, so it gets overwritten. Make persistent changes in /etc/default/grub (or /etc/grub.d/) and regenerate the file."}, {"module": "Module 1 - System Management", "q": "On an Ubuntu system, which command rebuilds the GRUB menu after you change /etc/default/grub?", "choices": ["update-grub", "dracut -f", "depmod -a", "systemctl daemon-reload"], "correct": 0, "explain": "update-grub is Debian/Ubuntu's wrapper around grub-mkconfig. On RHEL-based systems, use grub2-mkconfig -o with the grub.cfg path."}, {"module": "Module 1 - System Management", "q": "You run ls in a directory and see vmlinuz-6.8.0-45-generic and initrd.img-6.8.0-45-generic. Which directory are you most likely in?", "choices": ["/boot", "/lib/modules", "/etc", "/usr/share"], "correct": 0, "explain": "/boot holds the kernel images, initramfs/initrd images, and bootloader files."}, {"module": "Module 1 - System Management", "q": "Where does the FHS place log files and other data that grows while the system runs?", "choices": ["/var", "/etc", "/usr", "/opt"], "correct": 0, "explain": "/var is for variable data: logs (/var/log), spools, caches, and similar. /etc is configuration, and /usr is mostly read-only programs."}, {"module": "Module 1 - System Management", "q": "What is the root user's home directory?", "choices": ["/root", "/home/root", "/", "/etc/root"], "correct": 0, "explain": "The superuser's home is /root, kept separate from /home so it's available even if /home is on another disk that fails to mount."}, {"module": "Module 1 - System Management", "q": "Files in /tmp are generally cleared on reboot, while /var/tmp is meant to survive reboots.", "choices": ["True", "False"], "correct": 0, "explain": "Both hold temporary files, but /var/tmp is for temp data that needs to persist across a reboot.", "tf": true}, {"module": "Module 1 - System Management", "q": "/etc holds host-specific configuration files, which are usually plain text.", "choices": ["True", "False"], "correct": 0, "explain": "Per the FHS, /etc is for system-wide, host-specific configuration, and nearly all of it is editable text.", "tf": true}, {"module": "Module 1 - System Management", "q": "A Fedora workstation and a RHEL server use the same package format. What is it?", "choices": ["RPM, installed and managed with dnf", ".deb, installed and managed with apt", "Flatpak only", "Plain .tar.gz source archives"], "correct": 0, "explain": "Fedora and RHEL are both RHEL-family distros that use RPM packages. Debian, Ubuntu, and Mint use .deb packages with apt/dpkg."}, {"module": "Module 1 - System Management", "q": "Under the MIT license, a company can modify the code and ship it inside a closed-source product, as long as it keeps the copyright notice. What kind of license is that?", "choices": ["Permissive", "Copyleft", "Proprietary", "Shareware"], "correct": 0, "explain": "Permissive licenses (MIT, BSD, Apache) allow closed derivatives. Copyleft licenses like the GPL require derivatives to stay open."}, {"module": "Module 1 - System Management", "q": "Your company ships a router whose firmware contains a modified GPL-licensed program. A customer who bought the router asks for the source code. What applies?", "choices": ["You must provide the modified source under the GPL", "You can refuse, because you only shipped a compiled binary", "You only have to share the original, unmodified upstream source", "You can relicense your changes under MIT and keep them private"], "correct": 0, "explain": "The GPL is copyleft. If you distribute a modified GPL program, recipients are entitled to the corresponding source under the same license."}, {"module": "Module 1 - System Management", "q": "Most Raspberry Pi boards and many cloud servers (like AWS Graviton) use which 64-bit CPU architecture?", "choices": ["AArch64 (64-bit ARM)", "x86_64", "RISC-V", "32-bit x86"], "correct": 0, "explain": "AArch64 is 64-bit ARM. x86_64 is 64-bit Intel/AMD, and RISC-V is a separate open instruction set."}, {"module": "Module 1 - System Management", "q": "A 32-bit x86 system without special extensions can address roughly how much RAM?", "choices": ["4 GB", "16 GB", "64 GB", "512 MB"], "correct": 0, "explain": "32 address bits allow 2^32 bytes, which is about 4 GB. That ceiling is a big reason x86_64 replaced 32-bit x86."}, {"module": "Module 1 - System Management", "q": "RISC-V is an open instruction set architecture that anyone can implement without paying licensing fees.", "choices": ["True", "False"], "correct": 0, "explain": "RISC-V is open and royalty-free, unlike x86 and ARM, which are licensed.", "tf": true}, {"module": "Module 1 - System Management", "q": "On a modern Fedora desktop, echo $XDG_SESSION_TYPE prints something other than x11. Which display protocol is the session most likely using?", "choices": ["wayland", "xfce", "gdm", "vnc"], "correct": 0, "explain": "Wayland is the modern replacement for the X11 display server. Xfce is a desktop environment and GDM is a display manager (the login screen)."}, {"module": "Module 1 - System Management", "q": "Which display manager provides the default graphical login screen for KDE Plasma?", "choices": ["SDDM", "GDM", "Wayland", "Xorg"], "correct": 0, "explain": "SDDM pairs with KDE and GDM pairs with GNOME. Wayland and Xorg are display servers, not login managers."}, {"module": "Module 1 - System Management", "q": "A lab of 30 diskless machines must download their operating system over the network at power-on. Which firmware feature makes that possible?", "choices": ["PXE network boot", "Secure Boot", "initramfs", "GRUB rescue mode"], "correct": 0, "explain": "PXE (Preboot Execution Environment) lets a NIC get an address over DHCP and pull a boot image from a TFTP/HTTP server."}, {"module": "Module 1 - System Management", "q": "You need to load the vfat kernel module and anything it depends on. Which command do you use?", "choices": ["modprobe vfat", "insmod vfat", "lsmod vfat", "depmod vfat"], "correct": 0, "explain": "modprobe uses modules.dep to load dependencies automatically. insmod needs a full .ko path and won't resolve dependencies."}, {"module": "Module 1 - System Management", "q": "What is the key difference between insmod and modprobe?", "choices": ["insmod loads one .ko file by path with no dependency handling; modprobe loads by module name and pulls in dependencies", "insmod loads dependencies automatically; modprobe does not", "insmod only removes modules; modprobe only adds them", "There is no difference; modprobe is just a symlink to insmod"], "correct": 0, "explain": "modprobe is the smarter front end that reads dependency maps built by depmod. insmod is the bare-bones loader."}, {"module": "Module 1 - System Management", "q": "Where do you place a configuration file to permanently blacklist a kernel module so it isn't loaded at boot?", "choices": ["/etc/modprobe.d/", "/lib/modules/", "/boot/", "/etc/fstab"], "correct": 0, "explain": "A file like /etc/modprobe.d/blacklist.conf containing 'blacklist <module>' stops modprobe from auto-loading it."}, {"module": "Module 1 - System Management", "q": "Before loading a network driver, you want to see what parameters it accepts and what license it uses. Which command shows that?", "choices": ["modinfo e1000e", "lsmod e1000e", "dmesg e1000e", "rmmod e1000e"], "correct": 0, "explain": "modinfo prints a module's description, author, license, dependencies, and parameters (parm: lines)."}, {"module": "Module 1 - System Management", "q": "You need a server's BIOS version and serial number without rebooting into firmware setup. Which command reads them from the SMBIOS/DMI tables?", "choices": ["dmidecode", "lscpu", "lspci", "lsmod"], "correct": 0, "explain": "dmidecode decodes firmware tables, so it shows BIOS, system, board, and memory module details. Run it with sudo."}, {"module": "Module 1 - System Management", "q": "Which tool talks to a server's baseboard management controller (BMC) to read hardware sensors, and can power-cycle the machine even if the OS is hung?", "choices": ["ipmitool", "lm_sensors", "nvtop", "dmesg"], "correct": 0, "explain": "ipmitool speaks IPMI to the BMC, which runs independently of the operating system."}, {"module": "Module 1 - System Management", "q": "On a fresh install, the sensors command shows no temperature readings. What usually needs to run once first?", "choices": ["sensors-detect", "depmod -a", "dracut -f", "lscpu"], "correct": 0, "explain": "sensors-detect probes for monitoring chips and works out which kernel modules lm_sensors needs."}, {"module": "Module 1 - System Management", "q": "After installing a new storage driver on Fedora, you need to rebuild the initramfs for the running kernel. Which command?", "choices": ["dracut -f", "update-grub", "lsinitrd", "grub2-install"], "correct": 0, "explain": "dracut builds initramfs images on RHEL-family systems (-f overwrites the existing one). Debian/Ubuntu use update-initramfs -u."}, {"module": "Module 1 - System Management", "q": "Which order builds usable LVM storage from a blank disk?", "choices": ["pvcreate → vgcreate → lvcreate → mkfs", "vgcreate → pvcreate → lvcreate → mkfs", "lvcreate → vgcreate → pvcreate → mkfs", "mkfs → pvcreate → vgcreate → lvcreate"], "correct": 0, "explain": "Mark the disk as a physical volume, pool PVs into a volume group, carve a logical volume out of it, then put a filesystem on the LV."}, {"module": "Module 1 - System Management", "q": "Your /data logical volume is formatted XFS, and you need to make it 10 GiB smaller. What is true?", "choices": ["XFS can't shrink; back up the data, recreate a smaller filesystem, and restore", "Run xfs_growfs with a negative size", "Run resize2fs on the logical volume", "Just run lvreduce; the filesystem adjusts automatically"], "correct": 0, "explain": "XFS can grow (xfs_growfs) but never shrink. Running lvreduce under a filesystem without shrinking the filesystem first destroys data."}, {"module": "Module 1 - System Management", "q": "What does the -r option do in lvextend -r -L +5G /dev/vg01/data?", "choices": ["Resizes the filesystem on the LV in the same step", "Reboots after extending", "Makes the volume read-only", "Removes the old volume first"], "correct": 0, "explain": "-r (--resizefs) calls the right filesystem resize tool for you, so you don't need a separate resize2fs or xfs_growfs."}, {"module": "Module 1 - System Management", "q": "An /etc/fstab entry refers to a partition by UUID=... instead of /dev/sdb1. Which command shows a partition's UUID?", "choices": ["blkid", "df -h", "du -sh", "mount -a"], "correct": 0, "explain": "blkid prints UUIDs and filesystem types (lsblk -f does too). UUIDs stay the same even if device names change between boots."}, {"module": "Module 1 - System Management", "q": "You added a new line to /etc/fstab. What's the safest way to test it before rebooting?", "choices": ["Run sudo mount -a and check for errors", "Reboot and see if it comes up", "Run fsck on the root filesystem", "Run df -h"], "correct": 0, "explain": "mount -a mounts everything in fstab that isn't already mounted, so a typo shows up now rather than as a failed boot."}, {"module": "Module 1 - System Management", "q": "df -h shows /var has plenty of free space, but creating even small files fails with 'No space left on device'. What should you check next?", "choices": ["Inode usage, with df -i", "Directory sizes, with du -sh", "The partition table, with lsblk", "RAID status, with mdadm --detail"], "correct": 0, "explain": "Every file uses an inode. Millions of tiny files can use up all the inodes while blocks are still free."}, {"module": "Module 1 - System Management", "q": "Which mount option stops programs on a filesystem from being executed, and is often applied to /tmp?", "choices": ["noexec", "noatime", "nodev", "ro"], "correct": 0, "explain": "noexec blocks executing binaries from that mount. nosuid and nodev are the other common hardening options."}, {"module": "Module 1 - System Management", "q": "Which RAID level stripes data with distributed parity, so the array survives one disk failure?", "choices": ["RAID 5", "RAID 0", "RAID 1", "JBOD"], "correct": 0, "explain": "RAID 5 needs at least 3 disks. RAID 0 stripes with no redundancy, and RAID 1 mirrors without parity."}, {"module": "Module 1 - System Management", "q": "Which network filesystem is native to Linux/Unix and shares directories through /etc/exports?", "choices": ["NFS", "SMB/CIFS", "ext4", "XFS"], "correct": 0, "explain": "NFS exports are defined in /etc/exports. SMB/CIFS (through Samba) is mainly for Windows interoperability."}, {"module": "Module 1 - System Management", "q": "growpart /dev/vda 1 just extended the partition holding an ext4 root filesystem. What makes the filesystem use the new space?", "choices": ["resize2fs /dev/vda1", "xfs_growfs /dev/vda1", "mkfs.ext4 /dev/vda1", "pvcreate /dev/vda1"], "correct": 0, "explain": "The partition grew, but the filesystem inside it didn't. resize2fs grows ext4 (online is fine). mkfs would wipe it."}, {"module": "Module 1 - System Management", "q": "An inode stores the file's name along with its metadata.", "choices": ["True", "False"], "correct": 1, "explain": "Inodes hold metadata (owner, permissions, timestamps, block pointers). The name lives in the directory entry that points to the inode, which is why hard links work.", "tf": true}, {"module": "Module 2 - System Management II", "q": "Which line in /etc/nsswitch.conf makes the system check /etc/hosts before asking DNS?", "choices": ["hosts: files dns", "hosts: dns files", "nameserver files", "order: hosts,bind"], "correct": 0, "explain": "nsswitch.conf sets the lookup order. 'files' means /etc/hosts, and the sources are tried left to right."}, {"module": "Module 2 - System Management II", "q": "Which of these lines belongs in /etc/resolv.conf?", "choices": ["nameserver 1.1.1.1", "1.1.1.1 dns01", "hosts: files dns", "GATEWAY=1.1.1.1"], "correct": 0, "explain": "resolv.conf lists the DNS servers to query. '1.1.1.1 dns01' is /etc/hosts syntax, and 'hosts:' lines belong in nsswitch.conf."}, {"module": "Module 2 - System Management II", "q": "Which command lists the connection profiles NetworkManager knows about?", "choices": ["nmcli connection show", "netplan get", "ip link show", "ss -tuln"], "correct": 0, "explain": "nmcli connection (or nmcli con) manages NetworkManager profiles. ip link shows kernel interfaces, not NM profiles."}, {"module": "Module 2 - System Management II", "q": "You changed a profile's static IP with nmcli connection modify. What makes the change take effect right away?", "choices": ["Reactivate the connection: nmcli connection up <name>", "A reboot is the only way", "Run netplan apply", "Nothing; modify applies instantly"], "correct": 0, "explain": "nmcli con mod saves the profile, and it persists, but the active connection only picks up the change when it's brought up again."}, {"module": "Module 2 - System Management II", "q": "In what format, and in which directory, are Netplan configuration files written?", "choices": ["YAML, in /etc/netplan/", "INI, in /etc/sysconfig/network-scripts/", "JSON, in /etc/network/", "Plain text, in /etc/hosts"], "correct": 0, "explain": "Netplan reads *.yaml files from /etc/netplan/ and renders them for NetworkManager or systemd-networkd."}, {"module": "Module 2 - System Management II", "q": "netplan try applies a configuration and rolls it back automatically if you don't confirm it before the timeout.", "choices": ["True", "False"], "correct": 0, "explain": "That's what makes it safe over SSH: if the change cuts you off, you can't confirm, so it reverts on its own.", "tf": true}, {"module": "Module 2 - System Management II", "q": "Which command shows the IP addresses assigned to every interface?", "choices": ["ip addr show", "ip route show", "ip neigh show", "ethtool -i"], "correct": 0, "explain": "ip addr (or just ip a) lists addresses. ip route shows the routing table, and ip neigh shows the ARP/neighbor cache."}, {"module": "Module 2 - System Management II", "q": "Which command shows the system's default gateway?", "choices": ["ip route show", "ip addr show", "ss -tuln", "hostname -I"], "correct": 0, "explain": "Look for the 'default via ...' line in the routing table."}, {"module": "Module 2 - System Management II", "q": "Which modern command replaces arp -a for viewing the neighbor (ARP) cache?", "choices": ["ip neigh", "ip link", "ss -a", "dig -x"], "correct": 0, "explain": "ip neigh shows IP-to-MAC mappings. arp comes from the older net-tools package."}, {"module": "Module 2 - System Management II", "q": "Which tool traces the path to a host and keeps updating packet loss and latency for each hop?", "choices": ["mtr", "traceroute", "ping", "dig"], "correct": 0, "explain": "mtr combines traceroute and ping into a continuously refreshing per-hop report. traceroute runs once."}, {"module": "Module 2 - System Management II", "q": "dig example.com +short returns nothing, but dig @8.8.8.8 example.com +short returns an address. Where is the problem most likely?", "choices": ["The DNS server your system is configured to use", "The example.com website is down", "A bad network cable", "A firewall on the example.com server"], "correct": 0, "explain": "8.8.8.8 answered, so the network and the domain both work. That leaves the resolver your system is configured to use."}, {"module": "Module 2 - System Management II", "q": "Which command checks whether TCP port 443 on host web01 accepts connections, without scanning every port?", "choices": ["nc -zv web01 443", "ping -c 4 web01", "dig web01", "ip neigh show web01"], "correct": 0, "explain": "netcat's -z option just tests the connection, and -v reports the result. ping only tests ICMP reachability, not ports."}, {"module": "Module 2 - System Management II", "q": "In ss -tuln, what do the four options mean?", "choices": ["TCP, UDP, listening sockets only, numeric ports (no name lookups)", "TCP, users, lines, names", "Time, uptime, load, network", "TCP, UNIX sockets, links, numbers"], "correct": 0, "explain": "ss -tuln is the go-to check for 'what is listening on this box?'"}, {"module": "Module 2 - System Management II", "q": "ethtool eth0 reports Speed: 100Mb/s on a link that should be gigabit. Where is the problem most likely?", "choices": ["The physical link: cable, port, or speed negotiation", "DNS resolution", "The routing table", "A host firewall rule"], "correct": 0, "explain": "Link speed and duplex are negotiated at the physical layer. A bad cable or port often negotiates down to 100Mb/s."}, {"module": "Module 2 - System Management II", "q": "Which network testing tool needs a matching server running on the other end (started with -s) before it can measure throughput?", "choices": ["iperf3", "ping", "mtr", "tcpdump"], "correct": 0, "explain": "iperf3 measures bandwidth between a client and an iperf3 server."}, {"module": "Module 2 - System Management II", "q": "You set MYVAR=hello in your shell, then run a script that prints $MYVAR, but it prints nothing. What fixes this?", "choices": ["export MYVAR so child processes inherit it", "Run unset MYVAR first", "Put quotes around hello", "Rename it to lowercase myvar"], "correct": 0, "explain": "Plain assignments are shell variables. export turns them into environment variables that child processes inherit."}, {"module": "Module 2 - System Management II", "q": "Which command shows the list of directories your shell searches for commands?", "choices": ["echo $PATH", "echo $HOME", "pwd", "echo $SHELL"], "correct": 0, "explain": "PATH is a colon-separated list that is searched left to right."}, {"module": "Module 2 - System Management II", "q": "You want an alias to exist in every new terminal window you open (interactive, non-login shells). Which file should define it?", "choices": ["~/.bashrc", "~/.bash_profile", "~/.bash_history", "/etc/hosts"], "correct": 0, "explain": ".bashrc runs for every interactive non-login shell. Login-time files like .bash_profile usually source .bashrc too."}, {"module": "Module 2 - System Management II", "q": "In command > out.txt 2>&1, what does 2>&1 do?", "choices": ["Sends standard error to the same place as standard output", "Sends standard output to standard error", "Appends to out.txt instead of overwriting it", "Runs the command in the background"], "correct": 0, "explain": "File descriptor 2 (stderr) is pointed at wherever 1 (stdout) currently goes, which is out.txt."}, {"module": "Module 2 - System Management II", "q": "Which redirection discards only the error messages, while normal output still reaches the screen?", "choices": ["2>/dev/null", "1>/dev/null", "<\/dev/null", "| /dev/null"], "correct": 0, "explain": "2> redirects stderr. /dev/null is a character device that throws away whatever is written to it."}, {"module": "Module 2 - System Management II", "q": "What does <<< do in grep root <<< \"$USERS\"?", "choices": ["Feeds the string as the command's standard input (a here string)", "Starts a multi-line here document", "Appends output to a file", "Pipes standard error into grep"], "correct": 0, "explain": "<<< is a here string (one string as stdin). << starts a multi-line here document."}, {"module": "Module 2 - System Management II", "q": "ls /nope | wc -l prints 0, but an error message still appears on screen. Why?", "choices": ["A pipe carries only standard output; standard error still goes to the terminal", "wc printed the error", "The pipe failed, so nothing ran", "ls sends errors to stdout and wc ignored them"], "correct": 0, "explain": "To send errors through a pipe too, redirect them first: 2>&1 |."}, {"module": "Module 2 - System Management II", "q": "Which command prints the third colon-separated field (the UID) of each line in /etc/passwd?", "choices": ["cut -d: -f3 /etc/passwd", "cut -f3 /etc/passwd", "head -3 /etc/passwd", "sed -n 3p /etc/passwd"], "correct": 0, "explain": "-d sets the delimiter (cut defaults to tab) and -f picks the field. head -3 and sed -n 3p print the third line, not the third field."}, {"module": "Module 2 - System Management II", "q": "Which of these is an absolute path?", "choices": ["/usr/local/bin", "../bin", "./script.sh", "docs/notes.txt"], "correct": 0, "explain": "Absolute paths start at / (the root). The others are relative to the current directory."}, {"module": "Module 2 - System Management II", "q": "history lists your previous commands, and !42 re-runs command number 42 from that list.", "choices": ["True", "False"], "correct": 0, "explain": "History expansion: !! repeats the last command, !n runs entry n, and !string runs the most recent command starting with string.", "tf": true}, {"module": "Module 2 - System Management II", "q": "Which command lists the files inside backup.tar.gz without extracting anything?", "choices": ["tar -tzf backup.tar.gz", "tar -xzf backup.tar.gz", "tar -czf backup.tar.gz", "gunzip backup.tar.gz"], "correct": 0, "explain": "-t lists (think 'table of contents'), -x extracts, -c creates, -z handles gzip, and -f names the archive file."}, {"module": "Module 2 - System Management II", "q": "Which tar option compresses or decompresses with xz?", "choices": ["-J", "-z", "-j", "-x"], "correct": 0, "explain": "-z is gzip, -j is bzip2, and -J (capital) is xz. -x means extract."}, {"module": "Module 2 - System Management II", "q": "Rank gzip, bzip2, and xz from fastest with the least compression to slowest with the best compression.", "choices": ["gzip, bzip2, xz", "xz, bzip2, gzip", "bzip2, gzip, xz", "gzip, xz, bzip2"], "correct": 0, "explain": "gzip is quick and everywhere, bzip2 is in the middle, and xz compresses best but takes longest."}, {"module": "Module 2 - System Management II", "q": "What does -k do in gzip -k report.txt?", "choices": ["Keeps the original file alongside report.txt.gz", "Kills any process using the file", "Uses the strongest compression level", "Encrypts the file with a key"], "correct": 0, "explain": "By default gzip replaces the original file with the .gz version, and -k keeps both."}, {"module": "Module 2 - System Management II", "q": "What's the difference between rsync -av src/ dest/ and rsync -av src dest/?", "choices": ["The trailing slash copies the contents of src into dest; without it, rsync creates dest/src", "There is no difference", "The trailing slash deletes extra files from dest", "Without the slash, rsync only copies changed files"], "correct": 0, "explain": "This trailing-slash rule is the classic rsync gotcha. Check it with -n (dry run) before syncing for real."}, {"module": "Module 2 - System Management II", "q": "Which dd option prints a live progress readout while it copies?", "choices": ["status=progress", "bs=4M", "conv=noerror", "if=/dev/sda"], "correct": 0, "explain": "bs sets the block size, conv=noerror keeps going after read errors, and if/of name the input and output."}, {"module": "Module 2 - System Management II", "q": "Which command decompresses logs.gz back to logs?", "choices": ["gunzip logs.gz", "gzip -k logs.gz", "tar -c logs.gz", "zip -d logs.gz"], "correct": 0, "explain": "gunzip is the same as gzip -d. To just read the contents, zcat, zless, and zgrep work without decompressing to disk."}, {"module": "Module 2 - System Management II", "q": "Fill in the blank: find . -name '*.conf' | ____ -o > confs.archive. Which tool reads file names from standard input to build an archive?", "choices": ["cpio", "tar", "gzip", "dd"], "correct": 0, "explain": "cpio takes its file list from stdin (-o creates an archive). It's also the format used inside initramfs images."}, {"module": "Module 2 - System Management II", "q": "VirtualBox running on your laptop's host OS, like the VMs used in this course's labs, is which kind of hypervisor?", "choices": ["Type 2 (hosted)", "Type 1 (bare-metal)", "A container runtime", "A paravirtualized driver"], "correct": 0, "explain": "Type 2 hypervisors run as applications on a host OS. Type 1 runs directly on the hardware (KVM turns the Linux kernel itself into one)."}, {"module": "Module 2 - System Management II", "q": "Which command checks whether the CPU supports hardware virtualization (Intel VT-x or AMD-V)?", "choices": ["grep -E 'vmx|svm' /proc/cpuinfo", "lsusb", "free -h", "df -h"], "correct": 0, "explain": "vmx is Intel's flag and svm is AMD's. If neither shows up, KVM acceleration isn't available (or it's disabled in firmware)."}, {"module": "Module 2 - System Management II", "q": "Which command creates a new 20 GB thin-provisioned VM disk image?", "choices": ["qemu-img create -f qcow2 disk.qcow2 20G", "qemu-img info disk.qcow2 20G", "virsh start disk.qcow2", "dd if=/dev/zero of=disk.qcow2"], "correct": 0, "explain": "A qcow2 image only grows on the host as the guest writes data, which is what thin provisioning means."}, {"module": "Module 2 - System Management II", "q": "Which virsh command lists all VMs, including the ones that are shut off?", "choices": ["virsh list --all", "virsh list", "virsh dominfo", "virsh start --all"], "correct": 0, "explain": "Plain virsh list shows only running domains."}, {"module": "Module 2 - System Management II", "q": "A VM needs its own IP address from the office DHCP server so other machines on the LAN can reach it directly. Which network mode fits?", "choices": ["Bridged", "NAT", "Host-only/isolated", "None"], "correct": 0, "explain": "Bridged mode puts the VM on the physical network like another computer. NAT hides it behind the host's address."}, {"module": "Module 2 - System Management II", "q": "A paused VM still holds its memory on the host, while a saved VM has written its memory to disk and freed that RAM.", "choices": ["True", "False"], "correct": 0, "explain": "Pause freezes the vCPUs but keeps RAM allocated. Save writes the VM's state to disk so it can resume later.", "tf": true}, {"module": "Module 2 - System Management II", "q": "A qcow2 image's file on the host can be much smaller than the disk size the guest operating system sees.", "choices": ["True", "False"], "correct": 0, "explain": "qcow2 allocates space as data is written. A raw image takes up its full size.", "tf": true}, {"module": "Module 3 - Services & User Management I", "q": "Which ls option shows hidden files, the ones whose names start with a dot?", "choices": ["-a", "-l", "-h", "-R"], "correct": 0, "explain": "-a shows all entries, including dotfiles. -l is the long listing, -h shows human-readable sizes, and -R recurses."}, {"module": "Module 3 - Services & User Management I", "q": "What happens when you run touch on a file that already exists?", "choices": ["Its timestamps are updated and its contents are unchanged", "The file is emptied", "You get an error", "A numbered copy is created"], "correct": 0, "explain": "touch creates the file if it's missing and otherwise just updates its access and modification times."}, {"module": "Module 3 - Services & User Management I", "q": "Which command copies a directory and everything inside it?", "choices": ["cp -r src/ dest/", "cp src/ dest/", "mv -r src/ dest/", "ln -s src/ dest/"], "correct": 0, "explain": "Without -r (recursive), cp refuses to copy a directory."}, {"module": "Module 3 - Services & User Management I", "q": "What does -i do in rm -i *.log?", "choices": ["Asks for confirmation before each removal", "Ignores errors", "Includes hidden files", "Removes immutable files"], "correct": 0, "explain": "Interactive mode is a good safety net with wildcards. Remember rm has no recycle bin."}, {"module": "Module 3 - Services & User Management I", "q": "What does find /var/log -mtime -1 return?", "choices": ["Files modified within the last 24 hours", "Files older than one day", "Files modified exactly one minute ago", "Files accessed in the last hour"], "correct": 0, "explain": "-mtime counts in 24-hour periods: -1 means less than 1 day ago and +1 means more than 1 day ago. For minutes, use -mmin."}, {"module": "Module 3 - Services & User Management I", "q": "Which command finds files larger than 500 MB anywhere on the system?", "choices": ["find / -size +500M", "find / -size 500M", "locate -size +500M", "du -size 500M /"], "correct": 0, "explain": "+ means greater than, - means less than, and no sign means exactly. Add 2>/dev/null to hide permission-denied noise."}, {"module": "Module 3 - Services & User Management I", "q": "You just installed a tool, but locate can't find any of its files. What's the fix?", "choices": ["Run sudo updatedb, then try again", "Reboot the system", "Use pwd instead", "Run chmod +x on the files"], "correct": 0, "explain": "locate searches a database that's refreshed periodically. find searches the filesystem live."}, {"module": "Module 3 - Services & User Management I", "q": "Which command shows the full path of the executable that runs when you type python3?", "choices": ["which python3", "file python3", "stat python3", "pwd python3"], "correct": 0, "explain": "which searches your PATH and prints the first match."}, {"module": "Module 3 - Services & User Management I", "q": "You delete a file that has both a hard link and a symbolic link pointing to it. Which link still gives you the data?", "choices": ["The hard link", "The symbolic link", "Both of them", "Neither of them"], "correct": 0, "explain": "A hard link is another name for the same inode, so the data survives. A symlink stores a path, and that path is now broken."}, {"module": "Module 3 - Services & User Management I", "q": "In an ls -l listing of /dev, an entry begins with c. What kind of file is it?", "choices": ["A character device, such as a terminal", "A block device, such as a disk", "A symbolic link", "A regular file"], "correct": 0, "explain": "c is a character device (byte stream). b is a block device, l is a symlink, d is a directory, and - is a regular file."}, {"module": "Module 3 - Services & User Management I", "q": "What does the extra first column show in ls -li?", "choices": ["The inode number", "The link count", "The file's permissions in octal", "The owner's UID"], "correct": 0, "explain": "Two names with the same inode number on the same filesystem are hard links to one file."}, {"module": "Module 3 - Services & User Management I", "q": "Which command compares two files byte by byte and reports only where they first differ?", "choices": ["cmp", "diff", "sdiff", "file"], "correct": 0, "explain": "cmp is good for binaries. diff shows line-by-line changes, and sdiff shows them side by side."}, {"module": "Module 3 - Services & User Management I", "q": "file holiday.jpg reports 'ELF 64-bit LSB executable'. What does that tell you?", "choices": ["It's really a Linux program, despite the .jpg name", "The image is corrupted", "It's a compressed photo", "The extension controls how Linux runs it"], "correct": 0, "explain": "file inspects the content (magic bytes), not the extension. Linux doesn't use extensions to decide file types."}, {"module": "Module 3 - Services & User Management I", "q": "Which file lists the system's groups and their supplementary members?", "choices": ["/etc/group", "/etc/passwd", "/etc/skel", "/etc/login.defs"], "correct": 0, "explain": "Each /etc/group line looks like group:x:GID:member1,member2. Group passwords, if used, live in /etc/gshadow."}, {"module": "Module 3 - Services & User Management I", "q": "In alice:x:1001:1001:Alice:/home/alice:/bin/bash, what does the x mean?", "choices": ["The password hash is stored in /etc/shadow", "The account is locked", "The account has no password", "The account is expired"], "correct": 0, "explain": "The x is a placeholder. The real hash is in /etc/shadow, which only root can read."}, {"module": "Module 3 - Services & User Management I", "q": "You run usermod -G devs alice without -a. What happens to alice's other supplementary groups?", "choices": ["They're removed; devs becomes her only supplementary group", "Nothing; devs is added to the list", "Her primary group changes to devs", "The command fails without -a"], "correct": 0, "explain": "-G on its own replaces the whole supplementary group list. Use -aG to append."}, {"module": "Module 3 - Services & User Management I", "q": "Which useradd option makes sure a home directory is created for the new user?", "choices": ["-m", "-M", "-s", "-G"], "correct": 0, "explain": "-m creates the home directory and copies /etc/skel into it. -M explicitly skips it. Debian's adduser creates the home directory by default."}, {"module": "Module 3 - Services & User Management I", "q": "Which command makes user jdoe's account expire on December 31, 2026?", "choices": ["chage -E 2026-12-31 jdoe", "chage -M 2026-12-31 jdoe", "passwd -l jdoe", "chage -l jdoe"], "correct": 0, "explain": "-E sets the account expiration date (usermod -e also works). -M sets the maximum password age in days."}, {"module": "Module 3 - Services & User Management I", "q": "Which command displays a user's password-aging settings without changing anything?", "choices": ["chage -l jdoe", "passwd -l jdoe", "id jdoe", "groups jdoe"], "correct": 0, "explain": "Careful: chage -l lists the settings, but passwd -l locks the account."}, {"module": "Module 3 - Services & User Management I", "q": "passwd -l and usermod -L both lock an account by putting ! in front of the password hash in /etc/shadow.", "choices": ["True", "False"], "correct": 0, "explain": "Unlock with passwd -u or usermod -U. Locking doesn't block SSH key logins on its own.", "tf": true}, {"module": "Module 3 - Services & User Management I", "q": "Which command lists accounts that have NOT logged in for more than 90 days?", "choices": ["lastlog -b 90", "lastlog -t 90", "w", "who -a"], "correct": 0, "explain": "lastlog -b (before) shows records older than N days, which finds dormant accounts. -t shows the opposite: logins more recent than N days."}, {"module": "Module 3 - Services & User Management I", "q": "Where does the last command get its list of past logins and reboots?", "choices": ["/var/log/wtmp", "/etc/passwd", "/var/run/utmp only", "~/.bash_history"], "correct": 0, "explain": "wtmp is the login history. utmp tracks who is logged in right now, which is what who and w read."}, {"module": "Module 3 - Services & User Management I", "q": "Which command creates a system account for a service that should never log in interactively?", "choices": ["useradd -r -s /sbin/nologin svcapp", "useradd -m svcapp", "adduser --admin svcapp", "usermod -L root"], "correct": 0, "explain": "-r assigns a system UID (below 1000 on most distros), and nologin blocks interactive shells."}, {"module": "Module 3 - Services & User Management I", "q": "In ps -ef output, which column shows each process's parent?", "choices": ["PPID", "PID", "TTY", "STIME"], "correct": 0, "explain": "PPID is the parent's process ID, the same relationship pstree draws as a tree."}, {"module": "Module 3 - Services & User Management I", "q": "Which signal does kill 1234 send when you don't name one?", "choices": ["SIGTERM (15)", "SIGKILL (9)", "SIGHUP (1)", "SIGSTOP (19)"], "correct": 0, "explain": "SIGTERM politely asks the process to exit and gives it a chance to clean up."}, {"module": "Module 3 - Services & User Management I", "q": "A program can catch SIGKILL and run cleanup code before it exits.", "choices": ["True", "False"], "correct": 1, "explain": "SIGKILL (9) and SIGSTOP can't be caught or ignored. That's why kill -9 is the last resort: the process gets no chance to clean up.", "tf": true}, {"module": "Module 3 - Services & User Management I", "q": "Which nice value gives a process the LOWEST scheduling priority?", "choices": ["19", "-20", "0", "100"], "correct": 0, "explain": "Niceness runs from -20 (highest priority) to 19 (nicest to everyone else, so lowest priority)."}, {"module": "Module 3 - Services & User Management I", "q": "A regular user runs renice -5 -p 2222 on their own process, which currently has niceness 0. What happens?", "choices": ["Permission denied: only root can lower niceness (raise priority)", "It works, because users can renice their own processes in any direction", "The process is killed", "The niceness is set to +5 instead"], "correct": 0, "explain": "Users can make their processes nicer (higher numbers). Going negative requires root."}, {"module": "Module 3 - Services & User Management I", "q": "jobs shows [1]+ Stopped vim notes.txt. How do you bring it back to the foreground?", "choices": ["fg %1", "bg %1", "kill %1", "nohup %1"], "correct": 0, "explain": "fg resumes a job in the foreground. bg resumes it in the background, and Ctrl+Z is what stopped it."}, {"module": "Module 3 - Services & User Management I", "q": "A zombie process won't go away, even with kill -9. What actually removes it?", "choices": ["Its parent reaping it, or the parent exiting so init/systemd adopts and reaps it", "Running kill -9 twice", "Lowering its niceness", "Unmounting /proc"], "correct": 0, "explain": "A zombie has already exited, so there's nothing left to kill. Only its process-table entry remains, waiting for the parent to collect its exit status."}, {"module": "Module 3 - Services & User Management I", "q": "Which crontab line runs a job every Monday at 6:30 AM?", "choices": ["30 6 * * 1", "6 30 * * 1", "30 6 1 * *", "* 6 30 * 1"], "correct": 0, "explain": "The fields are minute, hour, day-of-month, month, day-of-week. Day-of-week 1 is Monday (0 or 7 is Sunday)."}, {"module": "Module 3 - Services & User Management I", "q": "Which crontab line runs a job every 15 minutes?", "choices": ["*/15 * * * *", "15 * * * *", "* */15 * * *", "15 15 * * *"], "correct": 0, "explain": "*/15 in the minute field means every 15th minute. '15 * * * *' runs once an hour, at :15."}, {"module": "Module 3 - Services & User Management I", "q": "What is at now + 2 hours used for?", "choices": ["Scheduling a one-time job two hours from now", "Running a job every two hours", "Delaying the next reboot", "Pausing the shell for two hours"], "correct": 0, "explain": "at is for one-time jobs and cron is for recurring ones. List pending at jobs with atq and remove them with atrm."}, {"module": "Module 3 - Services & User Management I", "q": "How does a line in /etc/crontab differ from a line in a user's crontab -e?", "choices": ["/etc/crontab has an extra field naming the user to run as", "/etc/crontab uses seconds instead of minutes", "/etc/crontab lines can't use * wildcards", "There's no difference"], "correct": 0, "explain": "In the system crontab the sixth field is the username, and the command comes after it."}, {"module": "Module 4 - Services & User Management II", "q": "On Ubuntu, what's the difference between apt update and apt upgrade?", "choices": ["update refreshes the package lists from the repos; upgrade installs newer versions of installed packages", "update installs new versions; upgrade refreshes the lists", "They're identical", "update upgrades the kernel only"], "correct": 0, "explain": "Run update first so apt knows what's available, then upgrade. On RHEL-family systems, dnf upgrade does both in one step."}, {"module": "Module 4 - Services & User Management II", "q": "Which command installs a downloaded .deb file and lets apt pull in its dependencies?", "choices": ["sudo apt install ./tool.deb", "sudo dpkg -i --deps tool.deb", "sudo rpm -i tool.deb", "sudo dnf install tool.deb"], "correct": 0, "explain": "dpkg -i installs the file but won't fetch missing dependencies. apt install with a ./path handles them. The ./ matters."}, {"module": "Module 4 - Services & User Management II", "q": "On Fedora, which command tells you which installed package owns /usr/bin/ssh?", "choices": ["rpm -qf /usr/bin/ssh", "dnf search /usr/bin/ssh", "which ssh", "rpm -i /usr/bin/ssh"], "correct": 0, "explain": "rpm -qf means 'query file'. The Debian equivalent is dpkg -S /usr/bin/ssh."}, {"module": "Module 4 - Services & User Management II", "q": "Which pair are the low-level package tools that apt and dnf sit on top of?", "choices": ["dpkg and rpm", "pip and npm", "yum and zypper", "flatpak and snap"], "correct": 0, "explain": "dpkg and rpm install individual package files. apt and dnf add repositories and dependency resolution on top."}, {"module": "Module 4 - Services & User Management II", "q": "Why do package repositories sign their packages with a GPG key?", "choices": ["So the package manager can verify packages really came from that repo and weren't tampered with", "To compress packages", "To speed up downloads", "To encrypt your system's configuration"], "correct": 0, "explain": "Third-party repos are a supply-chain risk. Only import signing keys from sources you trust."}, {"module": "Module 4 - Services & User Management II", "q": "What is the usual order for building software from source?", "choices": ["./configure → make → sudo make install", "make → ./configure → sudo make install", "sudo make install → make → ./configure", "./configure → sudo make install → make"], "correct": 0, "explain": "configure checks your system and writes the Makefile, make compiles, and make install copies the results into place."}, {"module": "Module 4 - Services & User Management II", "q": "Software installed with make install shows up in apt or dnf and can be removed with apt remove.", "choices": ["True", "False"], "correct": 1, "explain": "The package manager never hears about source installs. Remove them with make uninstall if the project provides it, or by hand.", "tf": true}, {"module": "Module 4 - Services & User Management II", "q": "Several text editors are installed. Which command lets you choose which one the generic 'editor' command runs?", "choices": ["update-alternatives --config editor", "apt install editor", "systemctl set-default editor", "alias editor"], "correct": 0, "explain": "update-alternatives manages the symlinks in /etc/alternatives/ for commands that have several providers (editor, java, python...)."}, {"module": "Module 4 - Services & User Management II", "q": "pip install requests on a recent Ubuntu fails with 'externally-managed-environment'. What's the right fix?", "choices": ["Use a virtual environment (python3 -m venv) or pipx", "Delete the system's python3", "Run chmod 777 on /usr/lib/python3", "Switch to npm install requests"], "correct": 0, "explain": "PEP 668 stops pip from overwriting distro-managed Python packages. Isolated environments avoid that conflict."}, {"module": "Module 4 - Services & User Management II", "q": "Which format is a single file you download, mark executable, and run with no installation?", "choices": ["AppImage", "Flatpak", "RPM", ".deb"], "correct": 0, "explain": "AppImage bundles everything into one runnable file. Flatpak and Snap install sandboxed apps through a runtime."}, {"module": "Module 4 - Services & User Management II", "q": "cargo is to Rust as npm is to which language?", "choices": ["JavaScript (Node.js)", "Python", "Ruby", "Go"], "correct": 0, "explain": "Language package managers: pip for Python, npm for Node.js, gem for Ruby, and cargo for Rust."}, {"module": "Module 4 - Services & User Management II", "q": "When a DHCP client joins a network, which message does it send first?", "choices": ["DHCPDISCOVER", "DHCPOFFER", "DHCPREQUEST", "DHCPACK"], "correct": 0, "explain": "DORA: Discover (client broadcast), Offer (server), Request (client), Acknowledge (server)."}, {"module": "Module 4 - Services & User Management II", "q": "Which TCP port does SMTP use for server-to-server mail transfer?", "choices": ["25", "110", "143", "993"], "correct": 0, "explain": "25 is SMTP relay and 587 is client submission. 110 is POP3, 143 is IMAP, and 993 is IMAP over TLS."}, {"module": "Module 4 - Services & User Management II", "q": "In a typical Linux mail server, what roles do Postfix and Dovecot play?", "choices": ["Postfix sends and relays mail over SMTP; Dovecot serves mailboxes to clients over IMAP/POP3", "Postfix serves IMAP; Dovecot relays SMTP", "Both are web servers", "Both are DNS servers"], "correct": 0, "explain": "Postfix is the mail transfer agent and Dovecot is the IMAP/POP3 server."}, {"module": "Module 4 - Services & User Management II", "q": "A user reads email on a phone and a laptop and wants read status and folders to match on both. Which protocol fits?", "choices": ["IMAP", "POP3", "SMTP", "DHCP"], "correct": 0, "explain": "IMAP keeps mail on the server and syncs state. POP3 usually downloads the mail and removes it from the server."}, {"module": "Module 4 - Services & User Management II", "q": "Which command checks Nginx's configuration for syntax errors before you reload it?", "choices": ["nginx -t", "nginx -s stop", "systemctl daemon-reload", "apachectl -k start"], "correct": 0, "explain": "Always test first: a bad config can stop the reload. Apache's equivalent is apachectl configtest."}, {"module": "Module 4 - Services & User Management II", "q": "On a RHEL-based server, what are Apache's package and service called?", "choices": ["httpd", "apache2", "nginx", "lighttpd"], "correct": 0, "explain": "RHEL family: httpd, with config in /etc/httpd/. Debian family: apache2, with config in /etc/apache2/."}, {"module": "Module 4 - Services & User Management II", "q": "On Debian/Ubuntu, which command enables an Apache site file you created in /etc/apache2/sites-available/?", "choices": ["a2ensite", "a2enmod", "httpd -e", "systemctl enable sites"], "correct": 0, "explain": "a2ensite symlinks the file into sites-enabled/ (a2enmod does the same for modules). Then reload apache2."}, {"module": "Module 4 - Services & User Management II", "q": "Which command shows the time servers chronyd is syncing with and how well each is doing?", "choices": ["chronyc sources", "timedatectl set-ntp false", "hwclock --systohc", "date -s"], "correct": 0, "explain": "chronyc is chrony's control tool. Its configuration is in /etc/chrony.conf, or /etc/chrony/chrony.conf on Debian."}, {"module": "Module 4 - Services & User Management II", "q": "Which DNS server software is configured through /etc/named.conf?", "choices": ["BIND (named)", "Dovecot", "chrony", "Postfix"], "correct": 0, "explain": "BIND's daemon is named, and it's the classic Linux DNS server."}, {"module": "Module 4 - Services & User Management II", "q": "What does systemctl enable --now nginx do?", "choices": ["Enables nginx to start at boot and starts it immediately", "Starts nginx now but not at boot", "Enables nginx at boot but doesn't start it", "Restarts nginx and disables it at boot"], "correct": 0, "explain": "enable alone only affects the next boot, and --now also starts the service right away. disable --now works the same way in reverse."}, {"module": "Module 4 - Services & User Management II", "q": "Where should an administrator put a custom unit file or a full override of a packaged one?", "choices": ["/etc/systemd/system/", "/usr/lib/systemd/system/", "/var/lib/systemd/", "/boot/systemd/"], "correct": 0, "explain": "Files in /etc/systemd/system/ take precedence over the distro's files in /usr/lib/systemd/system/, which package updates overwrite."}, {"module": "Module 4 - Services & User Management II", "q": "What does systemctl edit nginx create?", "choices": ["A drop-in override file in /etc/systemd/system/nginx.service.d/", "A copy of nginx.conf in your home directory", "A new unit called nginx-edit.service", "A backup of the nginx package"], "correct": 0, "explain": "Drop-ins change only the settings you specify and survive package updates, and systemd reloads them for you."}, {"module": "Module 4 - Services & User Management II", "q": "Which command lists only the units that have failed?", "choices": ["systemctl --failed", "systemctl list-timers", "systemctl get-default", "journalctl --list-boots"], "correct": 0, "explain": "systemctl --failed is the same as list-units --state=failed, and it's a good first check after a bad boot."}, {"module": "Module 4 - Services & User Management II", "q": "Boot now takes 90 seconds, and you suspect one slow service. Which command ranks every unit by its startup time so the culprit is at the top?", "choices": ["systemd-analyze blame", "systemctl list-units --all", "journalctl -b", "systemctl status"], "correct": 0, "explain": "blame is a subcommand of systemd-analyze. systemd-analyze time gives the overall kernel/initrd/userspace totals."}, {"module": "Module 4 - Services & User Management II", "q": "What does journalctl -u sshd -f do?", "choices": ["Follows the sshd unit's log live as new entries arrive", "Shows the first lines of the sshd config", "Forces sshd to restart", "Deletes old sshd logs"], "correct": 0, "explain": "-u filters by unit and -f follows the log, like tail -f."}, {"module": "Module 4 - Services & User Management II", "q": "Which command shows only error-priority (and worse) journal messages from the current boot?", "choices": ["journalctl -b -p err", "journalctl -k", "journalctl --vacuum-size=1G", "journalctl -u err"], "correct": 0, "explain": "-b limits output to this boot and -p err filters by priority. -k shows kernel messages only."}, {"module": "Module 4 - Services & User Management II", "q": "By default, which unit does backup.timer activate when it fires?", "choices": ["backup.service", "backup.target", "backup.socket", "cron.service"], "correct": 0, "explain": "A timer activates the service with the same name unless Unit= says otherwise. The timer schedules, and the service does the work."}, {"module": "Module 4 - Services & User Management II", "q": "sysctl -w net.ipv4.ip_forward=1 works, but the setting is gone after a reboot. How do you make it persistent?", "choices": ["Put the setting in a file under /etc/sysctl.d/, then run sysctl --system", "Run sysctl -w twice", "Add it to /etc/fstab", "Put it in ~/.bashrc"], "correct": 0, "explain": "sysctl -w changes only the running kernel. Files in /etc/sysctl.d/ (or /etc/sysctl.conf) are applied at boot."}, {"module": "Module 4 - Services & User Management II", "q": "Which command sets the system hostname permanently?", "choices": ["hostnamectl set-hostname web01", "hostname web01", "echo web01 > /etc/hosts", "nmcli hostname web01 --temp"], "correct": 0, "explain": "hostnamectl writes /etc/hostname and updates the running system. Plain hostname web01 only lasts until reboot."}, {"module": "Module 4 - Services & User Management II", "q": "Which command sets the system time zone?", "choices": ["timedatectl set-timezone America/Chicago", "date --zone America/Chicago", "hwclock --tz America/Chicago", "chronyc timezone America/Chicago"], "correct": 0, "explain": "timedatectl manages the time zone, NTP sync (set-ntp true), and the clock, and timedatectl alone shows the current status."}, {"module": "Module 4 - Services & User Management II", "q": "After systemctl mask foo.service, systemctl start foo.service fails until the unit is unmasked.", "choices": ["True", "False"], "correct": 0, "explain": "Masking links the unit to /dev/null, which blocks manual starts and dependency starts. Disabling only stops it starting at boot.", "tf": true}, {"module": "Module 4 - Services & User Management II", "q": "What's the difference between a container image and a container?", "choices": ["An image is a read-only template; a container is a running (or stopped) instance with its own writable layer", "They're the same thing", "A container is the template; an image is the running copy", "Images only exist on Docker Hub"], "correct": 0, "explain": "You can start many containers from one image, and each gets its own thin writable layer."}, {"module": "Module 4 - Services & User Management II", "q": "docker ps shows nothing, but you're sure the container exists. What's the likely reason?", "choices": ["It's stopped; docker ps lists only running containers, so use docker ps -a", "Docker deleted it automatically", "It's running under a different image name", "You need to run docker pull first"], "correct": 0, "explain": "-a includes exited containers. Then docker logs <name> usually shows why it exited."}, {"module": "Module 4 - Services & User Management II", "q": "What does -d do in docker run -d nginx?", "choices": ["Runs the container detached, in the background", "Deletes the container when it exits", "Enables debug logging", "Sets the DNS server"], "correct": 0, "explain": "--rm deletes the container on exit. -d just returns your prompt while the container keeps running."}, {"module": "Module 4 - Services & User Management II", "q": "In docker run -v pgdata:/var/lib/postgresql/data postgres, what is pgdata?", "choices": ["A named volume managed by Docker", "A folder in your current directory", "An environment variable", "The image tag"], "correct": 0, "explain": "A name with no leading / or ./ is a named volume. A path like /srv/pg is a bind mount to a host directory."}, {"module": "Module 4 - Services & User Management II", "q": "Which Dockerfile instruction copies files from the build context into the image?", "choices": ["COPY", "FROM", "RUN", "EXPOSE"], "correct": 0, "explain": "FROM picks the base image, RUN runs commands at build time, and EXPOSE documents a port."}, {"module": "Module 4 - Services & User Management II", "q": "An image has ENTRYPOINT [\"ping\"] and CMD [\"localhost\"]. What runs when you start it with docker run myimg 8.8.8.8?", "choices": ["ping 8.8.8.8: the run arguments replace CMD, and ENTRYPOINT stays", "8.8.8.8 alone, because the arguments replace everything", "ping localhost, because run arguments are ignored", "An error, because you can't pass arguments"], "correct": 0, "explain": "CMD supplies default arguments that run-time arguments override. ENTRYPOINT is the fixed command (change it with --entrypoint)."}, {"module": "Module 4 - Services & User Management II", "q": "Which command downloads an image without starting a container?", "choices": ["docker pull nginx:1.27", "docker run nginx:1.27", "docker exec nginx:1.27", "docker start nginx:1.27"], "correct": 0, "explain": "Pin a specific tag like 1.27 instead of latest so deployments are reproducible."}, {"module": "Module 4 - Services & User Management II", "q": "What's the difference between docker rm and docker rmi?", "choices": ["docker rm removes containers; docker rmi removes images", "docker rm removes images; docker rmi removes containers", "They're aliases", "docker rmi removes volumes"], "correct": 0, "explain": "A container must be removed before the image it uses can be removed (unless you force it)."}, {"module": "Module 4 - Services & User Management II", "q": "Most docker commands work the same if you type podman instead, because Podman offers a Docker-compatible CLI.", "choices": ["True", "False"], "correct": 0, "explain": "Podman is daemonless and can run rootless, but it keeps the familiar command syntax.", "tf": true}];
+  const MODULE_ORDER = ["Module 1 - System Management", "Module 2 - System Management II", "Module 3 - Services & User Management I", "Module 4 - Services & User Management II"];
+  const MOCK_BLUEPRINT = [11, 15, 12, 12];
+  const STUDY_PAGES = {
+    [MODULE_ORDER[0]]: ['IT251_Study_Page.html', 'Week 1'],
+    [MODULE_ORDER[1]]: ['IT251_Week2_Study_Page.html', 'Week 2'],
+    [MODULE_ORDER[2]]: ['IT251_Week4_Study_Page.html', 'Week 4'],
+    [MODULE_ORDER[3]]: ['IT251_Week5_Study_Page.html', 'Week 5']
+  };
+
+  const modGrid = document.getElementById('modGrid');
+  const qCountInput = document.getElementById('qCount');
+  const countHint = document.getElementById('countHint');
+  const startBtn = document.getElementById('startBtn');
+
+  function selectedModules(){
+    return Array.from(document.querySelectorAll('.module-check:checked')).map(cb => cb.value);
+  }
+  function availableCount(){
+    const sel = selectedModules();
+    return QUESTIONS.filter(q => sel.includes(q.module)).length;
+  }
+  function updateCountHint(){
+    const avail = availableCount();
+    countHint.textContent = avail === 0
+      ? 'Select at least one module'
+      : `of ${avail} available from your selection`;
+    qCountInput.max = String(Math.max(avail, 1));
+    if (avail > 0 && parseInt(qCountInput.value, 10) > avail) qCountInput.value = String(avail);
+    startBtn.disabled = avail === 0;
+  }
+  modGrid.addEventListener('change', updateCountHint);
+  qCountInput.addEventListener('change', () => {
+    const avail = availableCount();
+    let v = parseInt(qCountInput.value, 10);
+    if (isNaN(v) || v < 1) v = 1;
+    if (v > avail) v = avail;
+    qCountInput.value = String(v);
+  });
+  document.getElementById('selectAllBtn').addEventListener('click', () => {
+    document.querySelectorAll('.module-check').forEach(cb => cb.checked = true);
+    updateCountHint();
+  });
+  document.getElementById('selectNoneBtn').addEventListener('click', () => {
+    document.querySelectorAll('.module-check').forEach(cb => cb.checked = false);
+    updateCountHint();
+  });
+  updateCountHint();
+
+  let currentSet = [];
+  let tally = {};
+  let score = 0, answered = 0;
+
+  function shuffledCopy(arr){
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function startTest(){
+    const sel = selectedModules();
+    if (sel.length === 0) return;
+    const n = Math.max(1, parseInt(qCountInput.value, 10) || 1);
+    const pool = QUESTIONS.filter(q => sel.includes(q.module));
+    const set = shuffledCopy(pool).slice(0, Math.min(n, pool.length));
+    const t = {};
+    set.forEach(q => {
+      if (!t[q.module]) t[q.module] = { correct: 0, total: 0 };
+      t[q.module].total++;
+    });
+    beginQuiz(set, t);
+  }
+
+  function startMockMidterm(){
+    document.querySelectorAll('.module-check').forEach(cb => cb.checked = true);
+    updateCountHint();
+    const set = [];
+    const t = {};
+    MODULE_ORDER.forEach((m, i) => {
+      const pool = QUESTIONS.filter(q => q.module === m);
+      const draw = shuffledCopy(pool).slice(0, MOCK_BLUEPRINT[i]);
+      set.push(...draw);
+      t[m] = { correct: 0, total: draw.length };
+    });
+    beginQuiz(shuffledCopy(set), t);
+  }
+
+  function beginQuiz(set, t){
+    currentSet = set;
+    tally = t;
+    score = 0; answered = 0;
+    renderQuiz();
+    updateScore();
+    updateBreakdown();
+    document.getElementById('setup').hidden = true;
+    document.getElementById('quizArea').hidden = false;
+    window.scrollTo({ top: document.getElementById('quizArea').offsetTop - 64, behavior: 'smooth' });
+  }
+
+  function el(tag, cls, text){
+    const e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text !== undefined) e.textContent = text;
+    return e;
+  }
+
+  function renderQuiz(){
+    const quizList = document.getElementById('quizList');
+    quizList.innerHTML = '';
+    currentSet.forEach((item, qi) => {
+      // True/False keeps its fixed order; multiple choice is reshuffled every time.
+      const idx = item.choices.map((_, i) => i);
+      const order = item.tf ? idx : shuffledCopy(idx);
+      const newCorrectPos = order.indexOf(item.correct);
+      const box = el('div', 'quiz-q');
+      box.appendChild(el('span', 'modtag', item.module));
+      const qtext = el('p', 'qtext');
+      qtext.appendChild(el('span', 'qnum', `Q${qi + 1}.`));
+      qtext.appendChild(document.createTextNode(item.tf ? `True or false: ${item.q}` : item.q));
+      box.appendChild(qtext);
+      const choicesEl = el('div', item.tf ? 'choices tf' : 'choices');
+      const explain = el('p', 'explain');
+      order.forEach((origIdx, pos) => {
+        const b = el('button', 'choice', item.choices[origIdx]);
+        b.type = 'button';
+        b.addEventListener('click', () => {
+          if (box.dataset.done) return;
+          box.dataset.done = '1'; answered++;
+          const t = tally[item.module];
+          const right = pos === newCorrectPos;
+          if (right) { score++; t.correct++; }
+          Array.from(choicesEl.children).forEach((c, ci) => {
+            c.disabled = true;
+            if (ci === newCorrectPos) c.classList.add('correct');
+            else if (ci === pos) c.classList.add('incorrect');
+          });
+          explain.textContent = (right ? 'Correct. ' : 'Not quite. ') + item.explain;
+          explain.classList.add('show');
+          updateScore();
+          updateBreakdown();
+        });
+        choicesEl.appendChild(b);
+      });
+      box.appendChild(choicesEl);
+      box.appendChild(explain);
+      quizList.appendChild(box);
+    });
+  }
+
+  function updateScore(){
+    document.getElementById('quizScore').textContent =
+      answered === 0 ? `${currentSet.length} questions — click an answer to check yourself`
+      : `Score: ${score} / ${answered} answered` + (answered === currentSet.length ? ` — done! (${Math.round(100*score/currentSet.length)}%)` : '');
+  }
+
+  function updateBreakdown(){
+    const body = document.getElementById('breakdownBody');
+    body.innerHTML = '';
+    MODULE_ORDER.forEach(m => {
+      if (!tally[m]) return;
+      const tr = document.createElement('tr');
+      tr.appendChild(el('td', '', m));
+      tr.appendChild(el('td', 'num', String(tally[m].correct)));
+      tr.appendChild(el('td', 'num', String(tally[m].total)));
+      const td = el('td', 'review');
+      const a = el('a', '', `${STUDY_PAGES[m][1]} study page →`);
+      a.href = STUDY_PAGES[m][0];
+      td.appendChild(a);
+      tr.appendChild(td);
+      body.appendChild(tr);
+    });
+  }
+
+  function backToSetup(){
+    document.getElementById('quizArea').hidden = true;
+    document.getElementById('setup').hidden = false;
+    window.scrollTo({ top: document.getElementById('setup').offsetTop - 64, behavior: 'smooth' });
+  }
+
+  startBtn.addEventListener('click', startTest);
+  document.getElementById('mockBtn').addEventListener('click', startMockMidterm);
+  document.getElementById('newTestBtn').addEventListener('click', backToSetup);
+  document.getElementById('newTestBtn2').addEventListener('click', backToSetup);
+
+  const backToTop = document.getElementById('backToTop');
+  function toggleBackToTop(){ backToTop.classList.toggle('show', window.scrollY > 480); }
+  window.addEventListener('scroll', toggleBackToTop, { passive: true });
+  toggleBackToTop();
+  backToTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+</script>
