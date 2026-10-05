@@ -1,0 +1,957 @@
+<title>Midterm Study Guide</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --bg:#f2f6f4;
+    --surface:#ffffff;
+    --surface-2:#e6efec;
+    --text:#0c1a15;
+    --muted:#51655d;
+    --border:#cddcd5;
+    --accent:#0f7a5c;
+    --accent-soft:#dcf1e7;
+    --accent-2:#0e7490;
+    --accent-2-soft:#dbeff4;
+    --danger:#b3261e;
+    --danger-soft:#f8dcd9;
+    --correct:#0f7a5c;
+    --correct-soft:#dcf1e7;
+    --shadow: 0 1px 2px rgba(12,26,21,.06), 0 8px 24px rgba(12,26,21,.07);
+    --mono:'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    --sans:'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0a0f0d; --surface:#0f1613; --surface-2:#131c18;
+      --text:#d9f5e8; --muted:#82a99a; --border:#1e2b26;
+      --accent:#3ddc97; --accent-soft:#123024;
+      --accent-2:#22d3ee; --accent-2-soft:#0c2b30;
+      --danger:#ff7a68; --danger-soft:#33150f;
+      --correct:#3ddc97; --correct-soft:#123024;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 12px 32px rgba(0,0,0,.45);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0a0f0d; --surface:#0f1613; --surface-2:#131c18;
+    --text:#d9f5e8; --muted:#82a99a; --border:#1e2b26;
+    --accent:#3ddc97; --accent-soft:#123024;
+    --accent-2:#22d3ee; --accent-2-soft:#0c2b30;
+    --danger:#ff7a68; --danger-soft:#33150f;
+    --correct:#3ddc97; --correct-soft:#123024;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 12px 32px rgba(0,0,0,.45);
+  }
+
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto;} *{animation-duration:.001ms !important; transition-duration:.001ms !important;} }
+  body{ margin:0; background:var(--bg); color:var(--text); font-family:var(--sans); line-height:1.55; -webkit-font-smoothing:antialiased; }
+  a{ color:var(--accent-2); }
+  ::selection{ background:var(--accent-soft); }
+  .wrap{ max-width:1080px; margin:0 auto; padding:0 24px; }
+
+  header.hero{
+    border-bottom:1px solid var(--border);
+    background:repeating-linear-gradient(180deg, var(--surface-2) 0 1px, var(--bg) 1px 28px);
+    padding:56px 0 40px;
+  }
+  .termbar{ display:flex; gap:6px; margin-bottom:20px; }
+  .termbar span{ width:11px; height:11px; border-radius:50%; }
+  .termbar span:nth-child(1){ background:#ff5f57; }
+  .termbar span:nth-child(2){ background:#febc2e; }
+  .termbar span:nth-child(3){ background:#28c840; }
+  .eyebrow{ font-family:var(--mono); font-size:.8rem; color:var(--accent); }
+  .eyebrow::before{ content:"$ "; opacity:.7; }
+  h1{ font-family:var(--mono); font-weight:700; font-size:clamp(2rem,4vw,3rem); line-height:1.08; margin:.4em 0 .3em; text-wrap:balance; letter-spacing:-.01em; }
+  h1 .cursor{ display:inline-block; width:.5ch; background:var(--accent); margin-left:.15em; animation:blink 1.1s steps(1) infinite; }
+  @keyframes blink{ 50%{ opacity:0; } }
+  .hero p.lede{ max-width:62ch; font-size:1.1rem; color:var(--muted); margin:0 0 1.6em; }
+  .factrow{ display:flex; flex-wrap:wrap; gap:10px; }
+  .fact{ font-family:var(--mono); font-size:.78rem; background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:.5em .8em; display:flex; gap:.5em; }
+  .fact b{ color:var(--muted); font-weight:500; text-transform:uppercase; letter-spacing:.06em; font-size:.72rem; }
+
+  nav.index{ position:sticky; top:0; z-index:20; background:color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter:blur(8px); border-bottom:1px solid var(--border); }
+  nav.index .wrap{ display:flex; gap:4px; overflow-x:auto; padding:10px 24px; scrollbar-width:none; }
+  nav.index .wrap::-webkit-scrollbar{ display:none; }
+  nav.index a{ font-family:var(--mono); font-size:.82rem; text-decoration:none; color:var(--muted); padding:.5em .9em; border-radius:6px; white-space:nowrap; border:1px solid transparent; }
+  nav.index a:hover{ color:var(--text); border-color:var(--border); background:var(--surface); }
+  nav.index a.toc-link{ font-weight:600; color:var(--accent); border-right:1px solid var(--border); border-radius:0; margin-right:8px; padding-right:16px; }
+  nav.index a.toc-link:hover{ color:var(--accent); background:transparent; border-right-color:var(--border); }
+  nav.index a:not(.toc-link)::before{ content:'#'; opacity:.5; margin-right:.3em; }
+
+  .back-to-top{ position:fixed; bottom:22px; right:22px; z-index:40; width:46px; height:46px;
+    background:var(--surface); border:1px solid var(--border); border-radius:10px; box-shadow:var(--shadow);
+    font-family:var(--mono); font-size:1.15rem; color:var(--accent); line-height:1;
+    display:flex; align-items:center; justify-content:center; padding:0; cursor:pointer; text-decoration:none;
+    opacity:0; visibility:hidden; transform:translateY(10px);
+    transition:opacity .25s ease, transform .25s ease, visibility 0s .25s; }
+  .back-to-top.show{ opacity:1; visibility:visible; transform:translateY(0); transition:opacity .25s ease, transform .25s ease, visibility 0s; }
+  .back-to-top:hover{ background:var(--accent-soft); border-color:var(--accent); }
+  .back-to-top:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+  @media print{ nav.index, .back-to-top{ display:none; } }
+
+  section{ padding:52px 0; border-bottom:1px solid var(--border); }
+  section:last-of-type{ border-bottom:none; }
+  .section-head{ margin-bottom:28px; max-width:70ch; }
+  .kicker{ font-family:var(--mono); font-size:.75rem; letter-spacing:.1em; text-transform:uppercase; color:var(--accent-2); margin:0 0 .5em; }
+  .kicker::before{ content:"// "; opacity:.6; }
+  h2{ font-family:var(--mono); font-size:clamp(1.4rem,2.4vw,1.9rem); margin:0 0 .3em; text-wrap:balance; }
+  h3{ font-family:var(--mono); font-size:1.05rem; margin:1.6em 0 .5em; }
+  .section-head p{ color:var(--muted); margin:.4em 0 0; }
+
+  .obj-list{ display:grid; gap:12px; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); list-style:none; margin:0; padding:0; }
+  .obj-list li{ background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:16px 18px; box-shadow:var(--shadow); font-size:.95rem; }
+  .obj-list li::before{ content:"$"; color:var(--accent); font-family:var(--mono); margin-right:.6em; font-weight:700; }
+
+  .example{ background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px 22px; margin-bottom:16px; box-shadow:var(--shadow); }
+  .example h3{ font-family:var(--mono); font-size:1.02rem; margin:0 0 8px; }
+  .example .tag{ display:inline-block; font-family:var(--mono); font-size:.68rem; text-transform:uppercase; letter-spacing:.08em; color:var(--accent-2); background:var(--accent-2-soft); border-radius:5px; padding:.25em .6em; margin-bottom:10px; }
+  code.inline{ font-family:var(--mono); background:var(--surface-2); border-radius:4px; padding:.1em .4em; font-size:.92em; }
+  pre.term{ font-family:var(--mono); font-size:.85rem; background:var(--surface-2); border:1px solid var(--border); border-radius:8px; padding:12px 14px; overflow-x:auto; margin:10px 0; white-space:pre; }
+  details.solution{ margin-top:12px; }
+  details.solution summary{ cursor:pointer; font-family:var(--mono); font-size:.82rem; color:var(--accent); list-style:none; display:inline-flex; align-items:center; gap:.4em; }
+  details.solution summary::-webkit-details-marker{ display:none; }
+  details.solution summary::before{ content:"▸"; transition:transform .15s; }
+  details.solution[open] summary::before{ transform:rotate(90deg); }
+  details.solution .solbody{ margin-top:10px; padding:14px 16px; background:var(--surface-2); border-radius:8px; font-size:.92rem; }
+
+  table.blocks{ width:100%; border-collapse:collapse; font-size:.9rem; margin:10px 0 24px; }
+  table.blocks caption{ caption-side:top; text-align:left; font-family:var(--mono); font-size:.75rem; text-transform:uppercase; letter-spacing:.08em; color:var(--accent-2); margin-bottom:.5em; }
+  table.blocks th, table.blocks td{ border:1px solid var(--border); padding:.55em .8em; text-align:left; vertical-align:top; }
+  table.blocks th{ background:var(--surface-2); font-family:var(--mono); font-size:.78rem; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); white-space:nowrap; }
+  table.blocks td:first-child{ font-family:var(--mono); white-space:nowrap; color:var(--accent); }
+  table.blocks tbody tr:nth-child(odd){ background:var(--surface); }
+  table.blocks tbody tr:nth-child(even){ background:color-mix(in srgb, var(--surface) 60%, var(--surface-2)); }
+
+  .toolbar{ display:flex; gap:10px; align-items:center; margin-bottom:16px; flex-wrap:wrap; }
+  button.btn{ font-family:var(--mono); font-size:.82rem; background:var(--surface); color:var(--text); border:1px solid var(--border); border-radius:7px; padding:.6em 1em; cursor:pointer; }
+  button.btn:hover{ border-color:var(--accent); color:var(--accent); }
+  button.btn:focus-visible, a:focus-visible, input:focus-visible, .checklist li:focus-within{ outline:2px solid var(--accent); outline-offset:2px; }
+  #lab1Progress, #lab2Progress, #practicalProgress{ font-family:var(--mono); font-size:.8rem; color:var(--muted); }
+
+  ul.checklist{ list-style:none; margin:0 0 24px; padding:0; display:grid; gap:8px; }
+  ul.checklist li{ background:var(--surface); border:1px solid var(--border); border-radius:9px; box-shadow:var(--shadow); }
+  ul.checklist label{ display:flex; align-items:flex-start; gap:.7em; padding:.7em .9em; cursor:pointer; font-size:.94rem; }
+  ul.checklist input[type="checkbox"]{ margin-top:.25em; width:16px; height:16px; accent-color:var(--accent); flex:0 0 auto; }
+  ul.checklist li.checked label{ color:var(--muted); text-decoration:line-through; text-decoration-color:var(--accent-2); }
+  ul.checklist li.checked{ border-color:var(--accent-2); }
+
+  #glossarySearch{ width:100%; max-width:420px; font-family:var(--sans); font-size:.95rem; padding:.7em .9em; border-radius:8px; border:1px solid var(--border); background:var(--surface); color:var(--text); margin-bottom:16px; }
+  .alpha-nav{ display:flex; flex-wrap:wrap; gap:4px; margin-bottom:24px; }
+  .alpha-nav a{ font-family:var(--mono); font-size:.78rem; width:1.9em; height:1.9em; display:flex; align-items:center; justify-content:center; border:1px solid var(--border); border-radius:5px; text-decoration:none; color:var(--muted); }
+  .alpha-nav a.has{ color:var(--text); }
+  .alpha-nav a.has:hover{ border-color:var(--accent); color:var(--accent); }
+  .glossary-letter{ font-family:var(--mono); color:var(--accent); font-size:1.1rem; margin:22px 0 8px; }
+  dl.glossary{ margin:0; }
+  dl.glossary .gitem{ border-top:1px solid var(--border); padding:12px 0; }
+  dl.glossary dt{ font-family:var(--mono); font-weight:600; }
+  dl.glossary dd{ margin:.3em 0 0; color:var(--muted); font-size:.92rem; }
+  .gitem.hidden{ display:none; }
+
+  .callout{ border-left:3px solid var(--accent); background:var(--accent-soft); border-radius:0 8px 8px 0; padding:14px 18px; margin:10px 0 24px; font-size:.92rem; }
+  .callout b{ font-family:var(--mono); }
+
+  footer{ padding:32px 0 60px; }
+  footer p{ color:var(--muted); font-size:.85rem; font-family:var(--mono); }
+  .todo{ border:1.5px dashed var(--muted); border-radius:10px; padding:12px 16px; margin:12px 0 18px; color:var(--muted); font-size:.92rem; background:transparent; }
+  .todo b{ font-family:var(--mono); letter-spacing:.04em; }
+  .todo-inline{ color:var(--muted); font-style:italic; border-bottom:1.5px dashed var(--muted); }
+  #quickref table.blocks td:first-child{ white-space:normal; }
+</style>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="termbar"><span></span><span></span><span></span></div>
+    <p class="eyebrow">IT251 · Week 8 · Midterm</p>
+    <h1>Midterm Study Guide<span class="cursor">&nbsp;</span></h1>
+    <p class="lede">The written midterm covers Ascend Modules 1&ndash;4, so this guide does too: the key facts, the commonly confused commands, and practice scenarios for each module, plus a quick-reference sheet and a one-week study plan.</p>
+    <div class="factrow">
+      <span class="fact"><b>8.1</b> Written exam in Ascend</span>
+      <span class="fact"><b>Covers</b> Modules 1&ndash;4</span>
+    </div>
+  </div>
+</header>
+
+<nav class="index" aria-label="Section index">
+  <div class="wrap">
+    <a href="index.html" class="toc-link">&larr; Table of Contents</a>
+    <a href="#overview">Overview</a>
+    <a href="#format">Exam Format</a>
+    <a href="#plan">Study Plan</a>
+    <a href="#module1">Module 1</a>
+    <a href="#module2">Module 2</a>
+    <a href="#module3">Module 3</a>
+    <a href="#module4">Module 4</a>
+    <a href="#practice">Practice Exam</a>
+    <a href="#quickref">Quick Reference</a>
+  </div>
+</nav>
+
+<main class="wrap">
+
+  <section id="overview">
+    <div class="section-head">
+      <p class="kicker">Start here</p>
+      <h2>How to use this guide</h2>
+      <p>The written midterm is taken in Ascend and covers the same four modules as your Ascend Quizzes 1&ndash;4. Each module below follows the same pattern: the topics, the key facts grouped by topic, the pairs people mix up, and a few practice scenarios.</p>
+    </div>
+    <div class="callout"><b>Ascend is the source.</b> This page condenses Ascend Modules 1&ndash;4. When a fact here doesn't make sense, go back to that module's reading in Ascend first.</div>
+    <ul class="obj-list">
+      <li><strong>Find your gaps:</strong> retake each Ascend module quiz cold, before rereading anything</li>
+      <li><strong>Fix them:</strong> use that module's section below, then the Ascend reading for anything still fuzzy</li>
+      <li><strong>Test yourself:</strong> the <a href="IT251_PracticeMidterm.html">practice midterm</a> drills one module at a time or runs a 50-question mock</li>
+    </ul>
+  </section>
+
+  <section id="format">
+    <div class="section-head">
+      <p class="kicker">Week 8</p>
+      <h2>What the written exam looks like</h2>
+    </div>
+    <table class="blocks">
+      <caption>8.1 — Written exam</caption>
+      <thead><tr><th>Detail</th><th>What to expect</th></tr></thead>
+      <tbody>
+        <tr><td>Scope</td><td>Ascend Modules 1&ndash;4</td></tr>
+        <tr><td>Where it's taken</td><td>Ascend, the same platform as your module readings and quizzes</td></tr>
+        <tr><td>Question count &amp; types</td><td>Your instructor will confirm in class</td></tr>
+        <tr><td>Time limit</td><td>Your instructor will confirm in class</td></tr>
+        <tr><td>Allowed materials</td><td>Your instructor will confirm in class</td></tr>
+        <tr><td>Weight in the course grade</td><td>Your instructor will confirm in class</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="plan">
+    <div class="section-head">
+      <p class="kicker">One week out</p>
+      <h2>Seven-day study plan</h2>
+      <p>One module per day, then review and a full mock. Each module day starts with that Ascend quiz <em>cold</em>, before rereading anything, so you spend your time on what you actually missed.</p>
+    </div>
+    <table class="blocks">
+      <caption>Countdown to the midterm</caption>
+      <thead><tr><th>Day</th><th>Focus</th><th>Do this</th></tr></thead>
+      <tbody>
+        <tr><td>7 days out</td><td>Module 1</td><td>Ascend Quiz 1 cold → <a href="#module1">Module 1 section</a> → Ascend reading for anything you missed</td></tr>
+        <tr><td>6 days out</td><td>Module 2</td><td>Ascend Quiz 2 cold → <a href="#module2">Module 2 section</a> → Ascend reading for misses</td></tr>
+        <tr><td>5 days out</td><td>Module 3</td><td>Ascend Quiz 3 cold → <a href="#module3">Module 3 section</a> → Ascend reading for misses</td></tr>
+        <tr><td>4 days out</td><td>Module 4</td><td>Ascend Quiz 4 cold → <a href="#module4">Module 4 section</a> → Ascend reading for misses</td></tr>
+        <tr><td>3 days out</td><td>Weakest modules</td><td><a href="IT251_PracticeMidterm.html">Practice midterm</a>, one module at a time, starting with your lowest quiz score</td></tr>
+        <tr><td>2 days out</td><td>Full mock</td><td>Practice midterm → <b>OH, I know 1&ndash;4</b> (50 questions). Note every miss and look each one up</td></tr>
+        <tr><td>1 day out</td><td>Last look</td><td>Only the "commonly confused" tables and the <a href="#quickref">quick reference</a>. Then sleep</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="module1">
+    <div class="section-head">
+      <p class="kicker">Module 1 · Ascend</p>
+      <h2>System Management</h2>
+    </div>
+    <h3>Topics</h3>
+    <ul class="obj-list">
+      <li>Linux basics: boot process, FHS, distros, licensing, CPU architectures, GUI stack</li>
+      <li>Kernel modules and initramfs</li>
+      <li>Hardware detection and monitoring</li>
+      <li>Storage: LVM, filesystems, mounting, RAID</li>
+    </ul>
+    <h3>Key facts</h3>
+    <table class="blocks">
+      <caption>Boot process</caption>
+      <thead><tr><th>Know this</th><th>What it means</th></tr></thead>
+      <tbody>
+        <tr><td>Boot order</td><td>Firmware (BIOS/UEFI) → bootloader (GRUB2) loads the kernel → initramfs/initrd → real root filesystem → systemd</td></tr>
+        <tr><td>initrd / initramfs</td><td>A temporary root filesystem with the drivers needed to mount the real root. If boot fails because a driver is missing, suspect the initramfs. It never holds user data</td></tr>
+        <tr><td>GRUB config</td><td>Change <code class="inline">/etc/default/grub</code>, then regenerate. Never edit <code class="inline">grub.cfg</code> by hand: it gets overwritten</td></tr>
+        <tr><td>Regenerate GRUB</td><td>RHEL/Fedora: <code class="inline">sudo grub2-mkconfig -o /boot/grub2/grub.cfg</code> · Debian/Ubuntu: <code class="inline">sudo update-grub</code>. Also needed if a new kernel doesn't show up in the menu</td></tr>
+        <tr><td>Build initramfs</td><td><code class="inline">dracut</code> (RHEL/Fedora; replaced the legacy <code class="inline">mkinitrd</code>) · <code class="inline">update-initramfs -u</code> (Debian/Ubuntu)</td></tr>
+        <tr><td>Look inside initramfs</td><td><code class="inline">lsinitrd</code> (dracut systems) · <code class="inline">lsinitramfs</code> (Debian/Ubuntu)</td></tr>
+        <tr><td>PXE</td><td>Network boot: machines pull their boot image from a server. Used to deploy many workstations at once</td></tr>
+      </tbody>
+    </table>
+    <table class="blocks">
+      <caption>Filesystem Hierarchy Standard</caption>
+      <thead><tr><th>Know this</th><th>What it means</th></tr></thead>
+      <tbody>
+        <tr><td>Why FHS</td><td>The same directory layout on every distro, so tools and admins know where things live</td></tr>
+        <tr><td><code class="inline">/etc</code></td><td>System-wide configuration files</td></tr>
+        <tr><td><code class="inline">/boot</code></td><td>Kernel images, initramfs, bootloader files. First place to look when a system won't boot</td></tr>
+        <tr><td><code class="inline">/var</code></td><td>Variable data that changes constantly: logs, spools, caches (not static config)</td></tr>
+        <tr><td><code class="inline">/tmp</code></td><td>Temporary files, usually cleared on reboot</td></tr>
+        <tr><td><code class="inline">/sbin</code></td><td>System binaries meant for root (on many modern distros it's a link into /usr/sbin)</td></tr>
+        <tr><td><code class="inline">/proc</code> · <code class="inline">/sys</code></td><td>Virtual filesystems the kernel generates: process/kernel info and device/driver info</td></tr>
+      </tbody>
+    </table>
+    <table class="blocks">
+      <caption>Distros, licensing, hardware platforms, GUI</caption>
+      <thead><tr><th>Know this</th><th>What it means</th></tr></thead>
+      <tbody>
+        <tr><td>Package families</td><td>Debian/Ubuntu: <code class="inline">apt</code> + <code class="inline">dpkg</code> (.deb) · RHEL/Fedora: <code class="inline">dnf</code> + <code class="inline">rpm</code> (.rpm)</td></tr>
+        <tr><td>GPL</td><td>Copyleft: if you distribute a modified version, you must release the source under the GPL. Internal-only use doesn't trigger this</td></tr>
+        <tr><td>Permissive vs. proprietary</td><td>Permissive licenses (MIT, BSD, Apache) allow closed derivatives. Proprietary software keeps its source closed</td></tr>
+        <tr><td>RISC-V</td><td>Open, royalty-free instruction set. Anyone can build or use it without a license fee</td></tr>
+        <tr><td>x86 vs. x86-64</td><td>32-bit x86 can address about 4 GB of RAM; x86-64 (amd64) removes that limit. ARM is common in mobile, embedded, and cloud</td></tr>
+        <tr><td>Wayland vs. X11</td><td>Wayland is the modern display protocol: simpler, better isolation between apps, better performance. X11 (X Server) is the legacy one</td></tr>
+        <tr><td>Display managers</td><td>The graphical login screen. GDM goes with GNOME; SDDM with KDE; LightDM is a lightweight option</td></tr>
+      </tbody>
+    </table>
+    <table class="blocks">
+      <caption>Kernel modules</caption>
+      <thead><tr><th>Know this</th><th>What it means</th></tr></thead>
+      <tbody>
+        <tr><td><code class="inline">lsmod</code></td><td>List loaded modules</td></tr>
+        <tr><td><code class="inline">modinfo name</code></td><td>Module details: description, file, parameters, dependencies</td></tr>
+        <tr><td><code class="inline">modprobe name</code></td><td>Load a module <em>and</em> its dependencies. <code class="inline">modprobe -r</code> unloads it and unused dependencies</td></tr>
+        <tr><td><code class="inline">insmod</code> · <code class="inline">rmmod</code></td><td>Low-level: load / remove one module file with no dependency handling</td></tr>
+        <tr><td><code class="inline">depmod -a</code></td><td>Rebuild the dependency map. Run it after manually installing or compiling a module</td></tr>
+        <tr><td><code class="inline">/lib/modules/$(uname -r)/</code></td><td>Where a kernel's modules and dependency files (modules.dep) live</td></tr>
+        <tr><td>Blacklisting</td><td>Stop a module loading with a <code class="inline">blacklist name</code> line in <code class="inline">/etc/modprobe.d/*.conf</code></td></tr>
+      </tbody>
+    </table>
+    <table class="blocks">
+      <caption>Hardware tools</caption>
+      <thead><tr><th>Know this</th><th>What it means</th></tr></thead>
+      <tbody>
+        <tr><td><code class="inline">dmesg</code></td><td>Kernel ring buffer: what hardware the kernel detected at boot and driver messages. First check when a device seems missing</td></tr>
+        <tr><td><code class="inline">lscpu</code> · <code class="inline">lspci</code> · <code class="inline">lsusb</code></td><td>CPU architecture and cores · PCI devices with vendor IDs · USB devices with IDs</td></tr>
+        <tr><td><code class="inline">lshw</code></td><td>Full hardware hierarchy (run as root for complete detail)</td></tr>
+        <tr><td><code class="inline">dmidecode</code></td><td>Reads firmware (SMBIOS/DMI) tables: memory size, speed, part numbers (<code class="inline">dmidecode -t memory</code>), serial numbers</td></tr>
+        <tr><td><code class="inline">ipmitool</code></td><td>Talks to the server's IPMI/BMC controller: sensors, power, out-of-band management</td></tr>
+        <tr><td>lm_sensors</td><td>Temperatures, fan speeds, voltages from the OS. Run <code class="inline">sensors-detect</code> once, then <code class="inline">sensors</code></td></tr>
+        <tr><td><code class="inline">nvtop</code></td><td>Live GPU usage, memory, and temperature (top for GPUs)</td></tr>
+      </tbody>
+    </table>
+    <table class="blocks">
+      <caption>Storage</caption>
+      <thead><tr><th>Know this</th><th>What it means</th></tr></thead>
+      <tbody>
+        <tr><td>LVM layers</td><td>Physical volume (<code class="inline">pvcreate</code>) → volume group, the pool (<code class="inline">vgcreate</code>) → logical volume (<code class="inline">lvcreate</code>). LVs can span disks and be resized online</td></tr>
+        <tr><td>LVM views</td><td><code class="inline">pvs</code> · <code class="inline">vgs</code> · <code class="inline">lvs</code>: short tables; <code class="inline">pvdisplay</code>/<code class="inline">vgdisplay</code>/<code class="inline">lvdisplay</code>: detailed</td></tr>
+        <tr><td>LVM operations</td><td><code class="inline">vgchange -ay vg</code> activates all LVs in a VG · <code class="inline">vgexport</code>/<code class="inline">vgimport</code> move a VG's disks to another host</td></tr>
+        <tr><td>Growing</td><td>Partition: <code class="inline">growpart</code> (common on cloud VMs) → LV: <code class="inline">lvextend</code> → filesystem: <code class="inline">resize2fs</code> (ext4) or <code class="inline">xfs_growfs</code> (XFS). <code class="inline">lvextend -r</code> does the last two in one step</td></tr>
+        <tr><td>XFS vs. ext4</td><td>XFS grows online but can never shrink. ext4 can grow, and shrink while unmounted. Btrfs adds snapshots and transparent compression</td></tr>
+        <tr><td><code class="inline">lsblk</code> · <code class="inline">blkid</code></td><td>Tree of disks, partitions, LVM · UUIDs and filesystem types</td></tr>
+        <tr><td><code class="inline">df -h</code> · <code class="inline">du -sh</code></td><td>Free space per mounted filesystem · size of a directory. <code class="inline">du -sh /var/*</code> finds what's filling /var</td></tr>
+        <tr><td><code class="inline">/etc/fstab</code></td><td>What mounts at boot and with which options. Test edits with <code class="inline">mount -a</code>. <code class="inline">/proc/mounts</code> is the kernel's live view of what's mounted</td></tr>
+        <tr><td>Mount options</td><td><code class="inline">noatime</code> skip access-time writes (faster) · <code class="inline">noexec</code> no running binaries · <code class="inline">nosuid</code> ignore setuid bits · <code class="inline">nodev</code> ignore device files</td></tr>
+        <tr><td><code class="inline">fsck</code></td><td>Checks and repairs a filesystem. Only run it on an unmounted filesystem</td></tr>
+        <tr><td>Inodes</td><td>Each file's metadata and pointers to its data. The <em>name</em> lives in the directory entry, not the inode. <code class="inline">df -i</code> shows inode usage</td></tr>
+        <tr><td>Software RAID</td><td><code class="inline">mdadm --detail /dev/md0</code> array status · <code class="inline">cat /proc/mdstat</code> live status and rebuild progress</td></tr>
+        <tr><td>Network filesystems</td><td>NFS (Linux/Unix) · SMB/CIFS (Windows shares; Samba on Linux; SMB3 adds encryption)</td></tr>
+        <tr><td><code class="inline">fio</code></td><td>Storage benchmark: IOPS, throughput, latency with configurable workloads</td></tr>
+      </tbody>
+    </table>
+    <h3>Commonly confused</h3>
+    <table class="blocks">
+      <thead><tr><th>This</th><th>vs. this</th><th>The difference</th></tr></thead>
+      <tbody>
+        <tr><td><code class="inline">modprobe</code></td><td><code class="inline">insmod</code></td><td>Loads by name and pulls in dependencies vs. loads a single .ko file with no dependency handling</td></tr>
+        <tr><td><code class="inline">modprobe -r</code></td><td><code class="inline">rmmod</code></td><td>Removes a module and its now-unused dependencies vs. removes just that one module</td></tr>
+        <tr><td><code class="inline">dracut</code></td><td><code class="inline">mkinitrd</code></td><td>Current initramfs builder on RHEL/Fedora vs. the legacy tool it replaced</td></tr>
+        <tr><td><code class="inline">/etc/default/grub</code></td><td><code class="inline">grub.cfg</code></td><td>The file you edit vs. the generated file you rebuild from it (grub2-mkconfig / update-grub)</td></tr>
+        <tr><td><code class="inline">resize2fs</code></td><td><code class="inline">xfs_growfs</code></td><td>Resize ext4 (grow or shrink) vs. grow XFS (no shrinking, ever)</td></tr>
+        <tr><td><code class="inline">df</code></td><td><code class="inline">du</code></td><td>Free and used space per filesystem vs. how much space a directory tree uses</td></tr>
+        <tr><td><code class="inline">dmidecode</code></td><td><code class="inline">lshw</code></td><td>Firmware tables (RAM part numbers, serials) vs. a full tree of detected hardware</td></tr>
+        <tr><td>GPL</td><td>Proprietary</td><td>Modified versions you distribute must stay open source vs. source stays closed</td></tr>
+      </tbody>
+    </table>
+    <h3>Practice</h3>
+    <p>Try each one before you open the answer.</p>
+    <div class="example">
+      <span class="tag">Boot</span>
+      <h3>Q1. New kernel, same old menu</h3>
+      <p>After a kernel update on a Fedora box, reboot shows only the previous kernel in the GRUB menu. What do you run?</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <p>Regenerate the GRUB config: <code class="inline">sudo grub2-mkconfig -o /boot/grub2/grub.cfg</code> (<code class="inline">sudo update-grub</code> on Debian/Ubuntu). GRUB only knows about kernels listed in grub.cfg.</p>
+        </div>
+      </details>
+    </div>
+    <div class="example">
+      <span class="tag">Kernel modules</span>
+      <h3>Q2. The module you built yourself</h3>
+      <p>You copied a freshly compiled driver into <code class="inline">/lib/modules/$(uname -r)/extra/</code>. <code class="inline">modprobe mydriver</code> says it can't find it. What's the missing step?</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <p><code class="inline">sudo depmod -a</code>. modprobe looks modules up in the dependency map (modules.dep), and that map doesn't know about the new file until depmod rebuilds it.</p>
+        </div>
+      </details>
+    </div>
+    <div class="example">
+      <span class="tag">Hardware</span>
+      <h3>Q3. Is it plugged in, or just not loaded?</h3>
+      <p>A new network card doesn't appear in <code class="inline">ip link</code>. Which two commands tell you whether the hardware was detected at all, and whether a driver claimed it?</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <p><code class="inline">lspci</code> (or <code class="inline">lspci -k</code>, which also shows the driver in use) to see if the card is on the bus, and <code class="inline">dmesg</code> to read what the kernel said about it at boot.</p>
+        </div>
+      </details>
+    </div>
+    <div class="example">
+      <span class="tag">Storage</span>
+      <h3>Q4. Two steps, not one</h3>
+      <p>You ran <code class="inline">lvextend -L +10G /dev/vg0/home</code>. <code class="inline">lvs</code> shows the bigger size, but <code class="inline">df -h /home</code> hasn't changed. The filesystem is XFS. What now, and what should you have run instead?</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <p><code class="inline">sudo xfs_growfs /home</code> grows the filesystem into the new space. Next time, <code class="inline">lvextend -r</code> resizes the LV and the filesystem together.</p>
+        </div>
+      </details>
+    </div>
+    <div class="example">
+      <span class="tag">Storage</span>
+      <h3>Q5. Hardening a data partition</h3>
+      <p>A shared upload partition is mounted at <code class="inline">/srv/uploads</code>. Nobody should be able to run programs from it or use setuid files there. Which fstab options do you add?</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <p><code class="inline">noexec,nosuid</code> (add <code class="inline">nodev</code> too, so device files there are ignored). Remount with <code class="inline">sudo mount -o remount /srv/uploads</code> and check <code class="inline">/proc/mounts</code>.</p>
+        </div>
+      </details>
+    </div>
+    <p>Back in Ascend: Module 1 readings and Quiz 1 · On this site: <a href="IT251_Study_Page.html">Week 1 Study Page &rarr;</a> · <a href="IT251_Week1_Deep_Dive.html">Week 1 Deep Dive &rarr;</a></p>
+  </section>
+
+  <section id="module2">
+    <div class="section-head">
+      <p class="kicker">Module 2 · Ascend</p>
+      <h2>System Management II</h2>
+    </div>
+    <h3>Topics</h3>
+    <ul class="obj-list">
+      <li>Network configuration and troubleshooting tools</li>
+      <li>The shell: variables, startup files, redirection, text tools</li>
+      <li>Backup, archiving, and compression</li>
+      <li>Virtualization: KVM/QEMU, disk images, VM networking</li>
+    </ul>
+    <h3>Key facts</h3>
+    <table class="blocks">
+      <caption>Name resolution and network config</caption>
+      <thead><tr><th>Know this</th><th>What it means</th></tr></thead>
+      <tbody>
+        <tr><td><code class="inline">/etc/hosts</code></td><td>Static name-to-IP entries. Usually checked before DNS, so an entry here overrides DNS</td></tr>
+        <tr><td><code class="inline">/etc/resolv.conf</code></td><td>Which DNS servers to ask</td></tr>
+        <tr><td><code class="inline">/etc/nsswitch.conf</code></td><td>The lookup order (e.g. <code class="inline">hosts: files dns</code>). If /etc/hosts works but DNS doesn't (or the reverse), check here</td></tr>
+        <tr><td><code class="inline">nmcli</code></td><td>NetworkManager's CLI. Changes saved to a connection profile persist across reboots</td></tr>
+        <tr><td>Netplan</td><td>Ubuntu's YAML network config in <code class="inline">/etc/netplan/</code>. <code class="inline">netplan apply</code> applies it (no undo) · <code class="inline">netplan try</code> applies it and rolls back unless you confirm · <code class="inline">netplan status</code> shows current state</td></tr>
+        <tr><td><code class="inline">hostnamectl</code></td><td>View or set the hostname</td></tr>
+        <tr><td><code class="inline">systemd-resolved</code></td><td>Local DNS resolver/cache on many systems. <code class="inline">resolvectl flush-caches</code> clears its cache; if the service stops, name resolution breaks</td></tr>
+      </tbody>
+    </table>
+    <table class="blocks">
+      <caption>Network tools</caption>
+      <thead><tr><th>Know this</th><th>What it means</th></tr></thead>
+      <tbody>
+        <tr><td><code class="inline">ping</code> · <code class="inline">ping6</code></td><td>Reachability using ICMP. ping6 is the IPv6 version</td></tr>
+        <tr><td><code class="inline">ss -tuln</code></td><td>Listening TCP/UDP ports (numeric). Add <code class="inline">-p</code> for the owning process. Replaces netstat</td></tr>
+        <tr><td><code class="inline">dig</code></td><td>Full DNS answers, including which server responded and the TTL</td></tr>
+        <tr><td><code class="inline">nc -zv host port</code></td><td>Can I open a TCP connection to this port? Quick firewall test</td></tr>
+        <tr><td><code class="inline">nmap</code></td><td>Port scanner: which ports are open on a target</td></tr>
+        <tr><td><code class="inline">tcpdump</code></td><td>Packet capture on an interface. Needs root</td></tr>
+        <tr><td><code class="inline">iperf3</code></td><td>Measures real throughput between two hosts (one runs the server, one the client)</td></tr>
+        <tr><td><code class="inline">ethtool</code></td><td>Link detected? Speed and duplex of a physical interface</td></tr>
+        <tr><td><code class="inline">arp</code> · <code class="inline">ip neigh</code></td><td>The ARP cache: IP-to-MAC mappings on the local network</td></tr>
+      </tbody>
+    </table>
+    <table class="blocks">
+      <caption>Shell basics</caption>
+      <thead><tr><th>Know this</th><th>What it means</th></tr></thead>
+      <tbody>
+        <tr><td>Key variables</td><td><code class="inline">HOME</code> home directory · <code class="inline">PATH</code> where commands are searched for · <code class="inline">PS1</code> prompt format · <code class="inline">SHELL</code> your login shell · <code class="inline">USER</code> username</td></tr>
+        <tr><td><code class="inline">PATH</code></td><td>If a program in <code class="inline">/opt/tools/bin</code> says "command not found," that directory isn't in PATH</td></tr>
+        <tr><td>Startup files</td><td><code class="inline">~/.bashrc</code> every interactive non-login shell · <code class="inline">~/.bash_profile</code> login shells, once · <code class="inline">~/.profile</code> the POSIX fallback for login shells</td></tr>
+        <tr><td>Paths</td><td>Absolute paths start with <code class="inline">/</code>; relative paths never do. <code class="inline">~</code> = your home. <code class="inline">cd</code> alone goes home; <code class="inline">cd -</code> toggles to the previous directory</td></tr>
+        <tr><td>History shortcuts</td><td><code class="inline">!!</code> repeats the last command; <code class="inline">sudo !!</code> reruns it as root</td></tr>
+        <tr><td>File descriptors</td><td>0 = stdin · 1 = stdout · 2 = stderr</td></tr>
+        <tr><td>Redirection</td><td><code class="inline">&gt;</code> overwrite · <code class="inline">&gt;&gt;</code> append · <code class="inline">2&gt;</code> stderr to a file · <code class="inline">&lt;</code> read stdin from a file · <code class="inline">&lt;&lt;EOF</code> here document (inline input until EOF)</td></tr>
+        <tr><td>Pipes</td><td><code class="inline">|</code> sends stdout to the next command's stdin. stderr does <em>not</em> go through the pipe unless you add <code class="inline">2&gt;&amp;1</code></td></tr>
+        <tr><td>Text tools</td><td><code class="inline">echo</code> / <code class="inline">printf</code> print · <code class="inline">cut</code> columns (<code class="inline">awk</code> works too) · <code class="inline">grep</code> search · <code class="inline">sed</code> find-and-replace (<code class="inline">sed 's/old/new/g'</code>) · <code class="inline">head</code>/<code class="inline">tail</code> · <code class="inline">less</code> scroll and search</td></tr>
+      </tbody>
+    </table>
+    <table class="blocks">
+      <caption>Backup and compression</caption>
+      <thead><tr><th>Know this</th><th>What it means</th></tr></thead>
+      <tbody>
+        <tr><td><code class="inline">tar</code></td><td>Archives files, keeping permissions and directory structure. Alone it does <em>not</em> compress. <code class="inline">-c</code> create · <code class="inline">-x</code> extract · <code class="inline">-t</code> list · <code class="inline">-v</code> verbose · <code class="inline">-f</code> archive file</td></tr>
+        <tr><td>tar + compression</td><td><code class="inline">-z</code> gzip (.tar.gz) · <code class="inline">-j</code> bzip2 · <code class="inline">-J</code> xz. Create: <code class="inline">tar -czf out.tar.gz dir</code> · Extract: <code class="inline">tar -xzf out.tar.gz</code></td></tr>
+        <tr><td>Compressors</td><td>gzip: fastest, most common · bzip2: middle · xz: smallest files, slowest. Each compresses one file; that's why tar comes first</td></tr>
+        <tr><td>gzip behavior</td><td><code class="inline">gzip file</code> replaces it with <code class="inline">file.gz</code> (the original is gone unless you use <code class="inline">-k</code>)</td></tr>
+        <tr><td>Read compressed files</td><td><code class="inline">zcat</code> print · <code class="inline">zgrep</code> search · <code class="inline">zless</code> page through. No need to decompress to disk</td></tr>
+        <tr><td><code class="inline">cpio</code></td><td>Archiver that reads the file list from stdin. initramfs images are cpio archives</td></tr>
+        <tr><td><code class="inline">zip</code> · <code class="inline">unzip</code></td><td>.zip files, common when exchanging with Windows</td></tr>
+        <tr><td><code class="inline">rsync</code></td><td>Copies only what changed. <code class="inline">-a</code> archive mode keeps permissions, times, links (no compression) · <code class="inline">-z</code> compress in transit · <code class="inline">-v</code> verbose · works over SSH (<code class="inline">user@host:/path</code>)</td></tr>
+        <tr><td><code class="inline">rsync --delete</code></td><td>Removes destination files that no longer exist at the source. Test with --dry-run first</td></tr>
+        <tr><td><code class="inline">dd</code></td><td>Raw block-by-block copy: <code class="inline">dd if=/dev/sda of=/dev/sdb bs=4M status=progress</code>. if = input, of = output; mixing them up destroys data</td></tr>
+        <tr><td><code class="inline">ddrescue</code></td><td>Like dd for failing disks: skips bad sectors, retries later, and logs progress to a map file so it can resume</td></tr>
+      </tbody>
+    </table>
+    <table class="blocks">
+      <caption>Virtualization</caption>
+      <thead><tr><th>Know this</th><th>What it means</th></tr></thead>
+      <tbody>
+        <tr><td>KVM</td><td>Kernel module that turns Linux into a Type 1 hypervisor using CPU extensions (Intel VT-x / AMD-V)</td></tr>
+        <tr><td>QEMU</td><td>Emulator. Alone it can emulate other CPU architectures in software (slow); with KVM it runs at near-native speed</td></tr>
+        <tr><td>VirtIO</td><td>Paravirtualized drivers (virtio-net, virtio-blk) that speed up network and disk I/O compared with emulated hardware</td></tr>
+        <tr><td>qcow2 vs. raw</td><td>qcow2: thin provisioned, snapshots, backing files (many VMs share one base image) · raw: plain byte-for-byte, slightly faster, uses its full size</td></tr>
+        <tr><td><code class="inline">qemu-img</code></td><td><code class="inline">info</code> virtual vs. actual size · <code class="inline">convert</code> change format · <code class="inline">resize</code> grow/shrink the virtual disk</td></tr>
+        <tr><td>libvirt tools</td><td><code class="inline">libvirt</code> common API across hypervisors · <code class="inline">virsh</code> CLI · <code class="inline">virt-manager</code> GUI</td></tr>
+        <tr><td>VM networks</td><td>NAT: VMs hidden behind the host's IP with a private subnet and virtual DHCP · Bridged: VMs are full hosts on the physical LAN · Host-only/isolated: VMs (and maybe the host) only, no outside access</td></tr>
+        <tr><td>VM features</td><td>Saved state: RAM written to disk, resume later exactly where you left off · Live migration: move a running VM to another host (needs shared storage) · Nested virtualization: a hypervisor inside a VM</td></tr>
+      </tbody>
+    </table>
+    <h3>Commonly confused</h3>
+    <table class="blocks">
+      <thead><tr><th>This</th><th>vs. this</th><th>The difference</th></tr></thead>
+      <tbody>
+        <tr><td><code class="inline">&gt;</code></td><td><code class="inline">&gt;&gt;</code></td><td>Overwrite the file vs. append to it</td></tr>
+        <tr><td><code class="inline">~/.bashrc</code></td><td><code class="inline">~/.bash_profile</code></td><td>Every new interactive shell (e.g. a terminal tab) vs. once at login (SSH, console)</td></tr>
+        <tr><td><code class="inline">netplan apply</code></td><td><code class="inline">netplan try</code></td><td>Applies immediately with no safety net vs. reverts automatically unless you confirm</td></tr>
+        <tr><td><code class="inline">/etc/resolv.conf</code></td><td><code class="inline">/etc/nsswitch.conf</code></td><td>Which DNS servers to use vs. in what order to check files, DNS, and other sources</td></tr>
+        <tr><td>gzip</td><td>xz</td><td>Fast, larger files vs. slow, smallest files</td></tr>
+        <tr><td><code class="inline">rsync -a</code></td><td><code class="inline">rsync -az</code></td><td>Archive mode only vs. archive mode plus compression during transfer</td></tr>
+        <tr><td><code class="inline">dd</code></td><td><code class="inline">ddrescue</code></td><td>Copies blindly and struggles on read errors vs. built to recover what it can from a failing disk</td></tr>
+        <tr><td>KVM</td><td>QEMU alone</td><td>Hardware-accelerated, same-architecture guests vs. software emulation that can run other CPU architectures, slowly</td></tr>
+        <tr><td>NAT</td><td>Bridged</td><td>VM hidden behind the host vs. VM gets its own address on the LAN</td></tr>
+      </tbody>
+    </table>
+    <h3>Practice</h3>
+    <p>Try each one before you open the answer.</p>
+    <div class="example">
+      <span class="tag">Shell</span>
+      <h3>Q1. Errors and output in one file</h3>
+      <p>You want a script's normal output <em>and</em> its error messages saved together in <code class="inline">run.log</code>, replacing any old log. Write the redirection.</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <p><code class="inline">./script.sh &gt; run.log 2&gt;&amp;1</code>. The order matters: point stdout at the file first, then send stderr (2) to the same place as stdout (1).</p>
+        </div>
+      </details>
+    </div>
+    <div class="example">
+      <span class="tag">Name resolution</span>
+      <h3>Q2. One name, two answers</h3>
+      <p><code class="inline">ping intranet</code> reaches 10.0.0.9, but <code class="inline">dig intranet</code> returns 10.0.0.50. Which is right, and why do they disagree?</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <p><code class="inline">ping</code> resolves through nsswitch.conf, which normally checks <code class="inline">/etc/hosts</code> first. <code class="inline">dig</code> queries DNS directly. A stale /etc/hosts entry is overriding DNS for normal programs. Remove or fix it.</p>
+        </div>
+      </details>
+    </div>
+    <div class="example">
+      <span class="tag">Backup</span>
+      <h3>Q3. Shrink this archive</h3>
+      <p>You archived a project with <code class="inline">tar -cf project.tar project/</code>, but it's too big to email. Recreate it with the best compression, accepting that it's slower.</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <p><code class="inline">tar -cJf project.tar.xz project/</code>. <code class="inline">-J</code> is xz, which gives the smallest result; <code class="inline">-z</code> (gzip) would be faster but larger.</p>
+        </div>
+      </details>
+    </div>
+    <div class="example">
+      <span class="tag">Virtualization</span>
+      <h3>Q4. Where did the 40 GB go?</h3>
+      <p>A VM's disk shows as 40 GB inside the guest, but the image file on the host is only 6 GB. Which command confirms both numbers, and why are they different?</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <p><code class="inline">qemu-img info disk.qcow2</code> reports the virtual size and the actual disk size. qcow2 is thin provisioned: it only takes up host space as the guest writes data. A raw image would use the full 40 GB right away.</p>
+        </div>
+      </details>
+    </div>
+    <div class="example">
+      <span class="tag">Virtualization</span>
+      <h3>Q5. Disk images for ten clones</h3>
+      <p>You need ten test VMs that start from the same installed OS without storing ten full copies. Which disk format and feature?</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <p>qcow2 with a backing file: one base image, and each VM's qcow2 overlay stores only its own changes. Raw images can't do this and always use their full size.</p>
+        </div>
+      </details>
+    </div>
+    <p>Back in Ascend: Module 2 readings and Quiz 2 · On this site: <a href="IT251_Week2_Study_Page.html">Week 2 Study Page &rarr;</a> · <a href="IT251_Week2_Deep_Dive.html">Week 2 Deep Dive &rarr;</a></p>
+  </section>
+
+  <section id="module3">
+    <div class="section-head">
+      <p class="kicker">Module 3 · Ascend</p>
+      <h2>Services &amp; User Management I</h2>
+    </div>
+    <h3>Topics</h3>
+    <ul class="obj-list">
+      <li>Files and directories: commands, links, file types, finding things</li>
+      <li>Local accounts and groups</li>
+      <li>Processes: monitoring, states, signals, priority</li>
+      <li>Jobs and scheduling: background jobs, cron, at, anacron</li>
+    </ul>
+    <h3>Key facts</h3>
+    <table class="blocks">
+      <caption>Files and directories</caption>
+      <thead><tr><th>Know this</th><th>What it means</th></tr></thead>
+      <tbody>
+        <tr><td>Moving around</td><td><code class="inline">pwd</code> where am I · <code class="inline">cd</code> change directory · <code class="inline">ls -l</code> long listing (permissions, owner, size) · <code class="inline">ls -li</code> adds inode numbers</td></tr>
+        <tr><td>Creating and removing</td><td><code class="inline">touch</code> empty file · <code class="inline">mkdir -p a/b/c</code> with parents · <code class="inline">cp</code> copy · <code class="inline">mv</code> move or rename · <code class="inline">rm</code> delete (no recycle bin) · <code class="inline">rm -r</code> a whole tree · <code class="inline">rmdir</code> only empty directories</td></tr>
+        <tr><td>ls -l type letter</td><td><code class="inline">-</code> file · <code class="inline">d</code> directory · <code class="inline">l</code> symlink · <code class="inline">b</code> block device (disks) · <code class="inline">c</code> character device (<code class="inline">/dev/null</code>, terminals) · <code class="inline">s</code> socket · <code class="inline">p</code> pipe</td></tr>
+        <tr><td><code class="inline">file</code></td><td>Identifies the real type by looking at the contents, not the extension</td></tr>
+        <tr><td><code class="inline">stat</code></td><td>All metadata: inode number, size, permissions, link count, access/modify/change timestamps</td></tr>
+        <tr><td><code class="inline">find</code></td><td>Searches live, so it sees brand-new files: <code class="inline">find /etc -type f -name "*.conf"</code></td></tr>
+        <tr><td><code class="inline">locate</code></td><td>Searches a prebuilt database: fast, but misses files created since the last <code class="inline">updatedb</code></td></tr>
+        <tr><td><code class="inline">diff</code> · <code class="inline">sdiff</code></td><td>Line-by-line differences · side-by-side columns</td></tr>
+        <tr><td><code class="inline">lsof</code></td><td>Lists open files and which processes have them, e.g. <code class="inline">lsof /var/log/syslog</code>. Answers "why can't I unmount / delete this?"</td></tr>
+        <tr><td>Hard links</td><td>A second name for the same inode (link count goes up). Data survives until the last name is deleted. Can't cross filesystems</td></tr>
+        <tr><td>Symbolic links</td><td><code class="inline">ln -s target name</code>: a small file holding a path. Can cross filesystems; breaks if the target moves or is deleted</td></tr>
+      </tbody>
+    </table>
+    <table class="blocks">
+      <caption>Users and groups</caption>
+      <thead><tr><th>Know this</th><th>What it means</th></tr></thead>
+      <tbody>
+        <tr><td>Creating users</td><td><code class="inline">useradd -m -s /bin/bash name</code> low-level, every distro · <code class="inline">adduser name</code> interactive and friendlier (Debian/Ubuntu)</td></tr>
+        <tr><td><code class="inline">/etc/skel</code></td><td>Template files copied into every new home directory. Put a file here and every new user gets it</td></tr>
+        <tr><td><code class="inline">/etc/passwd</code></td><td>One line per account: username, x, UID, primary GID, comment, home directory, login shell. Readable by everyone</td></tr>
+        <tr><td><code class="inline">/etc/shadow</code></td><td>Password hashes and aging. Only root can read it. A <code class="inline">!</code> at the start of the password field means locked</td></tr>
+        <tr><td><code class="inline">/etc/login.defs</code></td><td>Defaults for new accounts: UID_MIN/UID_MAX, SYS_UID_MIN, password aging</td></tr>
+        <tr><td>UIDs</td><td>0 = root (any account with UID 0 has full root power) · below 1000 = system/service accounts · 1000+ = regular users on modern distros</td></tr>
+        <tr><td>Modifying</td><td><code class="inline">usermod -aG group user</code> add a supplementary group (keep the <code class="inline">-a</code>!) · <code class="inline">usermod -s</code> or <code class="inline">chsh -s /bin/zsh user</code> change shell · <code class="inline">usermod -u</code> change UID (then <code class="inline">chown</code> files outside the home directory)</td></tr>
+        <tr><td>New group membership</td><td>Takes effect at the user's next login. An existing session won't have it (<code class="inline">newgrp</code> or log out/in)</td></tr>
+        <tr><td>Locking</td><td><code class="inline">passwd -l</code> or <code class="inline">usermod -L</code> lock (account and files stay) · <code class="inline">passwd -u</code> or <code class="inline">usermod -U</code> unlock</td></tr>
+        <tr><td>Deleting</td><td><code class="inline">userdel name</code> keeps the home directory · <code class="inline">userdel -r name</code> removes it too</td></tr>
+        <tr><td><code class="inline">chage</code></td><td>Password aging: <code class="inline">chage -l user</code> view · <code class="inline">chage -M 90 user</code> must change every 90 days</td></tr>
+        <tr><td>Looking up accounts</td><td><code class="inline">id user</code> UID, GIDs, groups · <code class="inline">getent passwd</code> all accounts from every NSS source (local files <em>and</em> LDAP), unlike reading /etc/passwd</td></tr>
+        <tr><td>Who logged in</td><td><code class="inline">w</code> who's on now and what they're running · <code class="inline">who</code> who's on · <code class="inline">last</code> login history · <code class="inline">lastlog</code> each user's most recent login · <code class="inline">lastlog -b 90</code> users with no login in the last 90 days</td></tr>
+      </tbody>
+    </table>
+    <table class="blocks">
+      <caption>Processes</caption>
+      <thead><tr><th>Know this</th><th>What it means</th></tr></thead>
+      <tbody>
+        <tr><td>Viewing</td><td><code class="inline">ps aux</code> snapshot with CPU/memory · <code class="inline">top</code> live · <code class="inline">htop</code> live, interactive, colors, mouse · <code class="inline">pstree</code> parent/child tree</td></tr>
+        <tr><td><code class="inline">/proc/&lt;PID&gt;/</code></td><td>The kernel's live info for one process: command line, open file descriptors, status</td></tr>
+        <tr><td>Deeper tools</td><td><code class="inline">mpstat</code> per-CPU usage incl. I/O wait · <code class="inline">pidstat</code> per-process usage over time · <code class="inline">strace</code> system calls a process makes</td></tr>
+        <tr><td>STAT codes</td><td>R running/runnable · S sleeping · D uninterruptible sleep, blocked on I/O · T stopped · Z zombie (exited, not yet reaped)</td></tr>
+        <tr><td>D and Z</td><td>Many D processes + high load = I/O trouble (slow disk, hung NFS). D processes ignore even kill -9 until the I/O finishes. Zombies use no CPU/RAM, just a PID, until the parent reaps them</td></tr>
+        <tr><td>Signals</td><td>SIGTERM (15) default for <code class="inline">kill</code>, polite, process can clean up · SIGKILL (9) can't be caught or ignored · SIGHUP (1) many daemons reload their config · SIGINT (2) Ctrl+C</td></tr>
+        <tr><td>Priority</td><td>Niceness −20 (most favored) to 19 (least). <code class="inline">nice -n 10 cmd</code> starts with a niceness · <code class="inline">renice</code> changes a running process. Only root can raise priority</td></tr>
+        <tr><td><code class="inline">ulimit</code></td><td>Per-shell resource limits: open files (<code class="inline">ulimit -n</code>), max processes (<code class="inline">ulimit -u</code>)</td></tr>
+      </tbody>
+    </table>
+    <table class="blocks">
+      <caption>Jobs and scheduling</caption>
+      <thead><tr><th>Know this</th><th>What it means</th></tr></thead>
+      <tbody>
+        <tr><td>Background jobs</td><td><code class="inline">cmd &amp;</code> runs in the background, still tied to your terminal · Ctrl+Z stops the foreground job · <code class="inline">bg %1</code> resumes it in the background · <code class="inline">fg %1</code> brings it back · <code class="inline">jobs</code> lists</td></tr>
+        <tr><td><code class="inline">nohup</code></td><td>Ignores SIGHUP so the job survives logout: <code class="inline">nohup ./long-job.sh &amp;</code></td></tr>
+        <tr><td>cron</td><td>Recurring jobs. <code class="inline">crontab -e</code>. Fields: minute hour day-of-month month day-of-week, then the command. <code class="inline">0 2 * * *</code> = 2:00 AM daily</td></tr>
+        <tr><td><code class="inline">at</code></td><td>Runs a job <em>once</em> at a set time: <code class="inline">at 23:00</code> · <code class="inline">atq</code> list · <code class="inline">atrm</code> remove</td></tr>
+        <tr><td><code class="inline">anacron</code></td><td>For machines that aren't always on: runs daily/weekly jobs that were missed while powered off</td></tr>
+      </tbody>
+    </table>
+    <h3>Commonly confused</h3>
+    <table class="blocks">
+      <thead><tr><th>This</th><th>vs. this</th><th>The difference</th></tr></thead>
+      <tbody>
+        <tr><td>Hard link</td><td>Symbolic link</td><td>Same inode, survives deleting the original, same filesystem only vs. a path pointer that breaks if the target goes away</td></tr>
+        <tr><td><code class="inline">find</code></td><td><code class="inline">locate</code></td><td>Searches live, slower vs. searches a database, fast but can miss new files</td></tr>
+        <tr><td><code class="inline">rmdir</code></td><td><code class="inline">rm -r</code></td><td>Removes only empty directories vs. removes a directory and everything in it</td></tr>
+        <tr><td><code class="inline">useradd</code></td><td><code class="inline">adduser</code></td><td>Low-level, flags only, on every distro vs. interactive helper on Debian/Ubuntu</td></tr>
+        <tr><td><code class="inline">usermod -G grp u</code></td><td><code class="inline">usermod -aG grp u</code></td><td>Replaces all supplementary groups vs. adds one and keeps the rest</td></tr>
+        <tr><td><code class="inline">userdel</code></td><td><code class="inline">userdel -r</code></td><td>Removes the account, keeps the home directory vs. removes both</td></tr>
+        <tr><td><code class="inline">cat /etc/passwd</code></td><td><code class="inline">getent passwd</code></td><td>Local accounts only vs. every source NSS knows about, including LDAP</td></tr>
+        <tr><td>SIGTERM (15)</td><td>SIGKILL (9)</td><td>Ask the process to exit cleanly vs. kernel ends it immediately, no cleanup</td></tr>
+        <tr><td><code class="inline">nice</code></td><td><code class="inline">renice</code></td><td>Set priority when starting vs. change it on a running process</td></tr>
+        <tr><td>cron</td><td><code class="inline">at</code> / anacron</td><td>Repeating schedule vs. one-time job / catch-up for missed jobs on machines that sleep</td></tr>
+        <tr><td>Zombie (Z)</td><td>Blocked (D)</td><td>Finished, waiting to be reaped vs. still alive, stuck waiting on I/O</td></tr>
+      </tbody>
+    </table>
+    <h3>Practice</h3>
+    <p>Try each one before you open the answer.</p>
+    <div class="example">
+      <span class="tag">Files</span>
+      <h3>Q1. The disk that won't unmount</h3>
+      <p><code class="inline">umount /mnt/usb</code> fails with "target is busy." How do you find out what's holding it?</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <p><code class="inline">lsof /mnt/usb</code> (or <code class="inline">lsof +D /mnt/usb</code>) lists the processes with files open there. Often it's a shell whose current directory is inside the mount: <code class="inline">cd</code> out and try again.</p>
+        </div>
+      </details>
+    </div>
+    <div class="example">
+      <span class="tag">Files</span>
+      <h3>Q2. Two names, one file?</h3>
+      <p><code class="inline">ls -li</code> shows <code class="inline">report.txt</code> and <code class="inline">backup.txt</code> with the same inode number and a link count of 2. You delete report.txt. What happens to the data?</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <p>Nothing; it's still there. They're hard links to the same inode, and the data is only freed when the last link is removed. backup.txt's link count drops to 1.</p>
+        </div>
+      </details>
+    </div>
+    <div class="example">
+      <span class="tag">Users</span>
+      <h3>Q3. A new-hire welcome file</h3>
+      <p>Every account you create from now on should start with a <code class="inline">.vimrc</code> and a <code class="inline">WELCOME.txt</code> in its home directory. Where do you put them?</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <p>In <code class="inline">/etc/skel</code>. <code class="inline">useradd -m</code> and <code class="inline">adduser</code> copy its contents into each new home directory. Existing users aren't affected.</p>
+        </div>
+      </details>
+    </div>
+    <div class="example">
+      <span class="tag">Processes</span>
+      <h3>Q4. Make it play nice</h3>
+      <p>A long video encode (PID 5120) is making the machine sluggish for everyone. You want it to keep running, just with less CPU priority. What do you run?</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <p><code class="inline">renice -n 15 -p 5120</code>. A higher nice value means lower priority. Making it <em>more</em> favored (a lower or negative number) would need root.</p>
+        </div>
+      </details>
+    </div>
+    <div class="example">
+      <span class="tag">Scheduling</span>
+      <h3>Q5. Write the schedule</h3>
+      <p>Write a crontab line that runs /usr/local/bin/cleanup.sh at 11:30 PM every Sunday.</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <p><code class="inline">30 23 * * 0 /usr/local/bin/cleanup.sh</code>: minute 30, hour 23, any day of month, any month, day-of-week 0 (Sunday; 7 also works).</p>
+        </div>
+      </details>
+    </div>
+    <p>Back in Ascend: Module 3 readings and Quiz 3 · On this site: <a href="IT251_Week4_Study_Page.html">Week 4 Study Page &rarr;</a> · <a href="IT251_Week4_Deep_Dive.html">Week 4 Deep Dive &rarr;</a></p>
+  </section>
+
+  <section id="module4">
+    <div class="section-head">
+      <p class="kicker">Module 4 · Ascend</p>
+      <h2>Services &amp; User Management II</h2>
+    </div>
+    <h3>Topics</h3>
+    <ul class="obj-list">
+      <li>Software management: packages, repositories, building from source, language and sandboxed packages</li>
+      <li>Network services: DHCP, DNS, web, mail, time</li>
+      <li>systemd: unit types, unit files, systemctl, system settings</li>
+      <li>Containers: runtimes, images, Dockerfiles, networking, storage</li>
+    </ul>
+    <h3>Key facts</h3>
+    <table class="blocks">
+      <caption>Software management</caption>
+      <thead><tr><th>Know this</th><th>What it means</th></tr></thead>
+      <tbody>
+        <tr><td>Package tools</td><td>High-level, resolve dependencies: <code class="inline">apt</code> (Debian) · <code class="inline">dnf</code> (RHEL/Fedora). Low-level, single package files: <code class="inline">dpkg</code> · <code class="inline">rpm</code></td></tr>
+        <tr><td>Common commands</td><td><code class="inline">dnf install pkg</code> · <code class="inline">dnf upgrade</code> (all packages) · <code class="inline">apt update</code> refresh lists · <code class="inline">apt upgrade</code> install updates</td></tr>
+        <tr><td>Repositories</td><td>Signed package sources. Debian: <code class="inline">/etc/apt/sources.list</code> and <code class="inline">/etc/apt/sources.list.d/</code> · RHEL/Fedora: <code class="inline">/etc/yum.repos.d/*.repo</code>. Third-party repos are the usual source of risk</td></tr>
+        <tr><td>GPG signatures</td><td>Prove a package came from the repo owner and wasn't tampered with</td></tr>
+        <tr><td>Conflicts</td><td>Two packages that provide the same file can't both be installed</td></tr>
+        <tr><td>Building from source</td><td><code class="inline">./configure</code> → <code class="inline">make</code> (compiles) → <code class="inline">sudo make install</code>. The package manager doesn't know about the result</td></tr>
+        <tr><td>Language package managers</td><td><code class="inline">pip</code> Python · <code class="inline">npm</code> Node.js (<code class="inline">npm list -g</code> global packages) · <code class="inline">cargo</code> Rust. None of these show up in apt/dnf listings</td></tr>
+        <tr><td>Sandboxed formats</td><td>Flatpak (sandboxed apps that use portals to reach files and devices) · Snap · AppImage</td></tr>
+        <tr><td><code class="inline">update-alternatives</code></td><td>Chooses which version a generic command runs (e.g. two Java versions): <code class="inline">--config java</code>. The links live in <code class="inline">/etc/alternatives/</code></td></tr>
+      </tbody>
+    </table>
+    <table class="blocks">
+      <caption>Network services</caption>
+      <thead><tr><th>Know this</th><th>What it means</th></tr></thead>
+      <tbody>
+        <tr><td>DHCP</td><td>Hands out IP addresses in four steps: Discover → Offer → Request → Acknowledge (DORA). UDP 67 (server) / 68 (client)</td></tr>
+        <tr><td>DNS</td><td>Maps hostnames to IPs. BIND (named) is the classic Linux DNS server. Port 53</td></tr>
+        <tr><td>Web: Apache</td><td>Debian: <code class="inline">apache2</code>, virtual hosts in <code class="inline">/etc/apache2/sites-available/</code> · RHEL: <code class="inline">httpd</code>, <code class="inline">/etc/httpd/conf.d/</code>. Syntax check: <code class="inline">apachectl configtest</code></td></tr>
+        <tr><td>Web: nginx</td><td>Main config <code class="inline">/etc/nginx/nginx.conf</code>, with server blocks there or in included files. Syntax check: <code class="inline">nginx -t</code></td></tr>
+        <tr><td>Mail</td><td>Postfix sends mail (SMTP). Dovecot is the common IMAP/POP3 server. IMAP keeps mail on the server; POP3 usually downloads it</td></tr>
+        <tr><td>Time</td><td>chrony (<code class="inline">chronyd</code>): <code class="inline">/etc/chrony.conf</code> on RHEL, <code class="inline">/etc/chrony/chrony.conf</code> on Debian. <code class="inline">timedatectl</code> shows time and NTP sync status; <code class="inline">timedatectl set-ntp true</code> turns sync on. Clock drift breaks authentication</td></tr>
+        <tr><td>Ports</td><td>22 SSH · 25 SMTP · 53 DNS · 67/68 DHCP · 80 HTTP · 110 POP3 · 123 NTP · 143 IMAP · 443 HTTPS · 587 mail submission · 993 IMAPS · 995 POP3S</td></tr>
+      </tbody>
+    </table>
+    <table class="blocks">
+      <caption>systemd</caption>
+      <thead><tr><th>Know this</th><th>What it means</th></tr></thead>
+      <tbody>
+        <tr><td>What it is</td><td>PID 1: initializes the system and manages services</td></tr>
+        <tr><td>Unit types</td><td>.service long-running daemons · .timer scheduled runs (paired with a .service of the same name; a cron alternative) · .target groups of units, a system state like multi-user or graphical · .mount mount points · .socket</td></tr>
+        <tr><td>Mount unit names</td><td>Named after the path, slashes become dashes: <code class="inline">/data/backups</code> → <code class="inline">data-backups.mount</code></td></tr>
+        <tr><td>Unit file locations</td><td>Distro-supplied: <code class="inline">/usr/lib/systemd/system/</code> (don't edit) · yours and overrides: <code class="inline">/etc/systemd/system/</code>. <code class="inline">systemctl edit unit</code> makes an override safely</td></tr>
+        <tr><td><code class="inline">ExecStart=</code></td><td>The command systemd runs to start the service</td></tr>
+        <tr><td><code class="inline">systemctl</code></td><td><code class="inline">start</code>/<code class="inline">stop</code>/<code class="inline">restart</code>/<code class="inline">reload</code> now · <code class="inline">enable</code>/<code class="inline">disable</code> at boot · <code class="inline">status</code> state plus recent log lines</td></tr>
+        <tr><td><code class="inline">daemon-reload</code></td><td>Run after editing any unit file so systemd re-reads it. It does not restart services</td></tr>
+        <tr><td><code class="inline">mask</code></td><td>Links the unit to /dev/null: can't be started manually or pulled in by another unit. Stronger than disable, which still allows manual starts</td></tr>
+        <tr><td>Boot timing</td><td><code class="inline">systemd-analyze time</code> time spent in kernel, initrd, userspace · <code class="inline">systemd-analyze blame</code> units sorted by start time</td></tr>
+        <tr><td>System settings</td><td><code class="inline">hostnamectl</code> hostname and chassis · <code class="inline">timedatectl</code> time/NTP · <code class="inline">resolvectl</code> DNS (systemd-resolved) · <code class="inline">sysctl</code> kernel parameters at runtime (<code class="inline">sysctl -w</code>; persist in <code class="inline">/etc/sysctl.d/</code>)</td></tr>
+      </tbody>
+    </table>
+    <table class="blocks">
+      <caption>Containers</caption>
+      <thead><tr><th>Know this</th><th>What it means</th></tr></thead>
+      <tbody>
+        <tr><td>Runtimes</td><td>runC: the low-level OCI runtime that actually creates containers · containerd: manages the lifecycle (pulls images, hands off to runC), used by Kubernetes · Docker builds on these</td></tr>
+        <tr><td>Podman vs. Docker</td><td>Podman is daemonless and can run containers as a normal user. Commands are nearly identical (<code class="inline">podman run</code> = <code class="inline">docker run</code>)</td></tr>
+        <tr><td>Dockerfile</td><td>Starts with <code class="inline">FROM</code> the base image (only <code class="inline">ARG</code> may come before it) · <code class="inline">RUN</code> build steps · <code class="inline">COPY</code> files in · <code class="inline">ENTRYPOINT</code> the fixed executable; runtime arguments are appended · <code class="inline">CMD</code> default arguments, easy to override</td></tr>
+        <tr><td>Images</td><td><code class="inline">docker build -t myapp:v1 .</code> builds and tags. Each instruction adds a read-only layer that images can share. Pin version tags (myapp:1.2.3) instead of <code class="inline">latest</code> so deployments are reproducible</td></tr>
+        <tr><td>Running</td><td><code class="inline">docker run -d --name web -p 8080:80 img</code> (host port 8080 → container port 80) · <code class="inline">-e KEY=val</code> or <code class="inline">--env-file</code> for config (changing it means re-creating the container)</td></tr>
+        <tr><td>Managing</td><td><code class="inline">docker logs web</code> · <code class="inline">docker exec -it web /bin/bash</code> shell inside · <code class="inline">docker rm</code> remove a container · <code class="inline">docker image prune -a</code> remove images no container uses · <code class="inline">docker info</code> engine details incl. storage driver (overlay2)</td></tr>
+        <tr><td>Networks</td><td>bridge: default, private network on one host · host: shares the host's interfaces, no NAT · macvlan: own MAC address, looks like a separate device on the LAN · none: loopback only</td></tr>
+        <tr><td>Storage</td><td>Named volume (<code class="inline">docker volume create pgdata</code>) managed by Docker vs. bind mount (<code class="inline">-v /opt/app:/app</code>) tied to a host path. On SELinux hosts add <code class="inline">:z</code> (shared) or <code class="inline">:Z</code> (private) to relabel</td></tr>
+        <tr><td>Security</td><td>Unprivileged/rootless containers are safer. <code class="inline">--privileged</code> gives nearly the same access as root on the host</td></tr>
+      </tbody>
+    </table>
+    <h3>Commonly confused</h3>
+    <table class="blocks">
+      <thead><tr><th>This</th><th>vs. this</th><th>The difference</th></tr></thead>
+      <tbody>
+        <tr><td><code class="inline">apt update</code></td><td><code class="inline">apt upgrade</code></td><td>Refresh the package lists (installs nothing) vs. install the newer versions</td></tr>
+        <tr><td><code class="inline">apt</code> / <code class="inline">dnf</code></td><td><code class="inline">dpkg</code> / <code class="inline">rpm</code></td><td>High-level, resolve dependencies, use repos vs. low-level, work on one package file</td></tr>
+        <tr><td><code class="inline">systemctl start</code></td><td><code class="inline">systemctl enable</code></td><td>Run it now vs. run it at every boot. Independent of each other</td></tr>
+        <tr><td><code class="inline">disable</code></td><td><code class="inline">mask</code></td><td>Won't start at boot, but can be started manually vs. can't be started at all</td></tr>
+        <tr><td><code class="inline">daemon-reload</code></td><td><code class="inline">restart</code></td><td>systemd re-reads unit files vs. the service itself stops and starts. After editing a unit you usually need both</td></tr>
+        <tr><td><code class="inline">systemd-analyze time</code></td><td><code class="inline">systemd-analyze blame</code></td><td>Total boot time split by stage vs. each unit's start time, slowest first</td></tr>
+        <tr><td>IMAP</td><td>POP3</td><td>Mail stays on the server, synced across devices vs. usually downloaded to one client</td></tr>
+        <tr><td><code class="inline">ENTRYPOINT</code></td><td><code class="inline">CMD</code></td><td>The fixed program (runtime args are appended) vs. default arguments that runtime args replace</td></tr>
+        <tr><td>Named volume</td><td>Bind mount</td><td>Docker manages where it's stored vs. you pick an exact host path</td></tr>
+        <tr><td>bridge</td><td>host / macvlan</td><td>Private container network behind NAT vs. share the host's network / appear on the LAN as separate devices</td></tr>
+      </tbody>
+    </table>
+    <h3>Practice</h3>
+    <p>Try each one before you open the answer.</p>
+    <div class="example">
+      <span class="tag">Software</span>
+      <h3>Q1. Where did it come from?</h3>
+      <p>You installed a tool with <code class="inline">pip install</code>, but <code class="inline">dnf list installed</code> doesn't show it. Is something broken?</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <p>No. Language package managers (pip, npm, cargo) keep their own records, so apt/dnf never see their packages. The same goes for software built from source with make install.</p>
+        </div>
+      </details>
+    </div>
+    <div class="example">
+      <span class="tag">systemd</span>
+      <h3>Q2. Run a job every night with systemd</h3>
+      <p>You want <code class="inline">report.service</code> to run at 1:00 AM daily using systemd instead of cron. What do you create, and what's the gotcha?</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <p>A <code class="inline">report.timer</code> unit with <code class="inline">OnCalendar=*-*-* 01:00:00</code>, then <code class="inline">systemctl enable --now report.timer</code>. The timer only triggers; it needs the matching report.service to exist.</p>
+        </div>
+      </details>
+    </div>
+    <div class="example">
+      <span class="tag">systemd</span>
+      <h3>Q3. Mount unit name</h3>
+      <p>You want systemd to mount a disk at <code class="inline">/srv/media/photos</code>. What must the unit file be called?</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <p><code class="inline">srv-media-photos.mount</code>. Mount units are named after their path, with the leading slash dropped and the remaining slashes turned into dashes.</p>
+        </div>
+      </details>
+    </div>
+    <div class="example">
+      <span class="tag">Containers</span>
+      <h3>Q4. Same image, three environments</h3>
+      <p>One container image must run in test and production with different database addresses. How do you avoid building two images?</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <p>Pass the settings in at run time: <code class="inline">-e DB_HOST=…</code> or <code class="inline">--env-file prod.env</code>. Changing them later means re-creating the container, not rebuilding the image.</p>
+        </div>
+      </details>
+    </div>
+    <div class="example">
+      <span class="tag">Containers</span>
+      <h3>Q5. No network for this job</h3>
+      <p>A container only processes files from a mounted volume and must not be able to reach any network. Which run option?</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <p><code class="inline">--network none</code>. The container gets only a loopback interface.</p>
+        </div>
+      </details>
+    </div>
+    <p>Back in Ascend: Module 4 readings and Quiz 4 · On this site: <a href="IT251_Week5_Study_Page.html">Week 5 Study Page &rarr;</a> · <a href="IT251_Week5_Deep_Dive.html">Week 5 Deep Dive &rarr;</a></p>
+  </section>
+
+  <section id="practice">
+    <div class="section-head">
+      <p class="kicker">Dress rehearsal</p>
+      <h2>Practice exam</h2>
+    </div>
+    <div class="callout"><b>Do You Know Modules 1&ndash;4?</b> A 152-question practice bank covering Modules 1&ndash;4. Drill single modules, or hit <b>OH, I know 1&ndash;4</b> for a 50-question mock weighted like Ascend's Quizzes 1&ndash;4. <a href="IT251_PracticeMidterm.html">Open the practice midterm &rarr;</a></div>
+  </section>
+
+  <section id="quickref">
+    <div class="section-head">
+      <p class="kicker">Last look</p>
+      <h2>Quick reference</h2>
+      <p>The commands most worth having cold, grouped by module.</p>
+    </div>
+    <table class="blocks">
+      <thead><tr><th>Command</th><th>Task</th><th>Module</th></tr></thead>
+      <tbody>
+        <tr><td><code class="inline">grub2-mkconfig -o /boot/grub2/grub.cfg</code> / <code class="inline">update-grub</code></td><td>Apply GRUB changes</td><td>1</td></tr>
+        <tr><td><code class="inline">dracut -f</code> / <code class="inline">update-initramfs -u</code></td><td>Rebuild the initramfs</td><td>1</td></tr>
+        <tr><td><code class="inline">lsmod</code>, <code class="inline">modinfo</code>, <code class="inline">modprobe</code>, <code class="inline">depmod -a</code></td><td>Work with kernel modules</td><td>1</td></tr>
+        <tr><td><code class="inline">dmesg</code>, <code class="inline">lspci</code>, <code class="inline">lsusb</code>, <code class="inline">lscpu</code></td><td>What hardware did the kernel find?</td><td>1</td></tr>
+        <tr><td><code class="inline">dmidecode -t memory</code></td><td>RAM size, speed, part numbers</td><td>1</td></tr>
+        <tr><td><code class="inline">lsblk</code>, <code class="inline">blkid</code></td><td>Disks, partitions, UUIDs</td><td>1</td></tr>
+        <tr><td><code class="inline">lvextend -r -L +5G /dev/vg/lv</code></td><td>Grow an LV and its filesystem</td><td>1</td></tr>
+        <tr><td><code class="inline">df -h</code>, <code class="inline">du -sh /var/*</code></td><td>Which filesystem is full, and what's filling it?</td><td>1</td></tr>
+        <tr><td><code class="inline">cat /proc/mdstat</code></td><td>Software RAID status / rebuild</td><td>1</td></tr>
+        <tr><td><code class="inline">nmcli</code> / <code class="inline">netplan try</code></td><td>Persistent network config (safely)</td><td>2</td></tr>
+        <tr><td><code class="inline">ss -tuln</code>, <code class="inline">nc -zv host port</code></td><td>Is it listening? Can I reach it?</td><td>2</td></tr>
+        <tr><td><code class="inline">dig name</code></td><td>What does DNS say?</td><td>2</td></tr>
+        <tr><td><code class="inline">cmd &gt; out.log 2&gt;&amp;1</code></td><td>Save output and errors together</td><td>2</td></tr>
+        <tr><td><code class="inline">tar -czf a.tar.gz dir</code> / <code class="inline">tar -xzf a.tar.gz</code></td><td>Create / extract a gzip archive</td><td>2</td></tr>
+        <tr><td><code class="inline">zgrep pattern file.gz</code></td><td>Search a compressed log</td><td>2</td></tr>
+        <tr><td><code class="inline">rsync -avz src/ user@host:/dest/</code></td><td>Sync to another host over SSH</td><td>2</td></tr>
+        <tr><td><code class="inline">qemu-img info disk.qcow2</code></td><td>VM image size and format</td><td>2</td></tr>
+        <tr><td><code class="inline">find /path -name "*.conf"</code></td><td>Find files right now</td><td>3</td></tr>
+        <tr><td><code class="inline">lsof /path</code></td><td>Who has this file open?</td><td>3</td></tr>
+        <tr><td><code class="inline">ln -s target name</code></td><td>Make a symlink</td><td>3</td></tr>
+        <tr><td><code class="inline">useradd -m -s /bin/bash user</code> / <code class="inline">adduser user</code></td><td>Create a user</td><td>3</td></tr>
+        <tr><td><code class="inline">usermod -aG group user</code></td><td>Add to a group, keep the others</td><td>3</td></tr>
+        <tr><td><code class="inline">passwd -l user</code> / <code class="inline">passwd -u user</code></td><td>Lock / unlock</td><td>3</td></tr>
+        <tr><td><code class="inline">chage -M 90 user</code></td><td>Force a password change every 90 days</td><td>3</td></tr>
+        <tr><td><code class="inline">getent passwd</code></td><td>All accounts, including LDAP</td><td>3</td></tr>
+        <tr><td><code class="inline">kill PID</code> → <code class="inline">kill -9 PID</code></td><td>Ask, then force</td><td>3</td></tr>
+        <tr><td><code class="inline">nohup cmd &amp;</code></td><td>Keep running after logout</td><td>3</td></tr>
+        <tr><td><code class="inline">crontab -e</code></td><td>Edit your scheduled jobs</td><td>3</td></tr>
+        <tr><td><code class="inline">dnf install pkg</code> / <code class="inline">apt install pkg</code></td><td>Install software</td><td>4</td></tr>
+        <tr><td><code class="inline">update-alternatives --config java</code></td><td>Pick a default version</td><td>4</td></tr>
+        <tr><td><code class="inline">apachectl configtest</code>, <code class="inline">nginx -t</code></td><td>Check web server config</td><td>4</td></tr>
+        <tr><td><code class="inline">systemctl daemon-reload</code></td><td>After editing a unit file</td><td>4</td></tr>
+        <tr><td><code class="inline">systemctl enable --now unit</code></td><td>Start now and at boot</td><td>4</td></tr>
+        <tr><td><code class="inline">systemctl mask unit</code></td><td>Never start this</td><td>4</td></tr>
+        <tr><td><code class="inline">systemd-analyze blame</code></td><td>Which units slowed boot?</td><td>4</td></tr>
+        <tr><td><code class="inline">timedatectl</code></td><td>Time and NTP sync status</td><td>4</td></tr>
+        <tr><td><code class="inline">docker build -t app:1.0 .</code>, <code class="inline">docker run -d -p 8080:80 app:1.0</code></td><td>Build and run a container</td><td>4</td></tr>
+        <tr><td><code class="inline">docker exec -it name /bin/bash</code>, <code class="inline">docker logs name</code></td><td>Get inside / read the logs</td><td>4</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>IT251 · Linux+ (XK0-006) · Midterm study guide — written exam, Ascend Modules 1&ndash;4.</p>
+  </div>
+</footer>
+
+<button id="backToTop" class="back-to-top" aria-label="Back to top" title="Back to top">&uarr;</button>
+
+<script>
+  const backToTop = document.getElementById('backToTop');
+  function toggleBackToTop(){ backToTop.classList.toggle('show', window.scrollY > 480); }
+  window.addEventListener('scroll', toggleBackToTop, {passive:true});
+  toggleBackToTop();
+  backToTop.addEventListener('click', () => window.scrollTo({top:0, behavior:'smooth'}));
+</script>
