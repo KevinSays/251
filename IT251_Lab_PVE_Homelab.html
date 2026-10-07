@@ -1,0 +1,827 @@
+<title>Proxmox Homelab Lab</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --bg:#f2f6f4;
+    --surface:#ffffff;
+    --surface-2:#e6efec;
+    --text:#0c1a15;
+    --muted:#51655d;
+    --border:#cddcd5;
+    --accent:#0f7a5c;
+    --accent-soft:#dcf1e7;
+    --accent-2:#0e7490;
+    --accent-2-soft:#dbeff4;
+    --danger:#b3261e;
+    --danger-soft:#f8dcd9;
+    --correct:#0f7a5c;
+    --correct-soft:#dcf1e7;
+    --shadow: 0 1px 2px rgba(12,26,21,.06), 0 8px 24px rgba(12,26,21,.07);
+    --mono:'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    --sans:'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0a0f0d; --surface:#0f1613; --surface-2:#131c18;
+      --text:#d9f5e8; --muted:#82a99a; --border:#1e2b26;
+      --accent:#3ddc97; --accent-soft:#123024;
+      --accent-2:#22d3ee; --accent-2-soft:#0c2b30;
+      --danger:#ff7a68; --danger-soft:#33150f;
+      --correct:#3ddc97; --correct-soft:#123024;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 12px 32px rgba(0,0,0,.45);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0a0f0d; --surface:#0f1613; --surface-2:#131c18;
+    --text:#d9f5e8; --muted:#82a99a; --border:#1e2b26;
+    --accent:#3ddc97; --accent-soft:#123024;
+    --accent-2:#22d3ee; --accent-2-soft:#0c2b30;
+    --danger:#ff7a68; --danger-soft:#33150f;
+    --correct:#3ddc97; --correct-soft:#123024;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 12px 32px rgba(0,0,0,.45);
+  }
+
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto;} *{animation-duration:.001ms !important; transition-duration:.001ms !important;} }
+  body{ margin:0; background:var(--bg); color:var(--text); font-family:var(--sans); line-height:1.55; -webkit-font-smoothing:antialiased; }
+  a{ color:var(--accent-2); }
+  ::selection{ background:var(--accent-soft); }
+  .wrap{ max-width:1080px; margin:0 auto; padding:0 24px; }
+
+  header.hero{
+    border-bottom:1px solid var(--border);
+    background:repeating-linear-gradient(180deg, var(--surface-2) 0 1px, var(--bg) 1px 28px);
+    padding:56px 0 40px;
+  }
+  .termbar{ display:flex; gap:6px; margin-bottom:20px; }
+  .termbar span{ width:11px; height:11px; border-radius:50%; }
+  .termbar span:nth-child(1){ background:#ff5f57; }
+  .termbar span:nth-child(2){ background:#febc2e; }
+  .termbar span:nth-child(3){ background:#28c840; }
+  .eyebrow{ font-family:var(--mono); font-size:.8rem; color:var(--accent); }
+  .eyebrow::before{ content:"$ "; opacity:.7; }
+  h1{ font-family:var(--mono); font-weight:700; font-size:clamp(2rem,4vw,3rem); line-height:1.08; margin:.4em 0 .3em; text-wrap:balance; letter-spacing:-.01em; }
+  h1 .cursor{ display:inline-block; width:.5ch; background:var(--accent); margin-left:.15em; animation:blink 1.1s steps(1) infinite; }
+  @keyframes blink{ 50%{ opacity:0; } }
+  .hero p.lede{ max-width:62ch; font-size:1.1rem; color:var(--muted); margin:0 0 1.6em; }
+  .factrow{ display:flex; flex-wrap:wrap; gap:10px; }
+  .fact{ font-family:var(--mono); font-size:.78rem; background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:.5em .8em; display:flex; gap:.5em; }
+  .fact b{ color:var(--muted); font-weight:500; text-transform:uppercase; letter-spacing:.06em; font-size:.72rem; }
+
+  nav.index{ position:sticky; top:0; z-index:20; background:color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter:blur(8px); border-bottom:1px solid var(--border); }
+  nav.index .wrap{ display:flex; gap:4px; overflow-x:auto; padding:10px 24px; scrollbar-width:none; }
+  nav.index .wrap::-webkit-scrollbar{ display:none; }
+  nav.index a{ font-family:var(--mono); font-size:.82rem; text-decoration:none; color:var(--muted); padding:.5em .9em; border-radius:6px; white-space:nowrap; border:1px solid transparent; }
+  nav.index a:hover{ color:var(--text); border-color:var(--border); background:var(--surface); }
+  nav.index a.toc-link{ font-weight:600; color:var(--accent); border-right:1px solid var(--border); border-radius:0; margin-right:8px; padding-right:16px; }
+  nav.index a.toc-link:hover{ color:var(--accent); background:transparent; border-right-color:var(--border); }
+  nav.index a:not(.toc-link)::before{ content:'#'; opacity:.5; margin-right:.3em; }
+
+  .back-to-top{ position:fixed; bottom:22px; right:22px; z-index:40; width:46px; height:46px;
+    background:var(--surface); border:1px solid var(--border); border-radius:10px; box-shadow:var(--shadow);
+    font-family:var(--mono); font-size:1.15rem; color:var(--accent); line-height:1;
+    display:flex; align-items:center; justify-content:center; padding:0; cursor:pointer; text-decoration:none;
+    opacity:0; visibility:hidden; transform:translateY(10px);
+    transition:opacity .25s ease, transform .25s ease, visibility 0s .25s; }
+  .back-to-top.show{ opacity:1; visibility:visible; transform:translateY(0); transition:opacity .25s ease, transform .25s ease, visibility 0s; }
+  .back-to-top:hover{ background:var(--accent-soft); border-color:var(--accent); }
+  .back-to-top:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+  @media print{ nav.index, .back-to-top{ display:none; } }
+
+  section{ padding:52px 0; border-bottom:1px solid var(--border); }
+  section:last-of-type{ border-bottom:none; }
+  .section-head{ margin-bottom:28px; max-width:70ch; }
+  .kicker{ font-family:var(--mono); font-size:.75rem; letter-spacing:.1em; text-transform:uppercase; color:var(--accent-2); margin:0 0 .5em; }
+  .kicker::before{ content:"// "; opacity:.6; }
+  h2{ font-family:var(--mono); font-size:clamp(1.4rem,2.4vw,1.9rem); margin:0 0 .3em; text-wrap:balance; }
+  h3{ font-family:var(--mono); font-size:1.05rem; margin:1.6em 0 .5em; }
+  .section-head p{ color:var(--muted); margin:.4em 0 0; }
+
+  .obj-list{ display:grid; gap:12px; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); list-style:none; margin:0; padding:0; }
+  .obj-list li{ background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:16px 18px; box-shadow:var(--shadow); font-size:.95rem; }
+  .obj-list li::before{ content:"$"; color:var(--accent); font-family:var(--mono); margin-right:.6em; font-weight:700; }
+
+  .example{ background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px 22px; margin-bottom:16px; box-shadow:var(--shadow); }
+  .example h3{ font-family:var(--mono); font-size:1.02rem; margin:0 0 8px; }
+  .example .tag{ display:inline-block; font-family:var(--mono); font-size:.68rem; text-transform:uppercase; letter-spacing:.08em; color:var(--accent-2); background:var(--accent-2-soft); border-radius:5px; padding:.25em .6em; margin-bottom:10px; }
+  code.inline{ font-family:var(--mono); background:var(--surface-2); border-radius:4px; padding:.1em .4em; font-size:.92em; }
+  pre.term{ font-family:var(--mono); font-size:.85rem; background:var(--surface-2); border:1px solid var(--border); border-radius:8px; padding:12px 14px; overflow-x:auto; margin:10px 0; white-space:pre; }
+  details.solution{ margin-top:12px; }
+  details.solution summary{ cursor:pointer; font-family:var(--mono); font-size:.82rem; color:var(--accent); list-style:none; display:inline-flex; align-items:center; gap:.4em; }
+  details.solution summary::-webkit-details-marker{ display:none; }
+  details.solution summary::before{ content:"▸"; transition:transform .15s; }
+  details.solution[open] summary::before{ transform:rotate(90deg); }
+  details.solution .solbody{ margin-top:10px; padding:14px 16px; background:var(--surface-2); border-radius:8px; font-size:.92rem; }
+
+  table.blocks{ width:100%; border-collapse:collapse; font-size:.9rem; margin:10px 0 24px; }
+  table.blocks caption{ caption-side:top; text-align:left; font-family:var(--mono); font-size:.75rem; text-transform:uppercase; letter-spacing:.08em; color:var(--accent-2); margin-bottom:.5em; }
+  table.blocks th, table.blocks td{ border:1px solid var(--border); padding:.55em .8em; text-align:left; vertical-align:top; }
+  table.blocks th{ background:var(--surface-2); font-family:var(--mono); font-size:.78rem; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); white-space:nowrap; }
+  table.blocks td:first-child{ font-family:var(--mono); white-space:nowrap; color:var(--accent); }
+  table.blocks tbody tr:nth-child(odd){ background:var(--surface); }
+  table.blocks tbody tr:nth-child(even){ background:color-mix(in srgb, var(--surface) 60%, var(--surface-2)); }
+
+  .toolbar{ display:flex; gap:10px; align-items:center; margin-bottom:16px; flex-wrap:wrap; }
+  button.btn{ font-family:var(--mono); font-size:.82rem; background:var(--surface); color:var(--text); border:1px solid var(--border); border-radius:7px; padding:.6em 1em; cursor:pointer; }
+  button.btn:hover{ border-color:var(--accent); color:var(--accent); }
+  button.btn:focus-visible, a:focus-visible, input:focus-visible, .checklist li:focus-within{ outline:2px solid var(--accent); outline-offset:2px; }
+  #pveProgress{ font-family:var(--mono); font-size:.8rem; color:var(--muted); }
+
+  ul.checklist{ list-style:none; margin:0 0 24px; padding:0; display:grid; gap:8px; }
+  ul.checklist li{ background:var(--surface); border:1px solid var(--border); border-radius:9px; box-shadow:var(--shadow); }
+  ul.checklist label{ display:flex; align-items:flex-start; gap:.7em; padding:.7em .9em; cursor:pointer; font-size:.94rem; }
+  ul.checklist input[type="checkbox"]{ margin-top:.25em; width:16px; height:16px; accent-color:var(--accent); flex:0 0 auto; }
+  ul.checklist li.checked label{ color:var(--muted); text-decoration:line-through; text-decoration-color:var(--accent-2); }
+  ul.checklist li.checked{ border-color:var(--accent-2); }
+
+  #glossarySearch{ width:100%; max-width:420px; font-family:var(--sans); font-size:.95rem; padding:.7em .9em; border-radius:8px; border:1px solid var(--border); background:var(--surface); color:var(--text); margin-bottom:16px; }
+  .alpha-nav{ display:flex; flex-wrap:wrap; gap:4px; margin-bottom:24px; }
+  .alpha-nav a{ font-family:var(--mono); font-size:.78rem; width:1.9em; height:1.9em; display:flex; align-items:center; justify-content:center; border:1px solid var(--border); border-radius:5px; text-decoration:none; color:var(--muted); }
+  .alpha-nav a.has{ color:var(--text); }
+  .alpha-nav a.has:hover{ border-color:var(--accent); color:var(--accent); }
+  .glossary-letter{ font-family:var(--mono); color:var(--accent); font-size:1.1rem; margin:22px 0 8px; }
+  dl.glossary{ margin:0; }
+  dl.glossary .gitem{ border-top:1px solid var(--border); padding:12px 0; }
+  dl.glossary dt{ font-family:var(--mono); font-weight:600; }
+  dl.glossary dd{ margin:.3em 0 0; color:var(--muted); font-size:.92rem; }
+  .gitem.hidden{ display:none; }
+
+  .callout{ border-left:3px solid var(--accent); background:var(--accent-soft); border-radius:0 8px 8px 0; padding:14px 18px; margin:10px 0 24px; font-size:.92rem; }
+  .callout b{ font-family:var(--mono); }
+
+  footer{ padding:32px 0 60px; }
+  footer p{ color:var(--muted); font-size:.85rem; font-family:var(--mono); }
+</style>
+
+<style>
+  .callout.warn{ border-left-color:var(--danger); background:var(--danger-soft); }
+  .callout.info{ border-left-color:var(--accent-2); background:var(--accent-2-soft); }
+  .netdiagram{ font-family:var(--mono); font-size:.8rem; background:var(--surface-2); border:1px solid var(--border); border-radius:8px; padding:14px 16px; overflow-x:auto; white-space:pre; line-height:1.45; }
+  ol.steps{ padding-left:1.4em; } ol.steps > li{ margin-bottom:.6em; }
+</style>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="termbar"><span></span><span></span><span></span></div>
+    <p class="eyebrow">IT251 · Week 7</p>
+    <h1>Build Your Proxmox Homelab<span class="cursor">&nbsp;</span></h1>
+    <p class="lede">Install Proxmox VE, the free hypervisor that runs a large share of real homelabs and small-business server rooms. Then build Linux containers on it, network them, snapshot them, break them, and roll them back. Underneath the web interface it's plain Debian, so the skills you've learned so far (apt, systemd, networking, LVM, permissions) are what keep it running.</p>
+    <div class="factrow">
+      <span class="fact"><b>7.2</b> Lab</span>
+      <span class="fact"><b>Format</b> Individual · 2 sessions + pre-lab download</span>
+      <span class="fact"><b>Prereq</b> Labs 1–5, 7.1 Troubleshooting Primer</span>
+      <span class="fact"><b>Covers</b> hypervisors, KVM vs. LXC, apt repos, bridges, NAT, LVM-thin, snapshots</span>
+    </div>
+  </div>
+</header>
+
+<nav class="index" aria-label="Section index">
+  <div class="wrap">
+    <a href="index.html" class="toc-link">&larr; Table of Contents</a>
+    <a href="#overview">Overview</a>
+    <a href="#hardware">Can I Run It?</a>
+    <a href="#prelab">Pre-Lab</a>
+    <a href="#design">The Design</a>
+    <a href="#partA">A · Build the VM</a>
+    <a href="#partB">B · Install</a>
+    <a href="#partC">C · Post-Install</a>
+    <a href="#partD">D · First Container</a>
+    <a href="#partE">E · Snapshots</a>
+    <a href="#partF">F · The CLI</a>
+    <a href="#partG">G · Under the Hood</a>
+    <a href="#stretch">Stretch</a>
+    <a href="#readme">Your README</a>
+    <a href="#troubleshooting">Common Snags</a>
+    <a href="#glossary">Glossary</a>
+  </div>
+</nav>
+
+<main class="wrap">
+
+  <section id="overview">
+    <div class="section-head">
+      <p class="kicker">Hands-On · Homelab</p>
+      <h2>What this lab covers</h2>
+      <p>A <b>homelab</b> is a small set of servers you own and are allowed to break. People use them to practice for jobs they don't have yet. By the end of this lab you'll have your own Proxmox VE server. It will run two Linux containers on their own network, including a web server you can reach from your laptop's browser, and you'll write a README documenting the whole setup. You'll keep using it after this lab.</p>
+    </div>
+
+    <table class="blocks">
+      <caption>Time blocks · two 75-min sessions</caption>
+      <thead><tr><th>When</th><th>Block</th></tr></thead>
+      <tbody>
+        <tr><td>Before class</td><td>Pre-lab: check your hardware, download the ISO, verify its checksum</td></tr>
+        <tr><td>Session 1</td><td>Parts A–C: build the VirtualBox VM, install Proxmox, fix the network and repositories, update</td></tr>
+        <tr><td>Session 2</td><td>Parts D–G: first container in the web UI, snapshots and rollback, a second container from the CLI, under the hood</td></tr>
+        <tr><td>After class</td><td>Stretch goals; write your homelab README</td></tr>
+      </tbody>
+    </table>
+
+    <ul class="obj-list">
+      <li>Explain what a Type 1 hypervisor is and how Proxmox uses KVM/QEMU for VMs and LXC for containers</li>
+      <li>Explain the difference between a VM and a container, and when you'd pick each</li>
+      <li>Set up nested virtualization and VirtualBox host-only and NAT networking</li>
+      <li>Install a Linux server with a static IP, gateway, DNS, and FQDN</li>
+      <li>Manage apt repositories in the deb822 <code class="inline">.sources</code> format</li>
+      <li>Configure a Linux bridge and NAT masquerading in <code class="inline">/etc/network/interfaces</code></li>
+      <li>Create, network, snapshot, and roll back LXC containers from the web UI and with <code class="inline">pct</code></li>
+      <li>Find what's underneath: LVM-thin volumes, systemd units, config files, and UID mapping</li>
+    </ul>
+  </section>
+
+  <section id="hardware">
+    <div class="section-head">
+      <p class="kicker">Read first</p>
+      <h2>Can my laptop run this?</h2>
+      <p>Proxmox is normally installed directly on a server ("bare metal"). In class we'll run it <em>inside</em> a VirtualBox VM instead. Running one hypervisor inside another is called <b>nested</b> virtualization, and it needs more from your computer than your other lab VMs did.</p>
+    </div>
+    <table class="blocks">
+      <caption>Find your situation</caption>
+      <thead><tr><th>Your computer</th><th>What to do</th></tr></thead>
+      <tbody>
+        <tr><td>Intel/AMD, 16 GB+ RAM</td><td>You're set. Follow the lab as written. Give the Proxmox VM 6 GB if you want to try the full-VM stretch goal.</td></tr>
+        <tr><td>Intel/AMD, 8 GB RAM</td><td>Containers will work. Give the Proxmox VM 4 GB, close your browser tabs, and shut down your other lab VMs while Proxmox runs. Skip the full-VM stretch goal.</td></tr>
+        <tr><td>Windows with Hyper-V, WSL2, or "Core Isolation / Memory Integrity" on</td><td>VirtualBox still runs, but on top of Hyper-V (a green turtle icon appears in the VM window). Nested VMs won't work and everything runs slower. <b>Containers still work</b>, and they're the required part of this lab.</td></tr>
+        <tr><td>Apple Silicon Mac (any M-series)</td><td>Not supported. Proxmox's ARM version is built for server hardware, not Macs. Pair with a classmate, or ask your instructor about a campus machine.</td></tr>
+        <tr><td>A spare PC or mini PC at home</td><td>This is the best homelab you can have. The <a href="#baremetal">bare-metal sidebar</a> explains what changes when you install on real hardware.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="prelab">
+    <div class="section-head">
+      <p class="kicker">Before Session 1 · at home</p>
+      <h2>Pre-lab: download and verify</h2>
+      <p>The installer is about 1.7 GB. Download it at home, not over campus Wi-Fi during class.</p>
+    </div>
+    <ol class="steps">
+      <li>Go to <a href="https://www.proxmox.com/en/downloads">proxmox.com/en/downloads</a> and download the latest <b>Proxmox VE ISO Installer</b>. Use the regular one, <b>not</b> the one labeled "For ARM64".</li>
+      <li>On the same page, copy the <b>SHA256</b> checksum listed for that ISO.</li>
+      <li>Verify the download. This is the same habit as the checksum callout in the Week 4 tooling lab: never install an OS you haven't verified.
+        <pre class="term"># Linux
+sha256sum ~/Downloads/proxmox-ve_*.iso
+
+# macOS
+shasum -a 256 ~/Downloads/proxmox-ve_*.iso
+
+# Windows (PowerShell)
+Get-FileHash $HOME\Downloads\proxmox-ve_*.iso -Algorithm SHA256</pre>
+        Compare the output with the checksum from the website. If they don't match, download it again.</li>
+      <li>Make sure you have <b>at least 70 GB free</b> on your laptop's drive. The virtual disk starts small and grows as you use it.</li>
+    </ol>
+  </section>
+
+  <section id="design">
+    <div class="section-head">
+      <p class="kicker">Understand before you click</p>
+      <h2>The design</h2>
+      <p>Before you build anything, know where every address comes from. This is the network you're making:</p>
+    </div>
+<div class="netdiagram">  YOUR LAPTOP (the VirtualBox host)
+  ├── browser ──► https://192.168.56.10:8006      (Proxmox web UI)
+  │   browser ──► http://192.168.56.21            (nginx in container web01)
+  │
+  │   host-only network "vboxnet0"  192.168.56.0/24   your laptop is .1
+  │   ════════════════════════════╤══════════════════════════════
+  │                               │  Adapter 1 (promiscuous: Allow All)
+  │   ┌───────────────────────────┴────────────────────────────┐
+  │   │ PROXMOX VE VM   pve.homelab.lan                         │
+  │   │   vmbr0  192.168.56.10/24  ◄── Linux bridge             │
+  │   │     ├── CT 101 web01  192.168.56.21  (gateway .10)      │
+  │   │     └── CT 102 db01   192.168.56.22  (gateway .10)      │
+  │   │                                                         │
+  │   │   NAT out (masquerade)  ──► enp0s8  10.0.2.15 (static)  │
+  │   └─────────────────────────────────┬───────────────────────┘
+  │                                     │  Adapter 2: VirtualBox NAT
+  └──────────────────────────────── internet</div>
+
+    <div class="example">
+      <span class="tag">Why two adapters?</span>
+      <h3>One for you to reach in, one for it to reach out</h3>
+      <p>The <b>host-only</b> adapter is a private network between your laptop and the VM. You can reach Proxmox and the containers at fixed addresses, but nothing on that network can reach the internet. The <b>NAT</b> adapter is the reverse: it can reach the internet, but your laptop can't easily reach in. Proxmox's own guide for running inside VirtualBox recommends exactly this pair.</p>
+      <p>The Proxmox host then acts as the <em>router</em> for its containers. Their traffic leaves through the host, which rewrites it to look like the host's own traffic. This is called masquerading, and your home router does the same thing for your phone and laptop.</p>
+    </div>
+
+    <div class="example">
+      <span class="tag">Concept</span>
+      <h3>VMs vs. containers</h3>
+      <p>A <b>VM</b> (KVM/QEMU in Proxmox) emulates a whole computer and runs its own kernel. It can run any operating system, Windows included, but it uses a lot of RAM and CPU. A <b>container</b> (LXC in Proxmox) shares the host's Linux kernel and keeps only its processes, files, and network separate. It starts in about a second and uses a fraction of the memory, but it can only run Linux. Containers are the required part of this lab because they work even where nested VMs don't.</p>
+    </div>
+  </section>
+
+  <section id="partA">
+    <div class="section-head">
+      <p class="kicker">Session 1</p>
+      <h2>Part A · Build the VirtualBox VM</h2>
+    </div>
+    <ol class="steps">
+      <li><b>Check that the host-only network exists.</b> In VirtualBox, go to File → Tools → Network Manager → <b>Host-only Networks</b>. You should see one at <code class="inline">192.168.56.1/24</code>. It's usually named <code class="inline">vboxnet0</code> on Linux and macOS, or "VirtualBox Host-Only Ethernet Adapter" on Windows. If there isn't one, click <b>Create</b>.</li>
+      <li><b>Create a new VM:</b> name <code class="inline">PVE-Lab</code>, choose the Proxmox ISO, type <b>Linux</b>, version <b>Debian (64-bit)</b>. Tick <b>Skip Unattended Installation</b> if it's offered.</li>
+      <li><b>Hardware:</b> 4096 MB RAM (6144 if you have 16 GB or more), 2 CPUs (4 if you have them).</li>
+      <li><b>Disk:</b> 64 GB, dynamically allocated.</li>
+      <li>Before the first boot, open the VM's <b>Settings</b>:
+        <ul>
+          <li><b>System → Processor:</b> tick <b>Enable Nested VT-x/AMD-V</b>. If the box is greyed out, close the VirtualBox window and run this on your laptop instead:
+            <pre class="term">VBoxManage modifyvm "PVE-Lab" --nested-hw-virt on</pre></li>
+          <li><b>Audio:</b> untick <b>Enable Audio</b>.</li>
+          <li><b>Network → Adapter 1:</b> set Attached to <b>Host-only Adapter</b> and choose <code class="inline">vboxnet0</code> (or the Windows equivalent). Expand <b>Advanced</b> and set Promiscuous Mode to <b>Allow All</b>. <b>Write down the MAC address</b> shown here.</li>
+          <li><b>Network → Adapter 2:</b> tick Enable and set Attached to <b>NAT</b>. Use plain "NAT", <em>not</em> "NAT Network".</li>
+        </ul>
+      </li>
+    </ol>
+    <div class="callout info"><b>Why "Allow All"?</b> Each container gets its own MAC address on Adapter 1. By default, VirtualBox only delivers traffic addressed to the VM's <em>own</em> MAC address, so your containers would never receive a reply. Promiscuous mode tells VirtualBox to pass all traffic through to the VM, where the <code class="inline">vmbr0</code> bridge delivers it to the right container.</div>
+  </section>
+
+  <section id="partB">
+    <div class="section-head">
+      <p class="kicker">Session 1</p>
+      <h2>Part B · Install Proxmox VE</h2>
+      <p>Start the VM and choose <b>Install Proxmox VE (Graphical)</b>. Accept the license, then fill in each screen:</p>
+    </div>
+    <table class="blocks">
+      <caption>Installer answers</caption>
+      <thead><tr><th>Screen</th><th>Enter</th></tr></thead>
+      <tbody>
+        <tr><td>Target harddisk</td><td>The 64 GB disk. Leave Options at the default, <b>ext4</b>. Proxmox then creates two storage areas: <code class="inline">local</code>, a folder for ISOs and templates, and <code class="inline">local-lvm</code>, an LVM thin pool for container and VM disks.</td></tr>
+        <tr><td>Location / time zone</td><td>United States, America/Chicago</td></tr>
+        <tr><td>Password / email</td><td>A root password you'll remember. Save it in your password manager, not in your README. Any email address works.</td></tr>
+        <tr><td>Management interface</td><td>The one whose <b>MAC address matches Adapter 1</b> (the one you wrote down). Picking the wrong one is the most common mistake in this lab.</td></tr>
+        <tr><td>Hostname (FQDN)</td><td><code class="inline">pve.homelab.lan</code></td></tr>
+        <tr><td>IP address (CIDR)</td><td><code class="inline">192.168.56.10/24</code></td></tr>
+        <tr><td>Gateway</td><td><code class="inline">192.168.56.1</code>. This is temporary. The installer insists on a gateway on this network, and you'll fix it in Part C.</td></tr>
+        <tr><td>DNS server</td><td><code class="inline">10.0.2.3</code> (VirtualBox NAT's built-in DNS relay)</td></tr>
+      </tbody>
+    </table>
+    <p>Click <b>Install</b>. After the reboot, the console shows a login prompt and the URL <code class="inline">https://192.168.56.10:8006/</code>. If the VM boots into the installer again, remove the ISO (Devices → Optical Drives).</p>
+    <p>On your laptop, open <b>https://192.168.56.10:8006</b>. Your browser will warn that the certificate isn't trusted. That's expected: Proxmox made its own self-signed certificate during the install. Click through (Advanced → Continue). Log in as <code class="inline">root</code> with the realm set to <b>Linux PAM</b>. Close the "No valid subscription" popup; Part C explains why it appears.</p>
+    <div class="callout"><b>Can't reach the web UI?</b> In the VM console, log in as root and run <code class="inline">ip -br addr</code>. If <code class="inline">vmbr0</code> doesn't show 192.168.56.10, or it's bridged to the wrong NIC, see <a href="#troubleshooting">Common Snags</a>.</div>
+  </section>
+
+  <section id="partC">
+    <div class="section-head">
+      <p class="kicker">Session 1</p>
+      <h2>Part C · Post-install: network, repos, updates</h2>
+      <p>Proxmox is installed, but it can't reach the internet yet and it's pointed at a paid update channel. Fixing both is ordinary Debian administration. From here on, work in the web UI's <b>Shell</b> (click <code class="inline">pve</code> in the left tree, then <b>&gt;_ Shell</b>), or SSH in from your laptop: <code class="inline">ssh root@192.168.56.10</code>.</p>
+    </div>
+
+    <h3>C1 · Diagnose first</h3>
+    <pre class="term">ip -br link          # your two NICs: names like enp0s3 and enp0s8
+ip -br addr          # which one has an address?
+ip route             # where does "default" point?
+ping -c 3 1.1.1.1            # can we reach the internet by IP?
+ping -c 3 deb.debian.org     # ...and by name?</pre>
+    <p>Both pings fail. The name lookup fails first, with "Temporary failure in name resolution", but DNS isn't the real cause. <code class="inline">ip route</code> shows why: the default route goes to 192.168.56.1, which is your laptop on the host-only network, and that network doesn't lead to the internet. The second NIC, the NAT one, has no address at all, so neither the internet (1.1.1.1) nor the DNS relay (10.0.2.3) is reachable. Fix the lowest layer first, and the DNS error goes away by itself. This is the method from the <a href="IT251_Week7_Study_Page.html">7.1 Troubleshooting Primer</a>: find the evidence before you change anything.</p>
+
+    <h3>C2 · Fix the network</h3>
+    <p>Back up the file, then edit it:</p>
+    <pre class="term">cp /etc/network/interfaces /root/interfaces.orig
+nano /etc/network/interfaces</pre>
+    <p>Make it look like this, using <b>your</b> NIC names from <code class="inline">ip -br link</code>. Adapter 1 is the NIC already listed in <code class="inline">bridge-ports</code>. Adapter 2 is the other one. The installer may have added an <code class="inline">iface enp0s8 inet manual</code> line for Adapter 2, so replace it rather than adding a second one. Each interface should appear only once.</p>
+    <pre class="term">auto lo
+iface lo inet loopback
+
+iface enp0s3 inet manual
+
+auto vmbr0
+iface vmbr0 inet static
+        address 192.168.56.10/24
+        # gateway line REMOVED - the default route now comes from enp0s8
+        bridge-ports enp0s3
+        bridge-stp off
+        bridge-fd 0
+        # Route the containers' traffic out through the NAT adapter:
+        post-up   echo 1 &gt; /proc/sys/net/ipv4/ip_forward
+        post-up   iptables -t nat -A POSTROUTING -s '192.168.56.0/24' -o enp0s8 -j MASQUERADE
+        post-down iptables -t nat -D POSTROUTING -s '192.168.56.0/24' -o enp0s8 -j MASQUERADE
+
+auto enp0s8
+iface enp0s8 inet static
+        address 10.0.2.15/24
+        gateway 10.0.2.2</pre>
+    <p style="color:var(--muted); font-size:.92rem;">Why static, not DHCP? VirtualBox's NAT adapter always uses the same addresses: the guest is 10.0.2.15, the gateway is 10.0.2.2, and DNS is 10.0.2.3. Typing them in avoids depending on a DHCP client being installed.</p>
+    <p>Apply it without rebooting, then verify:</p>
+    <pre class="term">ifreload -a
+ip route                       # default via 10.0.2.2 dev enp0s8
+cat /proc/sys/net/ipv4/ip_forward   # 1
+ping -c 3 deb.debian.org       # replies now</pre>
+    <div class="example">
+      <span class="tag">What each line does</span>
+      <h3>A bridge, a route, and a translation</h3>
+      <p><code class="inline">vmbr0</code> is a <b>Linux bridge</b>, a virtual switch. <code class="inline">bridge-ports enp0s3</code> plugs the VM's network card into it, and every container you create gets plugged in too. Setting <code class="inline">ip_forward</code> to 1 lets the kernel pass packets <em>between</em> interfaces, which turns the host into a router.</p>
+      <p>The <code class="inline">MASQUERADE</code> rule rewrites the source address of any traffic from 192.168.56.0/24 that leaves through <code class="inline">enp0s8</code>. Replies come back to the host, which forwards them to the right container. This snippet is adapted from Proxmox's own network documentation.</p>
+    </div>
+
+    <h3>C3 · Switch to the free update repository</h3>
+    <p>Proxmox sells support subscriptions, and a fresh install points apt at the <b>enterprise</b> repository, which needs a paid key. If you run <code class="inline">apt update</code> now, you'll see <code class="inline">401 Unauthorized</code> errors. To fix it, you'll edit apt sources in the deb822 <code class="inline">.sources</code> format, the newer style that Debian 13 uses:</p>
+    <pre class="term">ls /etc/apt/sources.list.d/
+cat /etc/apt/sources.list.d/pve-enterprise.sources</pre>
+    <p>Disable the enterprise repos by adding one line, <code class="inline">Enabled: no</code>, to each entry:</p>
+    <pre class="term">nano /etc/apt/sources.list.d/pve-enterprise.sources   # add:  Enabled: no
+nano /etc/apt/sources.list.d/ceph.sources             # add:  Enabled: no  (if the file exists)</pre>
+    <p>Then add the free <b>no-subscription</b> repository:</p>
+    <pre class="term">cat &gt; /etc/apt/sources.list.d/proxmox.sources &lt;&lt;'EOF'
+Types: deb
+URIs: http://download.proxmox.com/debian/pve
+Suites: trixie
+Components: pve-no-subscription
+Signed-By: /usr/share/keyrings/proxmox-archive-keyring.gpg
+EOF
+apt update
+apt full-upgrade -y</pre>
+    <p style="color:var(--muted); font-size:.92rem;">Check your work in the web UI: under <code class="inline">pve</code> → <b>Updates → Repositories</b>, the no-subscription repo should be enabled and the enterprise ones disabled. The free repo ships the same software as the enterprise one, but with less testing before release. That's fine for a homelab, but a business wouldn't run it. The "No valid subscription" popup will keep appearing at login. That's normal; just click OK.</p>
+    <div class="callout"><b>Snapshot time:</b> shut down the VM (<code class="inline">poweroff</code>) and take a VirtualBox snapshot named <code class="inline">pve-installed</code>. You can roll back to this point if anything later goes wrong.</div>
+  </section>
+
+  <section id="partD">
+    <div class="section-head">
+      <p class="kicker">Session 2</p>
+      <h2>Part D · Your first container (web UI)</h2>
+    </div>
+
+    <div class="toolbar">
+      <button class="btn" id="resetPveBtn">Reset progress</button>
+      <span id="pveProgress"></span>
+    </div>
+    <ul class="checklist" id="pveChecklist">
+      <li><label><input type="checkbox" data-id="pve-0"> ISO downloaded and checksum verified</label></li>
+      <li><label><input type="checkbox" data-id="pve-1"> Proxmox installed; web UI reachable at https://192.168.56.10:8006</label></li>
+      <li><label><input type="checkbox" data-id="pve-2"> Host can ping deb.debian.org; apt uses the no-subscription repo; updates installed</label></li>
+      <li><label><input type="checkbox" data-id="pve-3"> VirtualBox snapshot <code class="inline">pve-installed</code> taken</label></li>
+      <li><label><input type="checkbox" data-id="pve-4"> CT 101 web01 serves the nginx page to my laptop's browser</label></li>
+      <li><label><input type="checkbox" data-id="pve-5"> Broke web01 and rolled it back from a snapshot</label></li>
+      <li><label><input type="checkbox" data-id="pve-6"> CT 102 db01 created with <code class="inline">pct</code>; db01 can ping web01</label></li>
+      <li><label><input type="checkbox" data-id="pve-7"> Answered the Part G questions</label></li>
+      <li><label><input type="checkbox" data-id="pve-8"> Homelab README written</label></li>
+    </ul>
+
+    <h3>D1 · Download a template</h3>
+    <p>A container template is a ready-made Linux root filesystem, compressed into one file. In the left tree, go to <code class="inline">local (pve)</code> → <b>CT Templates</b> → <b>Templates</b>. Search for <code class="inline">debian</code>, choose the newest <b>debian-13-standard</b>, and click <b>Download</b>.</p>
+
+    <h3>D2 · Create the container</h3>
+    <p>Click <b>Create CT</b> (top right) and fill in:</p>
+    <table class="blocks">
+      <caption>Create CT wizard</caption>
+      <thead><tr><th>Tab</th><th>Setting</th></tr></thead>
+      <tbody>
+        <tr><td>General</td><td>CT ID <code class="inline">101</code>, hostname <code class="inline">web01</code>, a root password. Leave <b>Unprivileged container</b> ticked (Part G explains why).</td></tr>
+        <tr><td>Template</td><td>Storage <code class="inline">local</code>, the debian-13-standard template</td></tr>
+        <tr><td>Disks</td><td>Storage <code class="inline">local-lvm</code>, 8 GB</td></tr>
+        <tr><td>CPU / Memory</td><td>1 core, 512 MB memory, 512 MB swap</td></tr>
+        <tr><td>Network</td><td>Bridge <code class="inline">vmbr0</code>, IPv4 <b>Static</b>: <code class="inline">192.168.56.21/24</code>, gateway <code class="inline">192.168.56.10</code> (the Proxmox host, which is now a router)</td></tr>
+        <tr><td>DNS</td><td>Leave blank to use the host's settings</td></tr>
+        <tr><td>Confirm</td><td>Tick <b>Start after created</b>, then Finish</td></tr>
+      </tbody>
+    </table>
+
+    <h3>D3 · Make it do something</h3>
+    <p>Select <code class="inline">101 (web01)</code> → <b>Console</b>, log in as root, and run:</p>
+    <pre class="term">ip -br addr                 # 192.168.56.21 on eth0
+ping -c 3 deb.debian.org    # internet works through the host's NAT
+apt update &amp;&amp; apt install -y nginx
+systemctl status nginx      # active (running), same systemd as your VMs
+echo "web01 - my homelab works" &gt; /var/www/html/index.html</pre>
+    <p>Now, in your <b>laptop's</b> browser, go to <b>http://192.168.56.21</b>. That page is served by a container, running in a hypervisor, inside a VM, on your laptop.</p>
+    <details class="solution">
+      <summary>Hint: ping or apt fails inside the container</summary>
+      <div class="solbody">
+        <p>Work outward one hop at a time, as in the 7.1 Troubleshooting Primer:</p>
+        <ul>
+          <li>If <code class="inline">ping -c 3 192.168.56.10</code> (the gateway) fails, the problem is in Part A. Check that promiscuous mode is set to <b>Allow All</b> on Adapter 1.</li>
+          <li>If the gateway answers but <code class="inline">ping -c 3 1.1.1.1</code> doesn't, check the Proxmox host. Is <code class="inline">ip_forward</code> set to 1? Does <code class="inline">iptables -t nat -L POSTROUTING -n</code> show the MASQUERADE rule?</li>
+          <li>If 1.1.1.1 answers but <code class="inline">deb.debian.org</code> doesn't, the problem is DNS. Check <code class="inline">cat /etc/resolv.conf</code> in the container.</li>
+        </ul>
+      </div>
+    </details>
+
+    <h3>D4 · Log in like a sysadmin</h3>
+    <p>The console is for emergencies. Make a normal user in web01 and SSH in from your laptop:</p>
+    <pre class="term"># in the web01 console
+adduser student             # pick a password
+usermod -aG sudo student
+
+# on your laptop
+ssh student@192.168.56.21</pre>
+    <p style="color:var(--muted); font-size:.92rem;">If you get "Connection refused", the template didn't include an SSH server. Run <code class="inline">apt install -y openssh-server</code> in the console. SSH as <code class="inline">root</code> with a password is refused on purpose: Debian's default setting <code class="inline">PermitRootLogin prohibit-password</code> is a security measure, so leave it in place.</p>
+  </section>
+
+  <section id="partE">
+    <div class="section-head">
+      <p class="kicker">Session 2</p>
+      <h2>Part E · Snapshot, break, roll back</h2>
+      <p>This is why homelabs use hypervisors: undo takes one click, so you can experiment freely.</p>
+    </div>
+    <ol class="steps">
+      <li>Select web01 → <b>Snapshots</b> → <b>Take Snapshot</b>, and name it <code class="inline">nginx_working</code>.</li>
+      <li>Break it. In web01, as root:
+        <pre class="term">rm -rf /etc/nginx
+systemctl restart nginx     # fails - read why with: journalctl -u nginx -n 10</pre>
+        Refresh http://192.168.56.21 in your browser: the site is down.</li>
+      <li>Roll back: <b>Snapshots</b> → select <code class="inline">nginx_working</code> → <b>Rollback</b>. Start the container again if it stopped.</li>
+      <li>Refresh the browser. Your custom page is back.</li>
+    </ol>
+    <div class="callout info"><b>A snapshot is not a backup.</b> It lives on the same disk as the container, so if the disk dies, the snapshot dies with it. Proxmox makes real backups with <code class="inline">vzdump</code> (Datacenter → Backup). The same rule applies to your VirtualBox snapshots: they protect you from bad changes, not from hardware failure.</div>
+  </section>
+
+  <section id="partF">
+    <div class="section-head">
+      <p class="kicker">Session 2</p>
+      <h2>Part F · Do it again from the command line</h2>
+      <p>Every action in the web UI has a command behind it. Real admins script repetitive jobs, and the exam expects you to know the GUI isn't the only way. From the Proxmox host's shell:</p>
+    </div>
+    <pre class="term">pveam update                                  # refresh the template catalog
+pveam available --section system | grep debian
+pveam list local                              # templates you already downloaded
+pct list                                      # containers that exist</pre>
+    <p>Create db01 with one command. Copy the exact template name from <code class="inline">pveam list local</code>:</p>
+    <pre class="term">pct create 102 local:vztmpl/debian-13-standard_&lt;VERSION&gt;_amd64.tar.zst \
+  --hostname db01 \
+  --memory 512 \
+  --rootfs local-lvm:8 \
+  --net0 name=eth0,bridge=vmbr0,ip=192.168.56.22/24,gw=192.168.56.10 \
+  --unprivileged 1 \
+  --password 'Change-Me-251'
+
+pct start 102
+pct list
+pct exec 102 -- ip -br addr
+pct exec 102 -- ping -c 3 192.168.56.21      # db01 can reach web01
+pct exec 102 -- passwd                        # now change that password</pre>
+    <div class="callout warn"><b>Notice what you just did:</b> you typed a password on the command line. It's now in the root user's shell history (<code class="inline">history | grep password</code>), which is why the next command changes it. In a real script you'd use <code class="inline">--ssh-public-keys</code> instead.</div>
+    <details class="solution">
+      <summary>Hint: "unable to parse" or "volume does not exist"</summary>
+      <div class="solbody">
+        <p>The template name must match exactly, including the version and the <code class="inline">.tar.zst</code> ending. Run <code class="inline">pveam list local</code> and copy the <code class="inline">local:vztmpl/…</code> value from its output. Each backslash must be the very last character on its line, with no space after it.</p>
+      </div>
+    </details>
+  </section>
+
+  <section id="partG">
+    <div class="section-head">
+      <p class="kicker">Session 2 · connect it to the course</p>
+      <h2>Part G · Under the hood</h2>
+      <p>Proxmox is Debian with extra packages. Run each command on the <b>Proxmox host</b>, and write a one-line answer to each question in your README.</p>
+    </div>
+    <div class="example">
+      <span class="tag">G1 · Services</span>
+      <h3>What is the web UI, really?</h3>
+      <pre class="term">ss -tlnp | grep 8006
+systemctl status pveproxy</pre>
+      <p><b>Q:</b> Which process is listening on port 8006, and which systemd unit runs it? What would you check first if the web UI stopped loading?</p>
+    </div>
+    <div class="example">
+      <span class="tag">G2 · Storage</span>
+      <h3>Where do container disks live?</h3>
+      <pre class="term">lsblk
+lvs
+pvesm status</pre>
+      <p><b>Q:</b> Find web01's disk in the <code class="inline">lvs</code> output. Which volume group is it in? Why does <code class="inline">Data%</code> show much less than 8 GB in use? (Hint: "thin" provisioning.)</p>
+    </div>
+    <div class="example">
+      <span class="tag">G3 · Config files</span>
+      <h3>The web UI is editing text files</h3>
+      <pre class="term">pct config 101
+cat /etc/pve/lxc/101.conf
+mount | grep /etc/pve</pre>
+      <p><b>Q:</b> What kind of filesystem is mounted on <code class="inline">/etc/pve</code>? (It's Proxmox's cluster filesystem. In a cluster of several servers, every node sees the same files here.)</p>
+    </div>
+    <div class="example">
+      <span class="tag">G4 · Permissions</span>
+      <h3>Unprivileged containers: root isn't root</h3>
+      <pre class="term">pct exec 101 -- ps -o user,pid,cmd -C nginx   # inside: run by root and www-data
+ps -o user,pid,cmd -C nginx                    # on the host: the same processes</pre>
+      <p><b>Q:</b> Which user does the host say owns the nginx master process? Inside an unprivileged container, UID 0 is mapped to UID 100000 on the host. Why does that matter if someone breaks out of the container?</p>
+    </div>
+    <div class="example">
+      <span class="tag">G5 · Hypervisor</span>
+      <h3>Is hardware virtualization available?</h3>
+      <pre class="term">grep -cE 'vmx|svm' /proc/cpuinfo
+ls -l /dev/kvm</pre>
+      <p><b>Q:</b> If the count is above 0 and <code class="inline">/dev/kvm</code> exists, nested virtualization is working and full VMs will run. What did yours show? What's the difference between a Type 1 and a Type 2 hypervisor, and which type is Proxmox? Which is VirtualBox?</p>
+    </div>
+  </section>
+
+  <section id="stretch">
+    <div class="section-head">
+      <p class="kicker">Optional · after class</p>
+      <h2>Stretch goals</h2>
+      <p>Your homelab is yours to keep. Pick any of these.</p>
+    </div>
+    <div class="example">
+      <span class="tag">Stretch 1 · needs 6 GB and a working G5</span>
+      <h3>A full VM</h3>
+      <p>Upload a small ISO, such as Alpine Linux's "virtual" image, to <code class="inline">local</code> → ISO Images. Then click <b>Create VM</b>: 1 core, 512 MB, 4 GB disk. On the Network tab, set the model to <b>Intel E1000</b>; Proxmox's VirtualBox guide warns that VirtIO network cards can misbehave when nested. Compare its boot time with a container's.</p>
+    </div>
+    <div class="example">
+      <span class="tag">Stretch 2</span>
+      <h3>A real backup and restore</h3>
+      <pre class="term">vzdump 102 --storage local --mode snapshot
+ls /var/lib/vz/dump/</pre>
+      <p>Destroy db01 (<code class="inline">pct stop 102 &amp;&amp; pct destroy 102</code>), then restore it from the backup under <code class="inline">local</code> → Backups.</p>
+    </div>
+    <div class="example">
+      <span class="tag">Stretch 3</span>
+      <h3>Names instead of numbers</h3>
+      <p>Add <code class="inline">web01.homelab.lan</code> and <code class="inline">db01.homelab.lan</code> to <code class="inline">/etc/hosts</code> on the Proxmox host, in both containers, and on your laptop. Then browse to <code class="inline">http://web01.homelab.lan</code>.</p>
+    </div>
+    <div class="example" id="baremetal">
+      <span class="tag">Sidebar · bare metal</span>
+      <h3>Installing on a real spare PC</h3>
+      <p>Write the ISO to a USB stick (balenaEtcher, Rufus in DD mode, or <code class="inline">dd</code>). Turn on VT-x/AMD-V in the BIOS; it's often labeled "SVM" or "Virtualization Technology". Then install. <b>The installer erases the whole target disk.</b></p>
+      <p>Use your home network's addresses instead of 192.168.56.x: pick a free static IP outside your router's DHCP range, and use your router as the gateway. You won't need Part C2 at all, because a single NIC on a real network already has internet access, and you won't need promiscuous mode. Never plug a homelab into the campus network.</p>
+    </div>
+  </section>
+
+  <section id="readme">
+    <div class="section-head">
+      <p class="kicker">Deliverable</p>
+      <h2>Your homelab README</h2>
+      <p>Every real homelab has one. Three months from now you won't remember the IP addresses or why you set something up a certain way. Keep the README on your laptop, not inside the lab, because notes stored on the thing that broke won't help you fix it. <b>Never put passwords in it.</b></p>
+    </div>
+    <pre class="term"># My Homelab
+
+## Hardware
+Host laptop: ________  (CPU, RAM)    Proxmox VM: __ GB RAM, __ CPUs, 64 GB disk
+Proxmox VE version: ________  (run: pveversion)
+
+## Network
+| Name            | IP               | Role                     |
+|-----------------|------------------|--------------------------|
+| my laptop       | 192.168.56.1     | VirtualBox host          |
+| pve.homelab.lan | 192.168.56.10    | Proxmox host, router/NAT |
+| web01 (CT 101)  | 192.168.56.21    | nginx                    |
+| db01  (CT 102)  | 192.168.56.22    | (future database)        |
+
+## Snapshots
+- VirtualBox: pve-installed  - clean Proxmox after Part C
+- web01: nginx_working
+
+## Part G answers
+G1:
+G2:
+G3:
+G4:
+G5:
+
+## What broke and how I fixed it
+- </pre>
+  </section>
+
+  <section id="troubleshooting">
+    <div class="section-head">
+      <p class="kicker">Reference</p>
+      <h2>Common snags</h2>
+    </div>
+    <table class="blocks">
+      <caption>Proxmox homelab</caption>
+      <thead><tr><th>Symptom</th><th>Likely cause / fix</th></tr></thead>
+      <tbody>
+        <tr><td>"Enable Nested VT-x/AMD-V" is greyed out</td><td>Close the VirtualBox window and run <code class="inline">VBoxManage modifyvm "PVE-Lab" --nested-hw-virt on</code>. On Windows, if it still won't work, Hyper-V is active. Containers will still work.</td></tr>
+        <tr><td>Browser can't reach https://192.168.56.10:8006</td><td>In the VM console, run <code class="inline">ip -br addr</code>. If vmbr0 is bridged to the NAT NIC, you picked the wrong management interface. Change <code class="inline">bridge-ports</code> in <code class="inline">/etc/network/interfaces</code> to the Adapter 1 NIC and run <code class="inline">ifreload -a</code>. Also check that you typed <b>https</b>.</td></tr>
+        <tr><td>"Your connection is not private"</td><td>Expected, because the certificate is self-signed. Click Advanced → Continue.</td></tr>
+        <tr><td><code class="inline">apt update</code>: 401 Unauthorized</td><td>The enterprise repo is still enabled. Check that <code class="inline">Enabled: no</code> is inside the entry in <code class="inline">pve-enterprise.sources</code> (and <code class="inline">ceph.sources</code>), on its own line.</td></tr>
+        <tr><td><code class="inline">ifreload -a</code> errors</td><td>Usually a typo or a wrong NIC name; compare with <code class="inline">ip -br link</code>. To start over: <code class="inline">cp /root/interfaces.orig /etc/network/interfaces &amp;&amp; ifreload -a</code>.</td></tr>
+        <tr><td>Host pings by IP but not by name</td><td>DNS problem. <code class="inline">cat /etc/resolv.conf</code> should list 10.0.2.3. Fix it in the web UI under pve → System → DNS.</td></tr>
+        <tr><td>Container can't ping 192.168.56.10</td><td>Promiscuous mode isn't set to <b>Allow All</b> on Adapter 1. Shut down the Proxmox VM to change it.</td></tr>
+        <tr><td>Container pings the gateway but not the internet</td><td>On the host, <code class="inline">cat /proc/sys/net/ipv4/ip_forward</code> should print 1, and <code class="inline">iptables -t nat -L POSTROUTING -n</code> should show MASQUERADE. Check that the <code class="inline">-o</code> NIC name matches your NAT NIC.</td></tr>
+        <tr><td>Laptop can't open http://192.168.56.21</td><td>Check that nginx is running: <code class="inline">pct exec 101 -- systemctl status nginx</code>. The laptop's own firewall or a VPN can also interfere. A VPN can take over 192.168.x routes, so disconnect it.</td></tr>
+        <tr><td>Everything is very slow / VM freezes</td><td>Not enough RAM. Shut down other VMs and close browser tabs, lower the containers to 256 MB, and don't run a full nested VM on an 8 GB laptop.</td></tr>
+        <tr><td>Proxmox VM won't start: "VT-x is not available"</td><td>Virtualization is turned off in your laptop's BIOS/UEFI, or Hyper-V is using it. Turn it on in the BIOS. If that doesn't fix it, ask your instructor about Hyper-V.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="glossary">
+    <div class="section-head">
+      <p class="kicker">Reference</p>
+      <h2>Glossary &amp; index</h2>
+      <p>Every term from this lab, searchable and indexed A–Z.</p>
+    </div>
+    <input type="text" id="glossarySearch" placeholder="Search terms…" aria-label="Search glossary">
+    <div class="alpha-nav" id="alphaNav"></div>
+    <dl class="glossary" id="glossaryList"></dl>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>IT251 · Linux+ (XK0-006) · Build Your Proxmox Homelab: Proxmox VE nested in VirtualBox, LXC containers, bridged + NAT networking. Progress checkboxes save to this browser only.</p>
+  </div>
+</footer>
+
+<script>
+  const TERMS = [
+    {t:"Homelab", d:"A small set of servers you own and control, used to learn and experiment. Breaking it is part of the point."},
+    {t:"Hypervisor", d:"Software that runs virtual machines. Type 1 runs directly on hardware (Proxmox VE, ESXi, Hyper-V); Type 2 runs as an app on a normal OS (VirtualBox, VMware Workstation)."},
+    {t:"Proxmox VE", d:"A free, open-source, Debian-based Type 1 hypervisor platform with a web UI. Runs full VMs with KVM/QEMU and containers with LXC."},
+    {t:"KVM / QEMU", d:"The Linux kernel's built-in hypervisor (KVM) plus the program that emulates the rest of a computer (QEMU). Together they run full VMs, each with its own kernel."},
+    {t:"LXC", d:"Linux Containers: isolated groups of processes sharing the host's kernel. Lighter and faster than VMs, but Linux-only."},
+    {t:"Nested virtualization", d:"Running a hypervisor inside a VM. Needs the outer hypervisor to pass hardware virtualization (VT-x/AMD-V) through to the guest."},
+    {t:"VT-x / AMD-V", d:"CPU features for hardware-accelerated virtualization. They show up as the vmx (Intel) or svm (AMD) flag in /proc/cpuinfo."},
+    {t:"/dev/kvm", d:"The device file KVM exposes. If it exists, the system can run hardware-accelerated VMs."},
+    {t:"Host-only adapter", d:"A VirtualBox network shared only between the host and its VMs, with no route to the internet. Default range 192.168.56.0/24."},
+    {t:"NAT (VirtualBox)", d:"A VirtualBox adapter that gives a VM internet access through the host, hidden behind the host's address. Gateway 10.0.2.2, DNS relay 10.0.2.3. Not the same as \"NAT Network\"."},
+    {t:"Promiscuous mode", d:"Lets a network interface receive frames addressed to other MAC addresses. Needed so containers behind the VM's NIC get their traffic."},
+    {t:"Linux bridge (vmbr0)", d:"A virtual network switch in the kernel. Proxmox plugs the host's NIC and every guest into it."},
+    {t:"/etc/network/interfaces", d:"Debian's network configuration file, used by Proxmox through ifupdown2. Apply changes with ifreload -a."},
+    {t:"ifreload -a", d:"Applies changes to /etc/network/interfaces without a reboot (ifupdown2)."},
+    {t:"IP forwarding", d:"The kernel setting (net.ipv4.ip_forward) that lets Linux pass packets between interfaces, acting as a router."},
+    {t:"Masquerade", d:"A form of NAT that rewrites outgoing packets' source address to the router's own address, so private hosts can share one connection."},
+    {t:"Default route / gateway", d:"Where a system sends traffic for any network it doesn't have a more specific route for. Shown by ip route as \"default via ...\"."},
+    {t:"FQDN", d:"Fully Qualified Domain Name: hostname plus domain, like pve.homelab.lan. The Proxmox installer requires one."},
+    {t:"deb822 .sources", d:"The newer apt repository format: multi-line Key: value entries in /etc/apt/sources.list.d/*.sources. Enabled: no disables an entry."},
+    {t:"Enterprise vs. no-subscription repo", d:"Proxmox's paid, more-tested update channel vs. its free one. Same software; the free one gets updates a little sooner and is meant for non-production use."},
+    {t:"Self-signed certificate", d:"A TLS certificate signed by the server itself rather than a trusted authority. Encrypts traffic, but browsers warn because they can't verify it."},
+    {t:"Container template", d:"A compressed, prebuilt root filesystem used to create containers. Managed in Proxmox with pveam."},
+    {t:"pveam", d:"Proxmox VE Appliance Manager: lists, downloads, and removes container templates."},
+    {t:"pct", d:"Proxmox Container Toolkit: create, start, stop, configure, snapshot, and enter LXC containers from the command line."},
+    {t:"qm", d:"QEMU/KVM Virtual Machine Manager: the command-line tool for Proxmox VMs, the VM equivalent of pct."},
+    {t:"Unprivileged container", d:"A container whose root user is mapped to a high, unprivileged UID (e.g. 100000) on the host, limiting damage if someone escapes it. The Proxmox default."},
+    {t:"LVM-thin", d:"An LVM thin pool: volumes are given a size, but only consume space as data is written. Proxmox's local-lvm storage uses it."},
+    {t:"local / local-lvm", d:"The two default Proxmox storages after an ext4 install: local is a directory for ISOs, templates, and backups; local-lvm is a thin pool for guest disks."},
+    {t:"/etc/pve", d:"Proxmox's cluster filesystem (pmxcfs), a FUSE mount holding guest configs and cluster settings, kept in sync across all nodes."},
+    {t:"pveproxy", d:"The systemd service that serves the Proxmox web UI and API on port 8006."},
+    {t:"Snapshot vs. backup", d:"A snapshot freezes a guest's state on the same storage, for quick undo. A backup (vzdump) is a separate copy that survives losing the original disk."},
+    {t:"vzdump", d:"Proxmox's backup tool for VMs and containers."},
+  ];
+  const glossaryList = document.getElementById('glossaryList');
+  const alphaNav = document.getElementById('alphaNav');
+  const sorted = [...TERMS].sort((a, b) => a.t.replace(/^[^A-Za-z0-9]+/, '').localeCompare(b.t.replace(/^[^A-Za-z0-9]+/, ''), undefined, {sensitivity:'base'}));
+  const letterOf = (t) => { const c = t.replace(/^[^A-Za-z0-9]+/, '')[0].toUpperCase(); return /[A-Z]/.test(c) ? c : '#'; };
+  const letters = [...new Set(sorted.map(t => letterOf(t.t)))];
+  'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').forEach(L => {
+    const a = document.createElement('a');
+    a.textContent = L;
+    if (letters.includes(L)) { a.href = '#g-' + L; a.className = 'has'; }
+    else { a.href = 'javascript:void(0)'; }
+    alphaNav.appendChild(a);
+  });
+  let currentLetter = '';
+  sorted.forEach(item => {
+    const L = letterOf(item.t);
+    if (L !== currentLetter) {
+      currentLetter = L;
+      const h = document.createElement('div');
+      h.className = 'glossary-letter'; h.id = 'g-' + L; h.textContent = L;
+      glossaryList.appendChild(h);
+    }
+    const wrap = document.createElement('div');
+    wrap.className = 'gitem';
+    wrap.innerHTML = `<dt>${item.t}</dt><dd>${item.d}</dd>`;
+    wrap.dataset.search = (item.t + ' ' + item.d).toLowerCase();
+    glossaryList.appendChild(wrap);
+  });
+  document.getElementById('glossarySearch').addEventListener('input', (e) => {
+    const q = e.target.value.toLowerCase().trim();
+    document.querySelectorAll('.gitem').forEach(el => {
+      el.classList.toggle('hidden', q && !el.dataset.search.includes(q));
+    });
+  });
+
+  // Checklist progress, saved per-browser via localStorage
+  function wireChecklist(listId, progressId, resetBtnId, storageKey){
+    const list = document.getElementById(listId);
+    if (!list) return;
+    const boxes = Array.from(list.querySelectorAll('input[type="checkbox"]'));
+    let saved = {};
+    try { saved = JSON.parse(localStorage.getItem(storageKey) || '{}'); } catch(e) { saved = {}; }
+    function save(){
+      try { localStorage.setItem(storageKey, JSON.stringify(saved)); } catch(e) {}
+    }
+    function updateProgress(){
+      const done = boxes.filter(b => b.checked).length;
+      const el = document.getElementById(progressId);
+      if (el) el.textContent = `${done} / ${boxes.length} complete`;
+    }
+    boxes.forEach(b => {
+      const id = b.dataset.id;
+      if (saved[id]) { b.checked = true; b.closest('li').classList.add('checked'); }
+      b.addEventListener('change', () => {
+        saved[id] = b.checked;
+        b.closest('li').classList.toggle('checked', b.checked);
+        save(); updateProgress();
+      });
+    });
+    updateProgress();
+    const resetBtn = document.getElementById(resetBtnId);
+    if (resetBtn) resetBtn.addEventListener('click', () => {
+      boxes.forEach(b => { b.checked = false; b.closest('li').classList.remove('checked'); });
+      saved = {}; save(); updateProgress();
+    });
+  }
+  wireChecklist('pveChecklist', 'pveProgress', 'resetPveBtn', 'it251_pve_checklist');
+</script>
+
+<button id="backToTop" class="back-to-top" aria-label="Back to top" title="Back to top">&uarr;</button>
+
+<script>
+  const backToTop = document.getElementById('backToTop');
+  function toggleBackToTop(){ backToTop.classList.toggle('show', window.scrollY > 480); }
+  window.addEventListener('scroll', toggleBackToTop, {passive:true});
+  toggleBackToTop();
+  backToTop.addEventListener('click', () => window.scrollTo({top:0, behavior:'smooth'}));
+</script>
