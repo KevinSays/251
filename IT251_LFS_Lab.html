@@ -201,6 +201,7 @@
     <a href="#s122">12.2</a>
     <a href="#later">13.2 →</a>
     <a href="#safety">Snapshots &amp; Tests</a>
+    <a href="#catchup">Catch-Up</a>
     <a href="#troubleshooting">Common Snags</a>
     <a href="#journal">Build Journal</a>
     <a href="#glossary">Glossary</a>
@@ -553,7 +554,7 @@ rm -rf &lt;package&gt;                # ALWAYS delete the extracted directory wh
       <li><label><input type="checkbox" data-id="e"> GCC test summary compared to the official log; journal entry written</label></li>
     </ul>
 
-    <div class="callout warn"><b>Checkpoint:</b> at the start of 12.2, you should be <b>inside the chroot</b> (Chapter 7 done). If you aren't, tell your instructor <i>today</i>. It's the last point where catching up is still realistic.</div>
+    <div class="callout warn"><b>Checkpoint:</b> at the start of 12.2, you should be <b>inside the chroot</b> (Chapter 7 done). If you aren't, tell your instructor <i>today</i>. It's the last point where catching up is still realistic, and the <a href="#catchup">catch-up snapshot</a> exists for exactly this.</div>
 
     <p>Chapter 8 is about <b>83% of all compile time</b> (≈103 SBU of ≈124), and most of that is a few big packages. It's long and repetitive. Today's class time is for getting through the parts where the test suites matter, with help in the room.</p>
 
@@ -622,6 +623,36 @@ rm -rf &lt;package&gt;                # ALWAYS delete the extracted directory wh
     <div class="callout info"><b>Snapshot vs. backup, again.</b> A VirtualBox snapshot saves the whole VM, on your laptop's disk. The §7.15 tarball saves just the LFS filesystem, as a file. If your laptop's drive dies, both are gone. That's why real backups live on a different device. (You saw the same rule in the Proxmox lab.) Snapshots also use disk space, so delete old ones once you're safely past them.</div>
   </section>
 
+  <section id="catchup">
+    <div class="section-head">
+      <p class="kicker">Fell behind?</p>
+      <h2>The catch-up snapshot</h2>
+      <p>If you aren't inside the chroot by 12.2, or your build is damaged beyond repair, your instructor can give you a finished end-of-Chapter-7 system. You start Chapter 8 from there and still build, configure, and boot your own system.</p>
+    </div>
+
+    <h3>The rules</h3>
+    <ul>
+      <li><b>Ask first.</b> Your instructor gives you the file (<code class="inline">lfs-temp-tools-13.1-systemd.tar.xz</code> plus a <code class="inline">.sha256</code>). It's offered at the 12.2 checkpoint, or later if your build can't be recovered.</li>
+      <li><b>Once per student.</b> After that, use your own snapshots.</li>
+      <li><b>Grading:</b> you keep full credit for milestones you already earned. Milestones the snapshot skips (M2 and/or M3) earn <b>half credit</b>. Your journal must explain what went wrong, and still answer the "why" questions from Chapters 5–7: why the toolchain is built twice, what <code class="inline">env -i</code> protects against, and why chroot isn't a security boundary.</li>
+      <li>It contains a marker file, <code class="inline">/etc/it251-catchup</code>. That's expected; you'll show it at your boot demo.</li>
+    </ul>
+
+    <h3>How to use it</h3>
+    <p>You need the 9.2 disk setup done (your <code class="inline">/dev/sdb1</code> and its fstab line). Copy the file into the VM (e.g. <code class="inline">scp -P 2222 lfs-temp-tools-13.1-systemd.tar.xz* student@127.0.0.1:</code>), then <b>as root on the Debian host, not in chroot</b>:</p>
+    <pre class="term">sudo -i
+cd ~student &amp;&amp; sha256sum -c lfs-temp-tools-13.1-systemd.tar.xz.sha256
+U=$(blkid -s UUID -o value /dev/sdb1)     # remember the partition's UUID
+umount -R /mnt/lfs                        # unmount it (and any virtual filesystems)
+findmnt -R /mnt/lfs                       # must print nothing
+mkfs -v -t ext4 -U "$U" /dev/sdb1         # wipe ONLY sdb1, keeping the same UUID
+mount /mnt/lfs                            # uses your fstab line from 9.2
+cd /mnt/lfs &amp;&amp; tar -xpf ~student/lfs-temp-tools-13.1-systemd.tar.xz
+cat /mnt/lfs/etc/it251-catchup            # confirms the restore</pre>
+    <p>Then run <a href="#resume">Card 3</a>, enter the chroot, and start Chapter 8. Take snapshot <code class="inline">ch7-backup</code> first.</p>
+    <div class="callout warn"><b>Why not the book's restore?</b> §7.15's restore deletes everything with <code class="inline">rm -rf ./*</code> as root. If it runs in the wrong directory, it wipes your Debian host. Reformatting just <code class="inline">/dev/sdb1</code> can only ever touch the LFS disk. Double-check the device name: it's <b>sdb1</b>, never sda.</div>
+  </section>
+
   <section id="troubleshooting">
     <div class="section-head">
       <p class="kicker">When it breaks</p>
@@ -639,6 +670,7 @@ rm -rf &lt;package&gt;                # ALWAYS delete the extracted directory wh
         <tr><td>"No space left on device"</td><td><code class="inline">df -h /mnt/lfs</code>. You probably forgot to delete extracted source directories in <code class="inline">$LFS/sources</code>. Old snapshots can also fill your <i>laptop's</i> disk.</td></tr>
         <tr><td>Hundreds of test failures (Binutils/GCC)</td><td>Usually no pseudo-terminals: <code class="inline">devpts</code> isn't mounted. Exit the chroot, check <code class="inline">findmnt $LFS/dev/pts</code>, redo Card 3. See <a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/chapter04/abouttestsuites.html">§4.6</a>.</td></tr>
         <tr><td>"mount point does not exist" / weird chroot errors</td><td>Virtual filesystems not mounted, or mounted twice. Check <code class="inline">findmnt -R $LFS</code>.</td></tr>
+        <tr><td>My build is beyond repair</td><td>First try your most recent VirtualBox snapshot. If that doesn't help, ask about the <a href="#catchup">catch-up snapshot</a>.</td></tr>
         <tr><td>md5sum: FAILED</td><td>The download was corrupted or cut off. Delete that file and run <code class="inline">wget --input-file=wget-list-systemd --continue</code> again.</td></tr>
         <tr><td>Debian boots to emergency mode</td><td>The LFS disk is missing or moved and its fstab line lacks <code class="inline">nofail</code>. Log in as root at the emergency prompt and fix <code class="inline">/etc/fstab</code>.</td></tr>
         <tr><td>Can't SSH to port 2222</td><td>VM not fully booted, or another VM is using port 2222. Use the VirtualBox console meanwhile.</td></tr>
