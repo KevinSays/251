@@ -287,7 +287,7 @@ Get-FileHash .\IT251-LFS-host-deb13-lfs13.1.ova                  # Windows Power
       <li><b>First login:</b> start the VM and log in as <code class="inline">student</code> / <code class="inline">lfs-student</code>. You'll be made to set your own password right away.</li>
       <li><b>Use SSH so you can copy and paste</b> (strongly recommended). From your laptop's terminal (Windows Terminal, macOS Terminal, or Linux):
         <pre class="term">ssh -p 2222 student@127.0.0.1</pre>
-        If you change your password over SSH, it disconnects you afterward, so just log in again. If SSH won't connect, check that no other VM (like your Proxmox lab) is running and using port 2222.</li>
+        If you change your password over SSH, it disconnects you afterward, so just log in again. If SSH won't connect, check that no other running VM is using port 2222.</li>
       <li><b>Check the host</b> (this is part of milestone M1):
         <pre class="term">version-check.sh        # every line should say OK
 lsblk                   # sda = 25G (your OS), sdb = 30G with NO partitions</pre></li>
@@ -620,7 +620,7 @@ rm -rf &lt;package&gt;                # ALWAYS delete the extracted directory wh
         <tr><td>pre-boot</td><td>Before Ch. 10 GRUB</td><td>Your host's bootloader</td></tr>
       </tbody>
     </table>
-    <div class="callout info"><b>Snapshot vs. backup, again.</b> A VirtualBox snapshot saves the whole VM, on your laptop's disk. The §7.15 tarball saves just the LFS filesystem, as a file. If your laptop's drive dies, both are gone. That's why real backups live on a different device. (You saw the same rule in the Proxmox lab.) Snapshots also use disk space, so delete old ones once you're safely past them.</div>
+    <div class="callout info"><b>Snapshot vs. backup, again.</b> A VirtualBox snapshot saves the whole VM, on your laptop's disk. The §7.15 tarball saves just the LFS filesystem, as a file. If your laptop's drive dies, both are gone. That's why real backups live on a different device. Snapshots also use disk space, so delete old ones once you're safely past them.</div>
   </section>
 
   <section id="catchup">
