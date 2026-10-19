@@ -192,7 +192,7 @@
       <span class="fact"><b>9.1</b> Lecture</span>
       <span class="fact"><b>9.2</b> Lab · LFS 1 (Host Prep)</span>
       <span class="fact"><b>Covers</b> Ascend Module 5.1 · Domain: Security</span>
-      <span class="fact"><b>Next</b> 10.1: firewalls &amp; OS hardening (5.2&ndash;5.3)</span>
+      <span class="fact"><b>Next</b> <a href="IT251_Week10_Study_Page.html">10.1: firewalls &amp; OS hardening</a></span>
     </div>
   </div>
 </header>
@@ -627,15 +627,15 @@ sudo grep sshd /var/log/secure      # RHEL/Fedora text log</pre>
       explain:"Accounting is the record of what an identity did after it got in. auditd and the logs are accounting tools."
     },
     {
-      q:"In a PAM auth stack, a 'requisite' module fails. What happens next?",
+      q:"An auth stack reads: 'required pam_faillock.so preauth', then 'sufficient pam_sss.so', then 'required pam_unix.so'. A directory user isn't locked out and types the right password, so pam_sss succeeds. What happens next?",
       choices:[
-        "The remaining modules run, then the stack fails",
-        "The stack fails immediately; no more modules run",
-        "The failure is ignored if a later module passes",
-        "The user is prompted to try a different module"
+        "pam_unix still runs and must also pass",
+        "The auth stack succeeds right away; pam_unix isn't checked",
+        "The stack fails because the user isn't in /etc/shadow",
+        "PAM asks for the password a second time"
       ],
       correct:1,
-      explain:"requisite stops right away on failure. required also causes failure, but lets the rest of the stack run first."
+      explain:"sufficient returns success immediately when nothing required above it failed. pam_faillock passed, so pam_unix never runs."
     },
     {
       q:"Which PAM module type checks whether an account is expired or outside its allowed login hours, after the password has already been accepted?",
@@ -650,21 +650,21 @@ sudo grep sshd /var/log/secure      # RHEL/Fedora text log</pre>
       explain:"systemctl asks systemd over D-Bus, and systemd asks polkit whether the caller may manage that unit."
     },
     {
-      q:"SSSD fails to start right after you copied in a new sssd.conf. The file's contents are valid. What is the most likely cause?",
+      q:"SSSD is running and the host is joined to the domain, but 'getent passwd jsmith@corp.example.com' returns nothing. /etc/nsswitch.conf has 'passwd: files'. What's missing?",
       choices:[
-        "The file isn't owned by root with mode 0600",
-        "SSSD needs a reboot to read new config",
-        "nsswitch.conf is missing 'files'",
-        "The Kerberos ticket expired"
+        "sss on the passwd (and group) lines of nsswitch.conf",
+        "A Samba password for jsmith",
+        "A polkit rule for SSSD",
+        "An entry for jsmith in /etc/shadow"
       ],
       correct:0,
-      explain:"SSSD refuses a config file that other users can read, because it may hold a bind password."
+      explain:"NSS only asks the sources listed in nsswitch.conf. Without 'sss' there, lookups never reach SSSD."
     },
     {
-      q:"Which command both joins a Linux host to an AD domain and writes the SSSD and Kerberos configuration for you?",
-      choices:["smbpasswd -a","kinit -k","realm join","ldapadd"],
-      correct:2,
-      explain:"realm (realmd) discovers the domain, creates the computer account and writes sssd.conf and krb5.conf."
+      q:"After joining a server to AD, every domain user can SSH in. Policy says only the linux-admins group may log in. Which command fixes that?",
+      choices:["realm leave","realm permit -g linux-admins@corp.example.com","kinit linux-admins","smbpasswd -a linux-admins"],
+      correct:1,
+      explain:"realm permit sets SSSD's access rules: users still authenticate, but only the permitted group is authorized to log in."
     },
     {
       q:"In the DN 'uid=lee,ou=Staff,dc=corp,dc=example,dc=com', which part identifies the top of the tree?",

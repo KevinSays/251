@@ -1,0 +1,934 @@
+<title>Firewalls &amp; Hardening</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --bg:#f2f6f4;
+    --surface:#ffffff;
+    --surface-2:#e6efec;
+    --text:#0c1a15;
+    --muted:#51655d;
+    --border:#cddcd5;
+    --accent:#0f7a5c;
+    --accent-soft:#dcf1e7;
+    --accent-2:#0e7490;
+    --accent-2-soft:#dbeff4;
+    --danger:#b3261e;
+    --danger-soft:#f8dcd9;
+    --correct:#0f7a5c;
+    --correct-soft:#dcf1e7;
+    --shadow: 0 1px 2px rgba(12,26,21,.06), 0 8px 24px rgba(12,26,21,.07);
+    --mono:'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    --sans:'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0a0f0d; --surface:#0f1613; --surface-2:#131c18;
+      --text:#d9f5e8; --muted:#82a99a; --border:#1e2b26;
+      --accent:#3ddc97; --accent-soft:#123024;
+      --accent-2:#22d3ee; --accent-2-soft:#0c2b30;
+      --danger:#ff7a68; --danger-soft:#33150f;
+      --correct:#3ddc97; --correct-soft:#123024;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 12px 32px rgba(0,0,0,.45);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0a0f0d; --surface:#0f1613; --surface-2:#131c18;
+    --text:#d9f5e8; --muted:#82a99a; --border:#1e2b26;
+    --accent:#3ddc97; --accent-soft:#123024;
+    --accent-2:#22d3ee; --accent-2-soft:#0c2b30;
+    --danger:#ff7a68; --danger-soft:#33150f;
+    --correct:#3ddc97; --correct-soft:#123024;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 12px 32px rgba(0,0,0,.45);
+  }
+
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto;} *{animation-duration:.001ms !important; transition-duration:.001ms !important;} }
+  body{ margin:0; background:var(--bg); color:var(--text); font-family:var(--sans); line-height:1.55; -webkit-font-smoothing:antialiased; }
+  a{ color:var(--accent-2); }
+  ::selection{ background:var(--accent-soft); }
+  .wrap{ max-width:1080px; margin:0 auto; padding:0 24px; }
+
+  header.hero{
+    border-bottom:1px solid var(--border);
+    background:repeating-linear-gradient(180deg, var(--surface-2) 0 1px, var(--bg) 1px 28px);
+    padding:56px 0 40px;
+  }
+  .termbar{ display:flex; gap:6px; margin-bottom:20px; }
+  .termbar span{ width:11px; height:11px; border-radius:50%; }
+  .termbar span:nth-child(1){ background:#ff5f57; }
+  .termbar span:nth-child(2){ background:#febc2e; }
+  .termbar span:nth-child(3){ background:#28c840; }
+  .eyebrow{ font-family:var(--mono); font-size:.8rem; color:var(--accent); }
+  .eyebrow::before{ content:"$ "; opacity:.7; }
+  h1{ font-family:var(--mono); font-weight:700; font-size:clamp(2rem,4vw,3rem); line-height:1.08; margin:.4em 0 .3em; text-wrap:balance; letter-spacing:-.01em; }
+  h1 .cursor{ display:inline-block; width:.5ch; background:var(--accent); margin-left:.15em; animation:blink 1.1s steps(1) infinite; }
+  @keyframes blink{ 50%{ opacity:0; } }
+  .hero p.lede{ max-width:62ch; font-size:1.1rem; color:var(--muted); margin:0 0 1.6em; }
+  .factrow{ display:flex; flex-wrap:wrap; gap:10px; }
+  .fact{ font-family:var(--mono); font-size:.78rem; background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:.5em .8em; display:flex; gap:.5em; }
+  .fact b{ color:var(--muted); font-weight:500; text-transform:uppercase; letter-spacing:.06em; font-size:.72rem; }
+
+  nav.index{ position:sticky; top:0; z-index:20; background:color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter:blur(8px); border-bottom:1px solid var(--border); }
+  nav.index .wrap{ display:flex; gap:4px; overflow-x:auto; padding:10px 24px; scrollbar-width:none; }
+  nav.index .wrap::-webkit-scrollbar{ display:none; }
+  nav.index a{ font-family:var(--mono); font-size:.82rem; text-decoration:none; color:var(--muted); padding:.5em .9em; border-radius:6px; white-space:nowrap; border:1px solid transparent; }
+  nav.index a:hover{ color:var(--text); border-color:var(--border); background:var(--surface); }
+  nav.index a.toc-link{ font-weight:600; color:var(--accent); border-right:1px solid var(--border); border-radius:0; margin-right:8px; padding-right:16px; }
+  nav.index a.toc-link:hover{ color:var(--accent); background:transparent; border-right-color:var(--border); }
+  nav.index a:not(.toc-link)::before{ content:'#'; opacity:.5; margin-right:.3em; }
+
+  .back-to-top{ position:fixed; bottom:22px; right:22px; z-index:40; width:46px; height:46px;
+    background:var(--surface); border:1px solid var(--border); border-radius:10px; box-shadow:var(--shadow);
+    font-family:var(--mono); font-size:1.15rem; color:var(--accent); line-height:1;
+    display:flex; align-items:center; justify-content:center; padding:0; cursor:pointer; text-decoration:none;
+    opacity:0; visibility:hidden; transform:translateY(10px);
+    transition:opacity .25s ease, transform .25s ease, visibility 0s .25s; }
+  .back-to-top.show{ opacity:1; visibility:visible; transform:translateY(0); transition:opacity .25s ease, transform .25s ease, visibility 0s; }
+  .back-to-top:hover{ background:var(--accent-soft); border-color:var(--accent); }
+  .back-to-top:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+  @media print{ nav.index, .back-to-top{ display:none; } }
+
+  section{ padding:52px 0; border-bottom:1px solid var(--border); }
+  section:last-of-type{ border-bottom:none; }
+  .section-head{ margin-bottom:28px; max-width:70ch; }
+  .kicker{ font-family:var(--mono); font-size:.75rem; letter-spacing:.1em; text-transform:uppercase; color:var(--accent-2); margin:0 0 .5em; }
+  .kicker::before{ content:"// "; opacity:.6; }
+  h2{ font-family:var(--mono); font-size:clamp(1.4rem,2.4vw,1.9rem); margin:0 0 .3em; text-wrap:balance; }
+  .section-head p{ color:var(--muted); margin:.4em 0 0; }
+
+  .obj-list{ display:grid; gap:12px; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); list-style:none; margin:0; padding:0; }
+  .obj-list li{ background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:16px 18px; box-shadow:var(--shadow); font-size:.95rem; }
+  .obj-list li::before{ content:"$"; color:var(--accent); font-family:var(--mono); margin-right:.6em; font-weight:700; }
+
+  figure{ margin:36px 0 0; }
+  figure svg{ width:100%; height:auto; display:block; background:var(--surface); border:1px solid var(--border); border-radius:12px; }
+  figcaption{ font-size:.85rem; color:var(--muted); margin-top:.6em; }
+  .diagram-grid{ display:grid; gap:32px; grid-template-columns:1fr; }
+  @media(min-width:860px){ .diagram-grid{ grid-template-columns:1fr 1.05fr; } }
+
+  table.blocks{ width:100%; border-collapse:collapse; font-size:.9rem; margin:22px 0 24px; }
+  table.blocks caption{ caption-side:top; text-align:left; font-family:var(--mono); font-size:.75rem; text-transform:uppercase; letter-spacing:.08em; color:var(--accent-2); margin-bottom:.5em; }
+  table.blocks th, table.blocks td{ border:1px solid var(--border); padding:.6em .85em; text-align:left; vertical-align:top; }
+  table.blocks th{ background:var(--surface-2); font-family:var(--mono); font-size:.78rem; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); }
+  table.blocks td:first-child{ font-family:var(--mono); font-weight:600; color:var(--accent); white-space:nowrap; }
+  table.blocks tbody tr:nth-child(odd){ background:var(--surface); }
+  table.blocks tbody tr:nth-child(even){ background:color-mix(in srgb, var(--surface) 60%, var(--surface-2)); }
+  @media(max-width:640px){ table.blocks{ display:block; overflow-x:auto; } main{ overflow-wrap:anywhere; } }
+
+  .toolbar{ display:flex; gap:10px; align-items:center; margin-bottom:20px; flex-wrap:wrap; }
+  button.btn{ font-family:var(--mono); font-size:.82rem; background:var(--surface); color:var(--text); border:1px solid var(--border); border-radius:7px; padding:.6em 1em; cursor:pointer; }
+  button.btn:hover{ border-color:var(--accent); color:var(--accent); }
+  button.btn:focus-visible, a:focus-visible, .flashcard:focus-visible, input:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+  #cardProgress, #autoCardProgress{ font-family:var(--mono); font-size:.8rem; color:var(--muted); }
+
+  .card-grid{ display:grid; gap:16px; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); }
+  .flashcard{ perspective:1200px; height:150px; cursor:pointer; border:none; background:none; padding:0; font-family:inherit; color:var(--text); text-align:left; width:100%; }
+  .flashcard-inner{ position:relative; width:100%; height:100%; transition:transform .5s cubic-bezier(.4,.2,.2,1); transform-style:preserve-3d; }
+  .flashcard.flipped .flashcard-inner{ transform:rotateY(180deg); }
+  .flashcard-face{ position:absolute; inset:0; backface-visibility:hidden; border-radius:10px; border:1px solid var(--border); box-shadow:var(--shadow); padding:16px; display:flex; flex-direction:column; justify-content:center; }
+  .flashcard-face.front{ background:var(--surface); }
+  .flashcard-face.back{ background:var(--accent-soft); transform:rotateY(180deg); overflow-y:auto; }
+  .flashcard-face .lbl{ font-family:var(--mono); font-size:.68rem; text-transform:uppercase; letter-spacing:.1em; color:var(--muted); margin-bottom:.5em; }
+  .flashcard-face.front .term{ font-family:var(--mono); font-weight:600; font-size:1.02rem; }
+  .flashcard-face.back .def{ font-size:.88rem; }
+  .flashcard.known .flashcard-face.front{ border-color:var(--correct); }
+
+  .quiz-q{ background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px 22px; margin-bottom:18px; box-shadow:var(--shadow); }
+  .quiz-q .qtext{ font-weight:600; margin:0 0 14px; }
+  .quiz-q .qnum{ font-family:var(--mono); color:var(--accent); margin-right:.5em; }
+  .choices{ display:grid; gap:8px; }
+  .choice{ text-align:left; font-family:var(--sans); font-size:.95rem; background:var(--surface-2); border:1px solid var(--border); border-radius:8px; padding:.7em .9em; cursor:pointer; color:var(--text); }
+  .choice:hover{ border-color:var(--accent); }
+  .choice.correct{ background:var(--correct-soft); border-color:var(--correct); }
+  .choice.incorrect{ background:var(--danger-soft); border-color:var(--danger); }
+  .choice[disabled]{ cursor:default; }
+  .explain{ margin-top:12px; font-size:.88rem; color:var(--muted); border-left:3px solid var(--accent-2); padding-left:12px; display:none; }
+  .explain.show{ display:block; }
+  #quizScore{ font-family:var(--mono); font-size:.85rem; color:var(--muted); margin-bottom:16px; }
+
+  .example{ background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px 22px; margin-bottom:16px; box-shadow:var(--shadow); }
+  .example h3{ font-family:var(--mono); font-size:1.02rem; margin:0 0 8px; }
+  .example .tag{ display:inline-block; font-family:var(--mono); font-size:.68rem; text-transform:uppercase; letter-spacing:.08em; color:var(--accent-2); background:var(--accent-2-soft); border-radius:5px; padding:.25em .6em; margin-bottom:10px; }
+  code.inline{ font-family:var(--mono); background:var(--surface-2); border-radius:4px; padding:.1em .4em; font-size:.92em; }
+  pre.term{ font-family:var(--mono); font-size:.85rem; background:var(--surface-2); border:1px solid var(--border); border-radius:8px; padding:12px 14px; overflow-x:auto; margin:10px 0; }
+  details.solution{ margin-top:12px; }
+  details.solution summary{ cursor:pointer; font-family:var(--mono); font-size:.82rem; color:var(--accent); list-style:none; display:inline-flex; align-items:center; gap:.4em; }
+  details.solution summary::-webkit-details-marker{ display:none; }
+  details.solution summary::before{ content:"▸"; transition:transform .15s; }
+  details.solution[open] summary::before{ transform:rotate(90deg); }
+  details.solution .solbody{ margin-top:10px; padding:14px 16px; background:var(--surface-2); border-radius:8px; font-size:.92rem; }
+
+  #glossarySearch{ width:100%; max-width:420px; font-family:var(--sans); font-size:.95rem; padding:.7em .9em; border-radius:8px; border:1px solid var(--border); background:var(--surface); color:var(--text); margin-bottom:16px; }
+  .alpha-nav{ display:flex; flex-wrap:wrap; gap:4px; margin-bottom:24px; }
+  .alpha-nav a{ font-family:var(--mono); font-size:.78rem; width:1.9em; height:1.9em; display:flex; align-items:center; justify-content:center; border:1px solid var(--border); border-radius:5px; text-decoration:none; color:var(--muted); }
+  .alpha-nav a.has{ color:var(--text); }
+  .alpha-nav a.has:hover{ border-color:var(--accent); color:var(--accent); }
+  .glossary-letter{ font-family:var(--mono); color:var(--accent); font-size:1.1rem; margin:22px 0 8px; }
+  dl.glossary{ margin:0; }
+  dl.glossary .gitem{ border-top:1px solid var(--border); padding:12px 0; }
+  dl.glossary dt{ font-family:var(--mono); font-weight:600; }
+  dl.glossary dd{ margin:.3em 0 0; color:var(--muted); font-size:.92rem; }
+  .gitem.hidden{ display:none; }
+
+  .callout{ border-left:3px solid var(--accent); background:var(--accent-soft); border-radius:0 8px 8px 0; padding:14px 18px; margin:10px 0 24px; font-size:.92rem; }
+  .callout b{ font-family:var(--mono); }
+
+  footer{ padding:32px 0 60px; }
+  footer p{ color:var(--muted); font-size:.85rem; font-family:var(--mono); }
+</style>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="termbar"><span></span><span></span><span></span></div>
+    <p class="eyebrow">IT251 · Week 10</p>
+    <h1>Firewalls &amp; OS Hardening<span class="cursor">&nbsp;</span></h1>
+    <p class="lede">Security, part two of Module 5. First, control what reaches the box: netfilter and the tools that drive it (nftables, firewalld, ufw, iptables), NAT and forwarding. Then shrink what an attacker can do once they're on it: sudo, attributes, special permissions, SELinux and AppArmor, SSH, and Secure Boot.</p>
+    <div class="factrow">
+      <span class="fact"><b>10.1</b> Lecture</span>
+      <span class="fact"><b>10.2</b> Lab · LFS 2 (Cross-Toolchain)</span>
+      <span class="fact"><b>Covers</b> Ascend Module 5.2&ndash;5.3 · Domain: Security</span>
+      <span class="fact"><b>Previous</b> <a href="IT251_Week9_Study_Page.html">9.1: AAA in Linux</a></span>
+    </div>
+  </div>
+</header>
+
+<nav class="index" aria-label="Section index">
+  <div class="wrap">
+    <a href="index.html" class="toc-link">&larr; Table of Contents</a>
+    <a href="#overview">Overview</a>
+    <a href="#diagrams">Concepts</a>
+    <a href="#nft">nftables</a>
+    <a href="#hardening">Hardening</a>
+    <a href="#flashcards">Flashcards</a>
+    <a href="#quiz">Quiz</a>
+    <a href="#examples">Examples</a>
+    <a href="#lfs">LFS Tie-in</a>
+    <a href="#glossary">Glossary</a>
+  </div>
+</nav>
+
+<main class="wrap">
+
+  <section id="overview">
+    <div class="section-head">
+      <p class="kicker">Overview</p>
+      <h2>What Week 10 covers</h2>
+      <p>Week 9 asked who you are and what you're allowed to do. This week builds the walls around that. A <strong>firewall</strong> decides which packets get to the system at all. <strong>Hardening</strong> assumes something will get through anyway, and makes sure it finds as little as possible: no extra services, no stray SUID programs, no root SSH logins, and a mandatory access control layer that says "no" even to root-owned processes that go off-script.</p>
+    </div>
+    <ul class="obj-list">
+      <li>Explain how <strong>netfilter</strong> hooks, tables and chains process a packet</li>
+      <li>Read and write a basic <strong>nftables</strong> ruleset, and know where <code class="inline">iptables</code> and <code class="inline">ipset</code> fit today</li>
+      <li>Use <strong>firewalld</strong> zones and services, and the runtime vs. permanent split</li>
+      <li>Use <strong>ufw</strong> on Ubuntu-family systems</li>
+      <li>Explain <strong>stateful</strong> vs. <strong>stateless</strong> filtering, <strong>NAT</strong> (SNAT, masquerade, DNAT) and <strong>IP forwarding</strong></li>
+      <li>Control privilege with <code class="inline">sudo</code>; protect files with <code class="inline">chattr</code>, special bits and ACLs</li>
+      <li>Tell <strong>SELinux</strong> from <strong>AppArmor</strong>, and fix the most common SELinux denial</li>
+      <li>Harden SSH, remove insecure services and unneeded SUID bits, and explain <strong>Secure Boot</strong></li>
+    </ul>
+    <div class="callout"><b>Supplement, not a replacement:</b> this page follows the Ascend 5.2 and 5.3 topic lists and is written independently. Ascend has the full reading, and Labs 5.2 and 5.3 in ExtremeLabs are where you practice on real rulesets. If you try firewall rules on your own VM, do it from the VirtualBox console, not over SSH: a wrong <code class="inline">policy drop</code> cuts off the connection you're typing into.</div>
+  </section>
+
+  <section id="diagrams">
+    <div class="section-head">
+      <p class="kicker">Concepts</p>
+      <h2>Two ways to see it</h2>
+      <p>The tool stack shows that every firewall command on this page drives <em>the same kernel engine</em>. The packet-path diagram shows <em>where</em> in that engine each kind of rule acts.</p>
+    </div>
+    <div class="diagram-grid">
+      <figure>
+        <svg viewBox="0 0 460 260" role="img" aria-label="Firewall tool stack. On top, the front ends: firewalld, ufw, and iptables-nft. Below them, the nft command and the nf_tables kernel subsystem. At the bottom, netfilter hooks in the kernel. All the front ends end up writing rules into the same netfilter engine.">
+          <g font-family="JetBrains Mono" font-size="11" font-weight="600">
+            <rect x="10" y="10" width="130" height="40" rx="6" fill="var(--accent-2-soft)" stroke="var(--accent-2)"/>
+            <text x="75" y="28" text-anchor="middle" fill="var(--accent-2)">firewalld</text>
+            <text x="75" y="42" text-anchor="middle" fill="var(--accent-2)" font-size="9" font-weight="500">RHEL / Fedora</text>
+            <rect x="165" y="10" width="130" height="40" rx="6" fill="var(--accent-2-soft)" stroke="var(--accent-2)"/>
+            <text x="230" y="28" text-anchor="middle" fill="var(--accent-2)">ufw</text>
+            <text x="230" y="42" text-anchor="middle" fill="var(--accent-2)" font-size="9" font-weight="500">Ubuntu / Mint</text>
+            <rect x="320" y="10" width="130" height="40" rx="6" fill="var(--danger-soft)" stroke="var(--danger)"/>
+            <text x="385" y="28" text-anchor="middle" fill="var(--danger)">iptables-nft</text>
+            <text x="385" y="42" text-anchor="middle" fill="var(--danger)" font-size="9" font-weight="500">legacy syntax</text>
+
+            <rect x="10" y="86" width="440" height="40" rx="6" fill="var(--accent-soft)" stroke="var(--accent)"/>
+            <text x="230" y="104" text-anchor="middle" fill="var(--accent)">nft  →  nf_tables (kernel)</text>
+            <text x="230" y="118" text-anchor="middle" fill="var(--accent)" font-size="9" font-weight="500">the current rule engine; you can also write rules here directly</text>
+
+            <rect x="10" y="162" width="440" height="40" rx="6" fill="none" stroke="currentColor"/>
+            <text x="230" y="180" text-anchor="middle" fill="currentColor">netfilter hooks + conntrack</text>
+            <text x="230" y="194" text-anchor="middle" fill="currentColor" font-size="9" font-weight="500">prerouting · input · forward · output · postrouting</text>
+          </g>
+          <line x1="75" y1="50" x2="75" y2="86" stroke="currentColor" opacity=".5"/>
+          <line x1="230" y1="50" x2="230" y2="86" stroke="currentColor" opacity=".5"/>
+          <line x1="385" y1="50" x2="385" y2="86" stroke="currentColor" opacity=".5"/>
+          <line x1="230" y1="126" x2="230" y2="162" stroke="currentColor" opacity=".5"/>
+          <text x="10" y="228" font-family="IBM Plex Sans" font-size="10.5" fill="var(--muted)">Run only one front end per box. Two of them rewriting the</text>
+          <text x="10" y="244" font-family="IBM Plex Sans" font-size="10.5" fill="var(--muted)">same rules is a classic "my rule keeps disappearing" ticket.</text>
+        </svg>
+        <figcaption>Different commands, one engine. Pick the front end your distro ships, and learn <code class="inline">nft list ruleset</code> to see what's really loaded.</figcaption>
+      </figure>
+
+      <figure>
+        <svg viewBox="0 0 420 260" role="img" aria-label="Netfilter packet path. A packet arrives at prerouting, where DNAT happens. A routing decision follows. Packets for this host go to input, then to a local process. Packets for another host go to forward, which only passes traffic if ip_forward is 1, then to postrouting, where SNAT or masquerade happens. Packets created locally go through output and then postrouting.">
+          <g font-family="JetBrains Mono" font-size="10.5">
+            <rect x="10" y="20" width="110" height="40" rx="6" fill="var(--accent-2-soft)" stroke="var(--accent-2)"/>
+            <text x="65" y="38" text-anchor="middle" fill="var(--accent-2)" font-weight="600">prerouting</text>
+            <text x="65" y="52" text-anchor="middle" fill="var(--accent-2)" font-size="9">DNAT here</text>
+            <rect x="150" y="20" width="110" height="40" rx="6" fill="none" stroke="currentColor" stroke-dasharray="4 3"/>
+            <text x="205" y="38" text-anchor="middle" fill="currentColor">routing</text>
+            <text x="205" y="52" text-anchor="middle" fill="currentColor" font-size="9">for me, or not?</text>
+            <rect x="150" y="100" width="110" height="40" rx="6" fill="var(--accent-soft)" stroke="var(--accent)"/>
+            <text x="205" y="118" text-anchor="middle" fill="var(--accent)" font-weight="600">input</text>
+            <text x="205" y="132" text-anchor="middle" fill="var(--accent)" font-size="9">→ local process</text>
+            <rect x="290" y="20" width="120" height="40" rx="6" fill="var(--danger-soft)" stroke="var(--danger)"/>
+            <text x="350" y="38" text-anchor="middle" fill="var(--danger)" font-weight="600">forward</text>
+            <text x="350" y="52" text-anchor="middle" fill="var(--danger)" font-size="9">needs ip_forward=1</text>
+            <rect x="290" y="180" width="120" height="40" rx="6" fill="var(--accent-2-soft)" stroke="var(--accent-2)"/>
+            <text x="350" y="198" text-anchor="middle" fill="var(--accent-2)" font-weight="600">postrouting</text>
+            <text x="350" y="212" text-anchor="middle" fill="var(--accent-2)" font-size="9">SNAT / masquerade</text>
+            <rect x="150" y="180" width="110" height="40" rx="6" fill="none" stroke="currentColor"/>
+            <text x="205" y="198" text-anchor="middle" fill="currentColor" font-weight="600">output</text>
+            <text x="205" y="212" text-anchor="middle" fill="currentColor" font-size="9">← local process</text>
+          </g>
+          <g stroke="currentColor" opacity=".55" fill="none">
+            <line x1="120" y1="40" x2="150" y2="40"/>
+            <line x1="260" y1="40" x2="290" y2="40"/>
+            <line x1="205" y1="60" x2="205" y2="100"/>
+            <line x1="350" y1="60" x2="350" y2="180"/>
+            <line x1="260" y1="200" x2="290" y2="200"/>
+          </g>
+          <text x="10" y="92" font-family="IBM Plex Sans" font-size="10" fill="var(--muted)">A normal server</text>
+          <text x="10" y="106" font-family="IBM Plex Sans" font-size="10" fill="var(--muted)">filters in input.</text>
+          <text x="10" y="186" font-family="IBM Plex Sans" font-size="10" fill="var(--muted)">A router or NAT</text>
+          <text x="10" y="200" font-family="IBM Plex Sans" font-size="10" fill="var(--muted)">gateway filters in</text>
+          <text x="10" y="214" font-family="IBM Plex Sans" font-size="10" fill="var(--muted)">forward.</text>
+        </svg>
+        <figcaption>Where a rule lives decides which traffic it can even see. An <code class="inline">input</code> rule never touches traffic being routed through the box.</figcaption>
+      </figure>
+    </div>
+
+    <table class="blocks">
+      <caption>Firewall tools at a glance</caption>
+      <thead><tr><th>Tool</th><th>What it is</th><th>Quick look</th></tr></thead>
+      <tbody>
+        <tr><td>netfilter</td><td>The packet-filtering framework inside the kernel: hooks, connection tracking, NAT</td><td><code class="inline">lsmod | grep nf_</code></td></tr>
+        <tr><td>nftables</td><td>The current rule engine and its <code class="inline">nft</code> command. Tables → chains → rules, with built-in sets</td><td><code class="inline">sudo nft list ruleset</code></td></tr>
+        <tr><td>firewalld</td><td>Zone-based service with runtime and permanent config. Default on RHEL/Fedora; uses nftables underneath</td><td><code class="inline">sudo firewall-cmd --list-all</code></td></tr>
+        <tr><td>ufw</td><td>"Uncomplicated Firewall": simple allow/deny front end. Installed but inactive on Ubuntu</td><td><code class="inline">sudo ufw status verbose</code></td></tr>
+        <tr><td>iptables</td><td>The older tool: tables (filter, nat, mangle, raw) and chains (INPUT, FORWARD, OUTPUT…). Today usually <code class="inline">iptables-nft</code>, a translator onto nftables</td><td><code class="inline">sudo iptables -L -n -v</code>, <code class="inline">iptables -V</code></td></tr>
+        <tr><td>ipset</td><td>Named lists of IPs or networks that one iptables rule can match. nftables has sets built in</td><td><code class="inline">sudo ipset list</code></td></tr>
+        <tr><td>conntrack</td><td>The state table behind stateful filtering: NEW, ESTABLISHED, RELATED, INVALID</td><td><code class="inline">sudo conntrack -L</code> (conntrack-tools)</td></tr>
+        <tr><td>sysctl</td><td>Kernel switches, including IP forwarding</td><td><code class="inline">sysctl net.ipv4.ip_forward</code></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="nft">
+    <div class="section-head">
+      <p class="kicker">Closer look</p>
+      <h2>Reading an nftables ruleset</h2>
+      <p>nftables is the current packet filter on Debian, Ubuntu, RHEL and Fedora, so learn its shape first. A <strong>table</strong> is a container tied to an address family (<code class="inline">inet</code> covers IPv4 and IPv6 together). A <strong>base chain</strong> attaches to a netfilter hook and has a default <strong>policy</strong>. <strong>Rules</strong> are checked top to bottom, and the first one that gives a verdict (accept, drop, reject) wins.</p>
+    </div>
+    <pre class="term">#!/usr/sbin/nft -f
+# /etc/nftables.conf (Debian/Ubuntu)   /etc/sysconfig/nftables.conf (RHEL/Fedora)
+flush ruleset
+
+table inet filter {
+    set ssh_admins {                       # a built-in set: no ipset needed
+        type ipv4_addr
+        flags interval
+        elements = { 192.168.56.0/24 }
+    }
+
+    chain input {
+        type filter hook input priority filter; policy drop;
+
+        ct state established,related accept   # stateful: replies to our own traffic
+        ct state invalid drop
+        iif "lo" accept                       # loopback
+        ip protocol icmp accept               # let ping work
+        ip saddr @ssh_admins tcp dport 22 accept
+        tcp dport { 80, 443 } accept
+    }
+
+    chain forward {
+        type filter hook forward priority filter; policy drop;
+    }
+}</pre>
+    <table class="blocks">
+      <caption>The same idea in each tool</caption>
+      <thead><tr><th>Task</th><th>nftables</th><th>firewalld / ufw / iptables</th></tr></thead>
+      <tbody>
+        <tr><td>Allow HTTPS</td><td><code class="inline">nft add rule inet filter input tcp dport 443 accept</code></td><td><code class="inline">firewall-cmd --add-service=https --permanent</code> · <code class="inline">ufw allow 443/tcp</code> · <code class="inline">iptables -A INPUT -p tcp --dport 443 -j ACCEPT</code></td></tr>
+        <tr><td>Default deny inbound</td><td><code class="inline">policy drop;</code> on the input chain</td><td>firewalld zones reject by default · <code class="inline">ufw default deny incoming</code> · <code class="inline">iptables -P INPUT DROP</code></td></tr>
+        <tr><td>Show what's loaded</td><td><code class="inline">nft list ruleset</code></td><td><code class="inline">firewall-cmd --list-all</code> · <code class="inline">ufw status numbered</code> · <code class="inline">iptables -L -n -v --line-numbers</code></td></tr>
+        <tr><td>Make it survive reboot</td><td>Put it in the config file, <code class="inline">systemctl enable nftables</code></td><td><code class="inline">--permanent</code> then <code class="inline">--reload</code> · ufw saves automatically · <code class="inline">iptables-save</code></td></tr>
+      </tbody>
+    </table>
+    <div class="callout"><b>Stateful vs. stateless:</b> the <code class="inline">ct state established,related accept</code> line is what makes this firewall <em>stateful</em>. Connection tracking remembers that you opened a connection out, so the replies get in without a rule for every port. A <em>stateless</em> filter judges each packet alone. It's simpler and a little faster, but you'd have to allow return traffic by hand, which in practice means opening far more than you meant to.</div>
+  </section>
+
+  <section id="hardening">
+    <div class="section-head">
+      <p class="kicker">Closer look</p>
+      <h2>Hardening: the layers</h2>
+      <p>A file access has to pass every layer below. Standard permissions and ACLs are the <strong>discretionary</strong> layer: the owner decides. SELinux or AppArmor is the <strong>mandatory</strong> layer: policy decides, and the owner, even root, can't override it from inside the policy. If any layer says no, the answer is "Permission denied."</p>
+    </div>
+    <table class="blocks">
+      <caption>Access control layers</caption>
+      <thead><tr><th>Layer</th><th>Decides by</th><th>Tools</th></tr></thead>
+      <tbody>
+        <tr><td>Permissions (DAC)</td><td>Owner / group / other, rwx, plus SUID, SGID, sticky</td><td><code class="inline">chmod</code>, <code class="inline">chown</code>, <code class="inline">umask</code></td></tr>
+        <tr><td>ACLs (DAC)</td><td>Extra named users or groups on one file. Part of the same permission check; <code class="inline">ls -l</code> shows a <code class="inline">+</code></td><td><code class="inline">getfacl</code>, <code class="inline">setfacl -m u:lee:rw file</code></td></tr>
+        <tr><td>Attributes</td><td>Filesystem flags that block changes, even by root: <code class="inline">i</code> immutable, <code class="inline">a</code> append-only</td><td><code class="inline">chattr +i</code>, <code class="inline">lsattr</code></td></tr>
+        <tr><td>SELinux (MAC)</td><td>Labels (contexts) on every process and file; policy says which process types may touch which file types</td><td><code class="inline">getenforce</code>, <code class="inline">ls -Z</code>, <code class="inline">restorecon</code>, <code class="inline">semanage</code>, <code class="inline">setsebool</code></td></tr>
+        <tr><td>AppArmor (MAC)</td><td>Per-program profiles listing which <em>paths</em> it may use</td><td><code class="inline">aa-status</code>, <code class="inline">aa-complain</code>, <code class="inline">aa-enforce</code></td></tr>
+      </tbody>
+    </table>
+    <table class="blocks">
+      <caption>SELinux vs. AppArmor: a distro-family fact</caption>
+      <thead><tr><th>System</th><th>Default on</th><th>Model</th><th>Modes</th></tr></thead>
+      <tbody>
+        <tr><td>SELinux</td><td>RHEL, Rocky, AlmaLinux, Fedora (enforcing)</td><td>Labels: <code class="inline">user:role:type:level</code>, e.g. <code class="inline">system_u:object_r:httpd_sys_content_t:s0</code>. The <em>type</em> does most of the work</td><td>enforcing · permissive (log only) · disabled</td></tr>
+        <tr><td>AppArmor</td><td>Ubuntu, Mint, Debian (and older SUSE releases)</td><td>Paths: a profile in <code class="inline">/etc/apparmor.d/</code> lists files and capabilities a program may use</td><td>enforce · complain (log only) · unconfined</td></tr>
+      </tbody>
+    </table>
+    <table class="blocks">
+      <caption>Special permission bits</caption>
+      <thead><tr><th>Bit</th><th>Octal</th><th>On a file</th><th>On a directory</th></tr></thead>
+      <tbody>
+        <tr><td>SUID <code class="inline">s</code> (user x)</td><td>4000</td><td>Runs as the file's <em>owner</em> (e.g. <code class="inline">passwd</code> runs as root)</td><td>No effect on Linux</td></tr>
+        <tr><td>SGID <code class="inline">s</code> (group x)</td><td>2000</td><td>Runs with the file's group</td><td>New files inherit the directory's group</td></tr>
+        <tr><td>Sticky <code class="inline">t</code> (other x)</td><td>1000</td><td>No effect on Linux</td><td>Only a file's owner (or the dir owner, or root) can delete it, e.g. <code class="inline">/tmp</code></td></tr>
+      </tbody>
+    </table>
+    <p>A capital <code class="inline">S</code> or <code class="inline">T</code> in <code class="inline">ls -l</code> means the bit is set but the execute bit under it isn't, which is usually a mistake.</p>
+  </section>
+
+  <section id="flashcards">
+    <div class="section-head">
+      <p class="kicker">Study</p>
+      <h2>Flashcards</h2>
+      <p>Click a card to flip it. Double-click to mark it known once you've got it cold.</p>
+    </div>
+    <div class="toolbar">
+      <button class="btn" id="shuffleBtn">Shuffle</button>
+      <button class="btn" id="resetKnownBtn">Reset progress</button>
+      <span id="cardProgress"></span>
+    </div>
+    <div class="card-grid" id="cardGrid"></div>
+  </section>
+
+  <section id="quiz">
+    <div class="section-head">
+      <p class="kicker">Check yourself</p>
+      <h2>Sample questions</h2>
+      <p>Pick an answer to see if you're right. These are original practice questions, not the Ascend quiz.</p>
+    </div>
+    <div id="quizScore"></div>
+    <div id="quizList"></div>
+    <button class="btn" id="resetQuizBtn">Reset quiz</button>
+  </section>
+
+  <section id="examples">
+    <div class="section-head">
+      <p class="kicker">Applied</p>
+      <h2>Worked examples</h2>
+      <p>Think it through before you expand the answer. Three of these start from something already broken, because that's how the exam asks.</p>
+    </div>
+
+    <div class="example">
+      <span class="tag">firewalld</span>
+      <h3>The web port worked until the reboot</h3>
+      <p>On a Fedora web server you ran <code class="inline">sudo firewall-cmd --add-service=http</code>. The site loaded. After a reboot it's unreachable again. What happened, and what's the right sequence?</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <pre class="term">sudo firewall-cmd --get-active-zones            # which zone is the NIC in?
+sudo firewall-cmd --zone=public --add-service=http --permanent
+sudo firewall-cmd --reload
+sudo firewall-cmd --zone=public --list-services  # http should be listed</pre>
+          <p>firewalld keeps two configs. <strong>Runtime</strong> is what's loaded now; <strong>permanent</strong> is what's on disk for the next start. A command without <code class="inline">--permanent</code> only changes runtime, so it vanished on reboot. Either add with <code class="inline">--permanent</code> and <code class="inline">--reload</code>, or test in runtime first and then save it with <code class="inline">firewall-cmd --runtime-to-permanent</code>. Rules belong to a <strong>zone</strong>, and an interface belongs to one zone, so check the zone first.</p>
+        </div>
+      </details>
+    </div>
+
+    <div class="example">
+      <span class="tag">ufw</span>
+      <h3>SSH from the admin network only</h3>
+      <p>An Ubuntu server should accept SSH only from <code class="inline">192.168.56.0/24</code>, accept HTTPS from anywhere, and refuse everything else inbound. You're on the console, and ufw is installed but inactive.</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <pre class="term">sudo ufw default deny incoming
+sudo ufw default allow outgoing
+sudo ufw allow from 192.168.56.0/24 to any port 22 proto tcp
+sudo ufw allow 443/tcp
+sudo ufw enable
+sudo ufw status numbered        # delete a rule with: sudo ufw delete 3</pre>
+          <p>Set the defaults and the SSH rule <em>before</em> <code class="inline">ufw enable</code>. Enabling a default-deny firewall over SSH without the allow rule locks you out. ufw saves its rules on its own, and they survive reboots once enabled.</p>
+        </div>
+      </details>
+    </div>
+
+    <div class="example">
+      <span class="tag">Troubleshoot</span>
+      <h3>The rule is there, but it doesn't work</h3>
+      <p>A teammate needed port 8080 open. They ran <code class="inline">sudo nft add rule inet filter input tcp dport 8080 accept</code>, and <code class="inline">nft list ruleset</code> shows the rule. Clients still time out. <code class="inline">ss -tlnp</code> shows the app listening on <code class="inline">0.0.0.0:8080</code>. Here's the chain:</p>
+      <pre class="term">chain input {
+    type filter hook input priority filter; policy accept;
+    ct state established,related accept
+    tcp dport 22 accept
+    drop
+    tcp dport 8080 accept
+}</pre>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <p>Rules run top to bottom, and the bare <code class="inline">drop</code> catches everything before the new rule. <code class="inline">nft add</code> <strong>appends</strong> to the end of the chain. Delete the misplaced rule and <strong>insert</strong> it above the drop instead:</p>
+          <pre class="term">sudo nft -a list chain inet filter input        # -a shows each rule's handle
+#   drop # handle 4
+#   tcp dport 8080 accept # handle 5
+sudo nft delete rule inet filter input handle 5
+sudo nft insert rule inet filter input position 4 tcp dport 8080 accept   # goes in before handle 4</pre>
+          <p>To prove it from the Week 7 toolkit: <code class="inline">sudo tcpdump -ni any port 8080</code> shows the SYNs arriving with no reply, and <code class="inline">ss</code> shows no new connections. That points at a filter on this box, not the network or the app. A cleaner design is <code class="inline">policy drop</code> on the chain instead of a hand-written <code class="inline">drop</code> line, so new rules added at the end still work.</p>
+        </div>
+      </details>
+    </div>
+
+    <div class="example">
+      <span class="tag">NAT</span>
+      <h3>Turn a Linux box into a NAT gateway</h3>
+      <p>A VM has <code class="inline">eth0</code> on the internet side and <code class="inline">eth1</code> on an internal <code class="inline">10.10.0.0/24</code> network. Internal hosts use it as their gateway but can't reach anything. What two things does the kernel need?</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <pre class="term">sysctl net.ipv4.ip_forward                       # 0 = not routing
+echo 'net.ipv4.ip_forward = 1' | sudo tee /etc/sysctl.d/90-forward.conf
+sudo sysctl --system
+
+# then masquerade traffic leaving eth0 (nftables)
+table ip nat {
+    chain postrouting {
+        type nat hook postrouting priority srcnat;
+        oifname "eth0" masquerade
+    }
+}</pre>
+          <p>First, <strong>forwarding</strong>: by default Linux drops packets that aren't addressed to it. Only turn this on for boxes that are meant to route. Second, <strong>source NAT</strong>: internal addresses are private, so replies from the internet can't find them. <code class="inline">masquerade</code> rewrites the source to <code class="inline">eth0</code>'s address on the way out, and conntrack reverses it for replies. Use masquerade when that address comes from DHCP, and <code class="inline">snat to 203.0.113.10</code> when it's fixed. The opposite direction, sending inbound port 80 to an internal server, is <strong>DNAT</strong> in prerouting. Also check that the <code class="inline">forward</code> chain allows the traffic.</p>
+        </div>
+      </details>
+    </div>
+
+    <div class="example">
+      <span class="tag">SUID</span>
+      <h3>Audit the SUID programs</h3>
+      <p>A hardening checklist says "remove unnecessary SUID bits." How do you find them, and how do you decide which ones to remove?</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <pre class="term">sudo find / -xdev -type f -perm -4000 -ls 2>/dev/null   # SUID
+sudo find / -xdev -type f -perm -2000 -ls 2>/dev/null   # SGID
+sudo chmod u-s /usr/bin/some-unneeded-tool</pre>
+          <p>A short list is normal: <code class="inline">passwd</code>, <code class="inline">su</code>, <code class="inline">sudo</code>, <code class="inline">mount</code>, and a few more. Every SUID-root program is a way to run code as root if it has a bug, which is why attackers run this same <code class="inline">find</code> right after they get in. Look up anything unfamiliar, and remove the bit, or the whole package, if nothing needs it. Watch for SUID files in home directories or <code class="inline">/tmp</code>; those are a red flag.</p>
+        </div>
+      </details>
+    </div>
+
+    <div class="example">
+      <span class="tag">Attributes</span>
+      <h3>Even root can't edit this file</h3>
+      <p>You're root, but <code class="inline">echo nameserver 1.1.1.1 &gt; /etc/resolv.conf</code> says "Operation not permitted". Permissions are <code class="inline">-rw-r--r-- root root</code>. What's stopping root?</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <pre class="term">lsattr /etc/resolv.conf          # ----i---------e------- = immutable
+sudo chattr -i /etc/resolv.conf  # remove it, make the change, then:
+sudo chattr +i /etc/resolv.conf</pre>
+          <p>The <code class="inline">i</code> (immutable) attribute blocks writing, deleting, renaming and linking, for everyone including root, until someone removes it with <code class="inline">chattr -i</code>. Admins use it to protect files that shouldn't change; attackers use it to make their backdoors hard to delete. The <code class="inline">a</code> (append-only) attribute is the log-file version: you can add lines, but you can't change or remove old ones. "Operation not permitted" for root is the clue; ordinary permission problems say "Permission denied."</p>
+        </div>
+      </details>
+    </div>
+
+    <div class="example">
+      <span class="tag">SELinux</span>
+      <h3>Apache returns 403 for files you just moved in</h3>
+      <p>On Rocky Linux you built a site in your home directory, then ran <code class="inline">sudo mv ~/site/* /var/www/html/</code>. The permissions are fine (644, readable by everyone), but Apache returns 403 Forbidden. Setting <code class="inline">setenforce 0</code> makes it work.</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <pre class="term">ls -Z /var/www/html/                      # user_home_t: wrong type
+sudo ausearch -m avc -ts recent           # the denial, from the audit log
+sudo restorecon -Rv /var/www/html/        # relabel to httpd_sys_content_t
+sudo setenforce 1                         # and turn enforcement back on</pre>
+          <p><code class="inline">mv</code> keeps a file's SELinux label, so the files still say <code class="inline">user_home_t</code>, and the policy won't let the web server (<code class="inline">httpd_t</code>) read home-directory files. <code class="inline">cp</code> would have given them the destination's label. <code class="inline">restorecon</code> resets labels to what the policy expects for that path. For a custom web root, first tell the policy about it with <code class="inline">semanage fcontext -a -t httpd_sys_content_t "/srv/web(/.*)?"</code>, then run <code class="inline">restorecon</code>. Leaving SELinux in permissive mode "because it fixed it" is the wrong answer on the exam and on the job. The Ubuntu version of this problem is an AppArmor profile: check <code class="inline">aa-status</code> and the journal for <code class="inline">apparmor="DENIED"</code>.</p>
+        </div>
+      </details>
+    </div>
+
+    <div class="example">
+      <span class="tag">SSH</span>
+      <h3>Harden sshd without locking yourself out</h3>
+      <p>Policy: no root login, keys only, and only the <code class="inline">admins</code> group may log in. How do you apply it safely?</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <pre class="term">ssh-keygen -t ed25519            # on your workstation
+ssh-copy-id you@server           # install the public key, then test a key login
+
+# /etc/ssh/sshd_config.d/10-hardening.conf
+PermitRootLogin no
+PasswordAuthentication no
+KbdInteractiveAuthentication no
+AllowGroups admins
+
+sudo sshd -t                      # syntax check: silence means OK
+sudo systemctl reload ssh         # sshd on RHEL/Fedora
+# keep this session open; test a NEW login in a second terminal</pre>
+          <p>Get a working key login <em>before</em> turning passwords off. <code class="inline">sshd -t</code> catches typos that would stop the daemon from starting. Watch out: in <code class="inline">sshd_config</code>, the <strong>first</strong> value read for a setting wins. Drop-in files are included at the top of the main file, which is why they override it. Add <code class="inline">fail2ban</code> to block repeated failures, and use a jump host (<code class="inline">ssh -J bastion target</code>) so internal servers don't face the internet. On those servers, allow SSH only from the bastion with a firewall source rule (like the <code class="inline">ssh_admins</code> set above) or <code class="inline">AllowUsers you@10.0.0.5</code>. Older guides use <code class="inline">/etc/hosts.allow</code> for this, but current OpenSSH no longer reads it. Telnet, FTP and rsh send passwords in cleartext; replace them with SSH and SFTP and remove the packages.</p>
+        </div>
+      </details>
+    </div>
+
+    <div class="example">
+      <span class="tag">Secure Boot</span>
+      <h3>The new driver won't load</h3>
+      <p>After installing a third-party driver from source (DKMS) on a UEFI laptop, <code class="inline">modprobe</code> fails with "Key was rejected by service." What's going on?</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <pre class="term">mokutil --sb-state                 # SecureBoot enabled
+dmesg | grep -i -E "secure|lockdown"
+sudo mokutil --import MOK.der      # your signing key's public half; confirm at next boot</pre>
+          <p>With <strong>Secure Boot</strong> on, UEFI firmware runs only a signed boot loader (the signed <code class="inline">shim</code>, then GRUB). That chain checks the kernel's signature, and on most distros the kernel then refuses unsigned modules. DKMS can create a key and sign its modules for you; where it keeps that key varies by distro. The fix is to sign the module and enroll the key as a <strong>Machine Owner Key (MOK)</strong>, not to turn Secure Boot off. This is what stops a rootkit from slipping in a modified boot loader or kernel module.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section id="lfs">
+    <div class="section-head">
+      <p class="kicker">Lab connection</p>
+      <h2>Where this shows up in your LFS build</h2>
+      <p>This week's lab builds your cross-toolchain. A finished LFS system is a good hardening case study: it starts small, and everything that's there, you put there.</p>
+    </div>
+    <ul class="obj-list">
+      <li><strong>No firewall at all.</strong> LFS installs neither <code class="inline">nft</code> nor <code class="inline">iptables</code>; both are in BLFS. Netfilter itself is kernel code, so in 13.2 the kernel config decides whether your system <em>could</em> filter packets (Networking support → Networking options → Network packet filtering framework).</li>
+      <li><strong>Small attack surface by default.</strong> No SSH server, no web server, no extra daemons. That's the "avoid, disable and remove" goal, reached by never installing them.</li>
+      <li><strong>SUID audit.</strong> After Ch. 8, run the SUID <code class="inline">find</code> from the examples inside your chroot, with <code class="inline">/</code> as the start. Compare its short list with your Debian host's.</li>
+      <li><strong><code class="inline">chattr</code> and <code class="inline">lsattr</code></strong> come from <strong>E2fsprogs</strong>, which you build in Ch. 8.</li>
+      <li><strong>No Secure Boot.</strong> The class VM boots with BIOS and MBR, and the kernel you compile isn't signed. On a Secure Boot machine, firmware would refuse to load it unless you signed it and enrolled your own key, which is exactly the protection that example describes.</li>
+    </ul>
+  </section>
+
+  <section id="glossary">
+    <div class="section-head">
+      <p class="kicker">Reference</p>
+      <h2>Glossary &amp; index</h2>
+      <p>Every term from this week, searchable and indexed A–Z.</p>
+    </div>
+    <input type="text" id="glossarySearch" placeholder="Search terms…" aria-label="Search glossary">
+    <div class="alpha-nav" id="alphaNav"></div>
+    <dl class="glossary" id="glossaryList"></dl>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>IT251 · Linux+ (XK0-006) · Module 5.2&ndash;5.3 Firewalls &amp; OS Hardening · Week 10 reference. Original study material that follows the Ascend 5.2&ndash;5.3 topic lists; not affiliated with Ascend Education or CompTIA.</p>
+  </div>
+</footer>
+
+<script>
+  const TERMS = [
+    {t:"netfilter", d:"The kernel's packet-processing framework: hooks where rules run, connection tracking, and NAT. Every Linux firewall tool configures it."},
+    {t:"Netfilter hooks", d:"prerouting (just arrived), input (for this host), forward (passing through), output (created here), postrouting (about to leave)."},
+    {t:"nftables / nft", d:"The current packet-filtering engine and its command. One syntax for IPv4, IPv6, ARP and bridges; replaces iptables, ip6tables, ebtables and ipset."},
+    {t:"Table (nftables)", d:"A container for chains, tied to a family: ip, ip6, inet (both), arp, bridge, netdev."},
+    {t:"Base chain", d:"An nftables chain attached to a hook: type filter hook input priority filter; policy drop;. Regular chains are only reached by jumping to them."},
+    {t:"Policy", d:"A chain's default verdict for packets no rule matched. policy drop = default deny."},
+    {t:"nft list ruleset", d:"Shows everything currently loaded in nftables, including rules written by firewalld, ufw or iptables-nft."},
+    {t:"nft add vs. insert", d:"add appends a rule to the end of the chain; insert puts it at the top, or before a given handle. Order matters: first verdict wins."},
+    {t:"firewalld", d:"Zone-based firewall service, default on RHEL/Fedora. Command: firewall-cmd. Backend: nftables."},
+    {t:"Zone (firewalld)", d:"A trust level with its own allowed services: drop, block, public (default), external, dmz, work, home, internal, trusted. Each interface or source belongs to one zone."},
+    {t:"Runtime vs. permanent", d:"firewalld's two configs. Without --permanent a change is lost on reload or reboot. Fix: --permanent + --reload, or --runtime-to-permanent."},
+    {t:"Rich rule", d:"firewalld's syntax for detailed rules, e.g. allow a service only from one source: --add-rich-rule='rule family=ipv4 source address=10.0.0.0/24 service name=ssh accept'."},
+    {t:"ufw", d:"Uncomplicated Firewall, the simple front end on Ubuntu: ufw default deny incoming, ufw allow 22/tcp, ufw enable, ufw status numbered."},
+    {t:"iptables", d:"The older firewall tool. Tables (filter, nat, mangle, raw) hold chains (INPUT, OUTPUT, FORWARD, PREROUTING, POSTROUTING). -A appends, -I inserts, -P sets policy, -j picks the target."},
+    {t:"iptables-nft vs. iptables-legacy", d:"Two builds of the iptables command. iptables-nft (the default now) translates rules into nftables; iptables -V shows which one you have."},
+    {t:"iptables-save / iptables-restore", d:"Dump the current iptables rules as text, and load them back. The usual way to make iptables rules persistent."},
+    {t:"ipset", d:"Named sets of IPs, networks or ports that a single iptables rule matches (-m set --match-set NAME src). Fast for big blocklists. nftables has sets built in."},
+    {t:"Stateful filtering", d:"Uses connection tracking, so replies to allowed connections are let in automatically (ct state established,related accept). Most Linux firewalls work this way."},
+    {t:"Stateless filtering", d:"Judges each packet on its own headers with no memory of connections. Simpler and faster, but return traffic needs its own rules."},
+    {t:"conntrack", d:"Netfilter's connection-tracking table. States: NEW, ESTABLISHED, RELATED, INVALID. conntrack -L lists entries."},
+    {t:"NAT", d:"Network Address Translation: rewriting addresses as packets pass through. Lets many private hosts share one public address."},
+    {t:"SNAT / masquerade", d:"Rewrite the source address on the way out (postrouting). masquerade uses whatever address the outgoing interface has right now; good for DHCP links."},
+    {t:"DNAT / port forwarding", d:"Rewrite the destination address on the way in (prerouting), e.g. send public port 80 to an internal web server."},
+    {t:"IP forwarding", d:"Lets the kernel route packets between interfaces. Off by default. sysctl net.ipv4.ip_forward=1; persist it in /etc/sysctl.d/."},
+    {t:"Hardening", d:"Reducing attack surface: remove what isn't needed, lock down what's left, and add layers so one mistake isn't fatal."},
+    {t:"Least privilege", d:"Give each user or process only the access its job needs, and nothing more."},
+    {t:"Privilege escalation", d:"Gaining more rights than you started with. Legitimately via sudo; illegitimately via bugs, bad sudo rules or SUID programs."},
+    {t:"sudo / visudo", d:"sudo runs one command as another user and logs it. Edit rules with visudo (syntax-checks before saving), preferably in /etc/sudoers.d/. sudo -l shows what you may run."},
+    {t:"wheel / sudo group", d:"The admin group that gets sudo by default: wheel on RHEL/Fedora, sudo on Debian/Ubuntu."},
+    {t:"chattr / lsattr", d:"Set and show filesystem attributes. +i immutable (no changes, even by root), +a append-only (logs)."},
+    {t:"umask", d:"Bits removed from new files' permissions. 022 gives 644 files / 755 dirs; a hardened 027 gives 640 / 750."},
+    {t:"SUID", d:"Set-user-ID (4000, s in the user x spot): the program runs as its owner, often root. Audit with find / -perm -4000."},
+    {t:"SGID", d:"Set-group-ID (2000): a program runs with the file's group; on a directory, new files inherit the directory's group."},
+    {t:"Sticky bit", d:"1000, t in the other x spot. On a directory like /tmp, only a file's owner (or the dir owner, or root) can delete or rename it."},
+    {t:"ACL", d:"Access Control List: permissions for extra named users or groups on one file. setfacl -m u:lee:rw file, getfacl file. ls -l shows a +."},
+    {t:"DAC vs. MAC", d:"Discretionary: the owner sets access (permissions, ACLs). Mandatory: a system policy sets it, and owners, even root, can't override it."},
+    {t:"SELinux", d:"Label-based MAC, default on RHEL/Fedora. Every file and process has a context; policy matches process types to file types."},
+    {t:"SELinux context", d:"user:role:type:level, e.g. system_u:object_r:httpd_sys_content_t:s0. Shown with ls -Z and ps -Z. The type (_t) matters most."},
+    {t:"getenforce / setenforce", d:"Show or change the SELinux mode for now: Enforcing, Permissive (log only). The boot-time mode is in /etc/selinux/config."},
+    {t:"restorecon / semanage fcontext", d:"restorecon resets file labels to the policy's defaults for that path. semanage fcontext -a adds a new path rule so restorecon labels a custom location correctly."},
+    {t:"SELinux booleans", d:"On/off switches in the policy, e.g. httpd_can_network_connect. getsebool -a lists them; setsebool -P makes a change permanent."},
+    {t:"AVC denial", d:"An SELinux 'access vector cache' denial logged to the audit log. Find with ausearch -m avc; explain with audit2why."},
+    {t:"AppArmor", d:"Path-based MAC, default on Ubuntu and Debian (and older SUSE releases). Profiles in /etc/apparmor.d/. aa-status, aa-complain, aa-enforce."},
+    {t:"sshd_config hardening", d:"PermitRootLogin no, PasswordAuthentication no, AllowUsers/AllowGroups. Test with sshd -t. The first value read wins, so drop-ins in sshd_config.d/ override the main file."},
+    {t:"ssh-keygen / ssh-copy-id", d:"Create a key pair (ssh-keygen -t ed25519) and install the public key on a server's ~/.ssh/authorized_keys."},
+    {t:"Jump host (bastion)", d:"A hardened SSH entry point; internal servers only accept SSH from it. ssh -J bastion target."},
+    {t:"fail2ban", d:"Watches logs for repeated failed logins and adds temporary firewall bans for the offending IPs."},
+    {t:"Insecure services", d:"telnet, FTP, rsh/rlogin, TFTP send data, often passwords, in cleartext. Replace with SSH, SFTP/SCP; remove the packages."},
+    {t:"Disabling unused filesystems", d:"Stop the kernel from loading rarely used filesystem modules (cramfs, hfs, udf…) with 'install NAME /bin/false' and 'blacklist NAME' in /etc/modprobe.d/."},
+    {t:"Secure Boot", d:"UEFI feature: firmware only runs signed boot loaders, which then verify the kernel, which verifies modules. Blocks bootkits and unsigned drivers."},
+    {t:"shim / MOK", d:"shim is the small Microsoft-signed first-stage loader Linux distros use. A Machine Owner Key (MOK) is your own key, enrolled with mokutil, for signing your own kernels or modules."},
+  ];
+
+  const QUIZ = [
+    {
+      q:"On a Fedora server you've only ever used firewall-cmd, yet 'nft list ruleset' shows a large table named firewalld. Why?",
+      choices:[
+        "Someone also installed nftables rules by hand",
+        "firewalld writes its zones and rules into nftables, its backend",
+        "nft shows a simulation, not real rules",
+        "It's left over from the previous boot"
+      ],
+      correct:1,
+      explain:"firewalld is a front end; its rules end up in nftables (and so in netfilter). nft list ruleset shows everything actually loaded."
+    },
+    {
+      q:"A Linux box routes traffic between two networks. Which netfilter hook sees packets that pass through it without being addressed to it?",
+      choices:["input","output","forward","prerouting only"],
+      correct:2,
+      explain:"Traffic for this host goes through input; traffic routed through it goes through forward."
+    },
+    {
+      q:"eth1 faces the trusted internal LAN but sits in firewalld's public zone, so internal tools are blocked. Which command moves it to the internal zone and keeps it there after reboot?",
+      choices:[
+        "firewall-cmd --set-default-zone=internal",
+        "firewall-cmd --zone=internal --change-interface=eth1 --permanent",
+        "firewall-cmd --add-service=internal",
+        "ufw allow in on eth1"
+      ],
+      correct:1,
+      explain:"Each interface belongs to one zone. --change-interface moves it; --permanent saves it (follow with --reload). Changing the default zone would affect every interface not explicitly assigned."
+    },
+    {
+      q:"An nftables input chain ends with a bare 'drop' rule. Someone runs 'nft add rule ... tcp dport 8080 accept'. What happens to port 8080 traffic?",
+      choices:[
+        "It's accepted, because accept beats drop",
+        "It's dropped, because add puts the new rule after the drop",
+        "nft refuses to add the rule",
+        "It depends on the chain's priority"
+      ],
+      correct:1,
+      explain:"Rules are checked in order and the first verdict wins. nft add appends; use nft insert (or a policy drop instead of a drop rule)."
+    },
+    {
+      q:"What does the rule 'ct state established,related accept' make the firewall?",
+      choices:["Stateless","Stateful","A NAT gateway","A proxy"],
+      correct:1,
+      explain:"Matching on connection-tracking state is what stateful filtering means: replies to allowed connections are let back in."
+    },
+    {
+      q:"Internal hosts behind a Linux gateway get DHCP addresses from 10.10.0.0/24. The gateway's internet-facing address also comes from DHCP. Which rule lets the internal hosts reach the internet?",
+      choices:["DNAT in prerouting","masquerade in postrouting","An accept rule in input","A sticky bit on /etc/sysctl.d"],
+      correct:1,
+      explain:"Outbound traffic needs its source rewritten (SNAT) on the way out; masquerade does that using whatever address the interface currently has. IP forwarding must be on too."
+    },
+    {
+      q:"Which command makes IP forwarding survive a reboot?",
+      choices:[
+        "echo 1 > /proc/sys/net/ipv4/ip_forward",
+        "sysctl -w net.ipv4.ip_forward=1",
+        "Put net.ipv4.ip_forward = 1 in a file under /etc/sysctl.d/ and run sysctl --system",
+        "systemctl enable ip_forward"
+      ],
+      correct:2,
+      explain:"The first two only change the running kernel. A sysctl.d file is read at every boot."
+    },
+    {
+      q:"You want an audit log file that new lines can be added to, but that nobody, not even root, can rewrite or truncate without first changing a flag. What do you run?",
+      choices:["chmod 1644 audit.log","chattr +a audit.log","chattr +i audit.log","setfacl -m u:root:r audit.log"],
+      correct:1,
+      explain:"+a (append-only) allows writes only at the end. +i (immutable) would block new lines too. chmod and ACLs can't restrict root."
+    },
+    {
+      q:"In 'ls -l' output, a directory shows drwxrwxrwt. What does the t mean?",
+      choices:[
+        "Files inside are temporary and deleted at reboot",
+        "Only a file's owner (or the directory owner or root) can delete files in it",
+        "New files inherit the directory's group",
+        "Programs inside run as root"
+      ],
+      correct:1,
+      explain:"That's the sticky bit, as on /tmp. Inheriting the group is SGID; running as the owner is SUID."
+    },
+    {
+      q:"On RHEL you're serving a site from a new directory, /srv/web. Running restorecon -Rv /srv/web doesn't change the labels. What has to happen first?",
+      choices:[
+        "chmod -R 755 /srv/web",
+        "semanage fcontext -a -t httpd_sys_content_t \"/srv/web(/.*)?\" to add a policy rule for that path",
+        "setenforce 0",
+        "chcon is the only way; restorecon never works on new paths"
+      ],
+      correct:1,
+      explain:"restorecon applies whatever labels the policy defines for a path. A new path has no rule yet, so add one with semanage fcontext, then run restorecon."
+    },
+    {
+      q:"Which access-control system would you expect to find enabled by default on an Ubuntu server?",
+      choices:["SELinux","AppArmor","Both, always","Neither; Ubuntu has no MAC"],
+      correct:1,
+      explain:"AppArmor is the Ubuntu/Debian/SUSE default; SELinux is the RHEL/Fedora default. Check with aa-status or getenforce."
+    },
+    {
+      q:"You added 'PermitRootLogin no' at the bottom of /etc/ssh/sshd_config, but root can still log in. A file in /etc/ssh/sshd_config.d/ says 'PermitRootLogin yes'. Why does yes win?",
+      choices:[
+        "The last value read wins",
+        "The first value read wins, and the drop-in directory is included at the top of the main file",
+        "sshd ignores the main config when drop-ins exist",
+        "Root login can only be changed with PAM"
+      ],
+      correct:1,
+      explain:"sshd keeps the first value it reads for most settings. Drop-ins are pulled in by an Include near the top, so they override later lines. Run sshd -T to see the effective config."
+    },
+    {
+      q:"After a kernel update on a UEFI machine with Secure Boot on, a self-compiled driver won't load: 'Key was rejected by service'. What's the right fix?",
+      choices:[
+        "Disable Secure Boot permanently",
+        "Sign the module and enroll the signing key as a MOK with mokutil",
+        "chmod +x the module",
+        "Add the module to /etc/modprobe.d/ as blacklisted"
+      ],
+      correct:1,
+      explain:"Secure Boot only allows modules signed by a trusted key. Enrolling your own key (MOK) keeps the protection on."
+    },
+  ];
+
+  const grid = document.getElementById('cardGrid');
+  TERMS.forEach((item, i) => {
+    const card = document.createElement('button');
+    card.className = 'flashcard';
+    card.setAttribute('aria-label', 'Flashcard: ' + item.t + '. Press to flip.');
+    card.dataset.i = i;
+    card.innerHTML = `
+      <div class="flashcard-inner">
+        <div class="flashcard-face front"><div class="lbl">Term</div><div class="term">${item.t}</div></div>
+        <div class="flashcard-face back"><div class="lbl">Definition</div><div class="def">${item.d}</div></div>
+      </div>`;
+    card.addEventListener('click', () => card.classList.toggle('flipped'));
+    card.addEventListener('dblclick', () => { card.classList.toggle('known'); updateProgress(); });
+    grid.appendChild(card);
+  });
+  function updateProgress(){
+    const known = document.querySelectorAll('#cardGrid .flashcard.known').length;
+    document.getElementById('cardProgress').textContent = `${known} / ${TERMS.length} marked known (double-click a card to mark it)`;
+  }
+  updateProgress();
+  document.getElementById('shuffleBtn').addEventListener('click', () => {
+    const cards = Array.from(grid.children);
+    cards.sort(() => Math.random() - 0.5);
+    cards.forEach(c => { c.classList.remove('flipped'); grid.appendChild(c); });
+  });
+  document.getElementById('resetKnownBtn').addEventListener('click', () => {
+    document.querySelectorAll('#cardGrid .flashcard.known').forEach(c => c.classList.remove('known'));
+    updateProgress();
+  });
+
+  const quizList = document.getElementById('quizList');
+  let score = 0, answered = 0;
+  function renderQuiz(){
+    quizList.innerHTML = ''; score = 0; answered = 0;
+    QUIZ.forEach((item, qi) => {
+      const box = document.createElement('div');
+      box.className = 'quiz-q';
+      box.innerHTML = `<p class="qtext"><span class="qnum">Q${qi+1}.</span>${item.q}</p><div class="choices"></div><p class="explain"></p>`;
+      const choicesEl = box.querySelector('.choices');
+      item.choices.forEach((c, ci) => {
+        const b = document.createElement('button');
+        b.className = 'choice'; b.textContent = c;
+        b.addEventListener('click', () => {
+          if (box.dataset.done) return;
+          box.dataset.done = '1'; answered++;
+          if (ci === item.correct) score++;
+          Array.from(choicesEl.children).forEach((el, ei) => {
+            el.disabled = true;
+            if (ei === item.correct) el.classList.add('correct');
+            else if (ei === ci) el.classList.add('incorrect');
+          });
+          box.querySelector('.explain').textContent = item.explain;
+          box.querySelector('.explain').classList.add('show');
+          updateScore();
+        });
+        choicesEl.appendChild(b);
+      });
+      quizList.appendChild(box);
+    });
+    updateScore();
+  }
+  function updateScore(){
+    document.getElementById('quizScore').textContent =
+      answered === 0 ? `${QUIZ.length} questions — click an answer to check yourself` : `Score: ${score} / ${answered} answered`;
+  }
+  renderQuiz();
+  document.getElementById('resetQuizBtn').addEventListener('click', renderQuiz);
+
+  // Glossary is alphabetized so each letter heading appears once
+  const firstLetter = s => s.replace(/^[^A-Za-z]+/, '')[0].toUpperCase();
+  const sortKey = s => s.replace(/^[^A-Za-z]+/, '');
+  const SORTED = [...TERMS].sort((a, b) => sortKey(a.t).localeCompare(sortKey(b.t), 'en', {sensitivity:'base'}));
+  const glossaryList = document.getElementById('glossaryList');
+  const alphaNav = document.getElementById('alphaNav');
+  const letters = [...new Set(SORTED.map(t => firstLetter(t.t)))];
+  'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').forEach(L => {
+    const a = document.createElement('a');
+    a.textContent = L;
+    if (letters.includes(L)) { a.href = '#g-' + L; a.className = 'has'; }
+    else { a.href = 'javascript:void(0)'; }
+    alphaNav.appendChild(a);
+  });
+  let currentLetter = '';
+  SORTED.forEach(item => {
+    const L = firstLetter(item.t);
+    if (L !== currentLetter) {
+      currentLetter = L;
+      const h = document.createElement('div');
+      h.className = 'glossary-letter'; h.id = 'g-' + L; h.textContent = L;
+      glossaryList.appendChild(h);
+    }
+    const wrap = document.createElement('div');
+    wrap.className = 'gitem';
+    wrap.innerHTML = `<dt>${item.t}</dt><dd>${item.d}</dd>`;
+    wrap.dataset.search = (item.t + ' ' + item.d).toLowerCase();
+    glossaryList.appendChild(wrap);
+  });
+  document.getElementById('glossarySearch').addEventListener('input', (e) => {
+    const q = e.target.value.toLowerCase().trim();
+    document.querySelectorAll('.gitem').forEach(el => {
+      el.classList.toggle('hidden', q && !el.dataset.search.includes(q));
+    });
+  });
+</script>
+
+<button id="backToTop" class="back-to-top" aria-label="Back to top" title="Back to top">&uarr;</button>
+
+<script>
+  const backToTop = document.getElementById('backToTop');
+  function toggleBackToTop(){ backToTop.classList.toggle('show', window.scrollY > 480); }
+  window.addEventListener('scroll', toggleBackToTop, {passive:true});
+  toggleBackToTop();
+  backToTop.addEventListener('click', () => window.scrollTo({top:0, behavior:'smooth'}));
+</script>
