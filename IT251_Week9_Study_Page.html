@@ -1,0 +1,830 @@
+<title>AAA in Linux</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --bg:#f2f6f4;
+    --surface:#ffffff;
+    --surface-2:#e6efec;
+    --text:#0c1a15;
+    --muted:#51655d;
+    --border:#cddcd5;
+    --accent:#0f7a5c;
+    --accent-soft:#dcf1e7;
+    --accent-2:#0e7490;
+    --accent-2-soft:#dbeff4;
+    --danger:#b3261e;
+    --danger-soft:#f8dcd9;
+    --correct:#0f7a5c;
+    --correct-soft:#dcf1e7;
+    --shadow: 0 1px 2px rgba(12,26,21,.06), 0 8px 24px rgba(12,26,21,.07);
+    --mono:'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    --sans:'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0a0f0d; --surface:#0f1613; --surface-2:#131c18;
+      --text:#d9f5e8; --muted:#82a99a; --border:#1e2b26;
+      --accent:#3ddc97; --accent-soft:#123024;
+      --accent-2:#22d3ee; --accent-2-soft:#0c2b30;
+      --danger:#ff7a68; --danger-soft:#33150f;
+      --correct:#3ddc97; --correct-soft:#123024;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 12px 32px rgba(0,0,0,.45);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0a0f0d; --surface:#0f1613; --surface-2:#131c18;
+    --text:#d9f5e8; --muted:#82a99a; --border:#1e2b26;
+    --accent:#3ddc97; --accent-soft:#123024;
+    --accent-2:#22d3ee; --accent-2-soft:#0c2b30;
+    --danger:#ff7a68; --danger-soft:#33150f;
+    --correct:#3ddc97; --correct-soft:#123024;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 12px 32px rgba(0,0,0,.45);
+  }
+
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto;} *{animation-duration:.001ms !important; transition-duration:.001ms !important;} }
+  body{ margin:0; background:var(--bg); color:var(--text); font-family:var(--sans); line-height:1.55; -webkit-font-smoothing:antialiased; }
+  a{ color:var(--accent-2); }
+  ::selection{ background:var(--accent-soft); }
+  .wrap{ max-width:1080px; margin:0 auto; padding:0 24px; }
+
+  header.hero{
+    border-bottom:1px solid var(--border);
+    background:repeating-linear-gradient(180deg, var(--surface-2) 0 1px, var(--bg) 1px 28px);
+    padding:56px 0 40px;
+  }
+  .termbar{ display:flex; gap:6px; margin-bottom:20px; }
+  .termbar span{ width:11px; height:11px; border-radius:50%; }
+  .termbar span:nth-child(1){ background:#ff5f57; }
+  .termbar span:nth-child(2){ background:#febc2e; }
+  .termbar span:nth-child(3){ background:#28c840; }
+  .eyebrow{ font-family:var(--mono); font-size:.8rem; color:var(--accent); }
+  .eyebrow::before{ content:"$ "; opacity:.7; }
+  h1{ font-family:var(--mono); font-weight:700; font-size:clamp(2rem,4vw,3rem); line-height:1.08; margin:.4em 0 .3em; text-wrap:balance; letter-spacing:-.01em; }
+  h1 .cursor{ display:inline-block; width:.5ch; background:var(--accent); margin-left:.15em; animation:blink 1.1s steps(1) infinite; }
+  @keyframes blink{ 50%{ opacity:0; } }
+  .hero p.lede{ max-width:62ch; font-size:1.1rem; color:var(--muted); margin:0 0 1.6em; }
+  .factrow{ display:flex; flex-wrap:wrap; gap:10px; }
+  .fact{ font-family:var(--mono); font-size:.78rem; background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:.5em .8em; display:flex; gap:.5em; }
+  .fact b{ color:var(--muted); font-weight:500; text-transform:uppercase; letter-spacing:.06em; font-size:.72rem; }
+
+  nav.index{ position:sticky; top:0; z-index:20; background:color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter:blur(8px); border-bottom:1px solid var(--border); }
+  nav.index .wrap{ display:flex; gap:4px; overflow-x:auto; padding:10px 24px; scrollbar-width:none; }
+  nav.index .wrap::-webkit-scrollbar{ display:none; }
+  nav.index a{ font-family:var(--mono); font-size:.82rem; text-decoration:none; color:var(--muted); padding:.5em .9em; border-radius:6px; white-space:nowrap; border:1px solid transparent; }
+  nav.index a:hover{ color:var(--text); border-color:var(--border); background:var(--surface); }
+  nav.index a.toc-link{ font-weight:600; color:var(--accent); border-right:1px solid var(--border); border-radius:0; margin-right:8px; padding-right:16px; }
+  nav.index a.toc-link:hover{ color:var(--accent); background:transparent; border-right-color:var(--border); }
+  nav.index a:not(.toc-link)::before{ content:'#'; opacity:.5; margin-right:.3em; }
+
+  .back-to-top{ position:fixed; bottom:22px; right:22px; z-index:40; width:46px; height:46px;
+    background:var(--surface); border:1px solid var(--border); border-radius:10px; box-shadow:var(--shadow);
+    font-family:var(--mono); font-size:1.15rem; color:var(--accent); line-height:1;
+    display:flex; align-items:center; justify-content:center; padding:0; cursor:pointer; text-decoration:none;
+    opacity:0; visibility:hidden; transform:translateY(10px);
+    transition:opacity .25s ease, transform .25s ease, visibility 0s .25s; }
+  .back-to-top.show{ opacity:1; visibility:visible; transform:translateY(0); transition:opacity .25s ease, transform .25s ease, visibility 0s; }
+  .back-to-top:hover{ background:var(--accent-soft); border-color:var(--accent); }
+  .back-to-top:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+  @media print{ nav.index, .back-to-top{ display:none; } }
+
+  section{ padding:52px 0; border-bottom:1px solid var(--border); }
+  section:last-of-type{ border-bottom:none; }
+  .section-head{ margin-bottom:28px; max-width:70ch; }
+  .kicker{ font-family:var(--mono); font-size:.75rem; letter-spacing:.1em; text-transform:uppercase; color:var(--accent-2); margin:0 0 .5em; }
+  .kicker::before{ content:"// "; opacity:.6; }
+  h2{ font-family:var(--mono); font-size:clamp(1.4rem,2.4vw,1.9rem); margin:0 0 .3em; text-wrap:balance; }
+  .section-head p{ color:var(--muted); margin:.4em 0 0; }
+
+  .obj-list{ display:grid; gap:12px; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); list-style:none; margin:0; padding:0; }
+  .obj-list li{ background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:16px 18px; box-shadow:var(--shadow); font-size:.95rem; }
+  .obj-list li::before{ content:"$"; color:var(--accent); font-family:var(--mono); margin-right:.6em; font-weight:700; }
+
+  figure{ margin:36px 0 0; }
+  figure svg{ width:100%; height:auto; display:block; background:var(--surface); border:1px solid var(--border); border-radius:12px; }
+  figcaption{ font-size:.85rem; color:var(--muted); margin-top:.6em; }
+  .diagram-grid{ display:grid; gap:32px; grid-template-columns:1fr; }
+  @media(min-width:860px){ .diagram-grid{ grid-template-columns:1fr 1.05fr; } }
+
+  table.blocks{ width:100%; border-collapse:collapse; font-size:.9rem; margin:22px 0 24px; }
+  table.blocks caption{ caption-side:top; text-align:left; font-family:var(--mono); font-size:.75rem; text-transform:uppercase; letter-spacing:.08em; color:var(--accent-2); margin-bottom:.5em; }
+  table.blocks th, table.blocks td{ border:1px solid var(--border); padding:.6em .85em; text-align:left; vertical-align:top; }
+  table.blocks th{ background:var(--surface-2); font-family:var(--mono); font-size:.78rem; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); }
+  table.blocks td:first-child{ font-family:var(--mono); font-weight:600; color:var(--accent); white-space:nowrap; }
+  table.blocks tbody tr:nth-child(odd){ background:var(--surface); }
+  table.blocks tbody tr:nth-child(even){ background:color-mix(in srgb, var(--surface) 60%, var(--surface-2)); }
+  @media(max-width:640px){ table.blocks{ display:block; overflow-x:auto; } main{ overflow-wrap:anywhere; } }
+
+  .toolbar{ display:flex; gap:10px; align-items:center; margin-bottom:20px; flex-wrap:wrap; }
+  button.btn{ font-family:var(--mono); font-size:.82rem; background:var(--surface); color:var(--text); border:1px solid var(--border); border-radius:7px; padding:.6em 1em; cursor:pointer; }
+  button.btn:hover{ border-color:var(--accent); color:var(--accent); }
+  button.btn:focus-visible, a:focus-visible, .flashcard:focus-visible, input:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+  #cardProgress, #autoCardProgress{ font-family:var(--mono); font-size:.8rem; color:var(--muted); }
+
+  .card-grid{ display:grid; gap:16px; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); }
+  .flashcard{ perspective:1200px; height:150px; cursor:pointer; border:none; background:none; padding:0; font-family:inherit; color:var(--text); text-align:left; width:100%; }
+  .flashcard-inner{ position:relative; width:100%; height:100%; transition:transform .5s cubic-bezier(.4,.2,.2,1); transform-style:preserve-3d; }
+  .flashcard.flipped .flashcard-inner{ transform:rotateY(180deg); }
+  .flashcard-face{ position:absolute; inset:0; backface-visibility:hidden; border-radius:10px; border:1px solid var(--border); box-shadow:var(--shadow); padding:16px; display:flex; flex-direction:column; justify-content:center; }
+  .flashcard-face.front{ background:var(--surface); }
+  .flashcard-face.back{ background:var(--accent-soft); transform:rotateY(180deg); overflow-y:auto; }
+  .flashcard-face .lbl{ font-family:var(--mono); font-size:.68rem; text-transform:uppercase; letter-spacing:.1em; color:var(--muted); margin-bottom:.5em; }
+  .flashcard-face.front .term{ font-family:var(--mono); font-weight:600; font-size:1.02rem; }
+  .flashcard-face.back .def{ font-size:.88rem; }
+  .flashcard.known .flashcard-face.front{ border-color:var(--correct); }
+
+  .quiz-q{ background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px 22px; margin-bottom:18px; box-shadow:var(--shadow); }
+  .quiz-q .qtext{ font-weight:600; margin:0 0 14px; }
+  .quiz-q .qnum{ font-family:var(--mono); color:var(--accent); margin-right:.5em; }
+  .choices{ display:grid; gap:8px; }
+  .choice{ text-align:left; font-family:var(--sans); font-size:.95rem; background:var(--surface-2); border:1px solid var(--border); border-radius:8px; padding:.7em .9em; cursor:pointer; color:var(--text); }
+  .choice:hover{ border-color:var(--accent); }
+  .choice.correct{ background:var(--correct-soft); border-color:var(--correct); }
+  .choice.incorrect{ background:var(--danger-soft); border-color:var(--danger); }
+  .choice[disabled]{ cursor:default; }
+  .explain{ margin-top:12px; font-size:.88rem; color:var(--muted); border-left:3px solid var(--accent-2); padding-left:12px; display:none; }
+  .explain.show{ display:block; }
+  #quizScore{ font-family:var(--mono); font-size:.85rem; color:var(--muted); margin-bottom:16px; }
+
+  .example{ background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px 22px; margin-bottom:16px; box-shadow:var(--shadow); }
+  .example h3{ font-family:var(--mono); font-size:1.02rem; margin:0 0 8px; }
+  .example .tag{ display:inline-block; font-family:var(--mono); font-size:.68rem; text-transform:uppercase; letter-spacing:.08em; color:var(--accent-2); background:var(--accent-2-soft); border-radius:5px; padding:.25em .6em; margin-bottom:10px; }
+  code.inline{ font-family:var(--mono); background:var(--surface-2); border-radius:4px; padding:.1em .4em; font-size:.92em; }
+  pre.term{ font-family:var(--mono); font-size:.85rem; background:var(--surface-2); border:1px solid var(--border); border-radius:8px; padding:12px 14px; overflow-x:auto; margin:10px 0; }
+  details.solution{ margin-top:12px; }
+  details.solution summary{ cursor:pointer; font-family:var(--mono); font-size:.82rem; color:var(--accent); list-style:none; display:inline-flex; align-items:center; gap:.4em; }
+  details.solution summary::-webkit-details-marker{ display:none; }
+  details.solution summary::before{ content:"▸"; transition:transform .15s; }
+  details.solution[open] summary::before{ transform:rotate(90deg); }
+  details.solution .solbody{ margin-top:10px; padding:14px 16px; background:var(--surface-2); border-radius:8px; font-size:.92rem; }
+
+  #glossarySearch{ width:100%; max-width:420px; font-family:var(--sans); font-size:.95rem; padding:.7em .9em; border-radius:8px; border:1px solid var(--border); background:var(--surface); color:var(--text); margin-bottom:16px; }
+  .alpha-nav{ display:flex; flex-wrap:wrap; gap:4px; margin-bottom:24px; }
+  .alpha-nav a{ font-family:var(--mono); font-size:.78rem; width:1.9em; height:1.9em; display:flex; align-items:center; justify-content:center; border:1px solid var(--border); border-radius:5px; text-decoration:none; color:var(--muted); }
+  .alpha-nav a.has{ color:var(--text); }
+  .alpha-nav a.has:hover{ border-color:var(--accent); color:var(--accent); }
+  .glossary-letter{ font-family:var(--mono); color:var(--accent); font-size:1.1rem; margin:22px 0 8px; }
+  dl.glossary{ margin:0; }
+  dl.glossary .gitem{ border-top:1px solid var(--border); padding:12px 0; }
+  dl.glossary dt{ font-family:var(--mono); font-weight:600; }
+  dl.glossary dd{ margin:.3em 0 0; color:var(--muted); font-size:.92rem; }
+  .gitem.hidden{ display:none; }
+
+  .callout{ border-left:3px solid var(--accent); background:var(--accent-soft); border-radius:0 8px 8px 0; padding:14px 18px; margin:10px 0 24px; font-size:.92rem; }
+  .callout b{ font-family:var(--mono); }
+
+  footer{ padding:32px 0 60px; }
+  footer p{ color:var(--muted); font-size:.85rem; font-family:var(--mono); }
+</style>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="termbar"><span></span><span></span><span></span></div>
+    <p class="eyebrow">IT251 · Week 9</p>
+    <h1>AAA in Linux<span class="cursor">&nbsp;</span></h1>
+    <p class="lede">Security, part one: who are you, what are you allowed to do, and what did you do? This week maps those three questions onto the Linux pieces that answer them: PAM, polkit, SSSD and realmd, LDAP, Kerberos, Samba and the logs.</p>
+    <div class="factrow">
+      <span class="fact"><b>9.1</b> Lecture</span>
+      <span class="fact"><b>9.2</b> Lab · LFS 1 (Host Prep)</span>
+      <span class="fact"><b>Covers</b> Ascend Module 5.1 · Domain: Security</span>
+      <span class="fact"><b>Next</b> 10.1: firewalls &amp; OS hardening (5.2&ndash;5.3)</span>
+    </div>
+  </div>
+</header>
+
+<nav class="index" aria-label="Section index">
+  <div class="wrap">
+    <a href="index.html" class="toc-link">&larr; Table of Contents</a>
+    <a href="#overview">Overview</a>
+    <a href="#diagrams">Concepts</a>
+    <a href="#pam">PAM</a>
+    <a href="#flashcards">Flashcards</a>
+    <a href="#quiz">Quiz</a>
+    <a href="#examples">Examples</a>
+    <a href="#lfs">LFS Tie-in</a>
+    <a href="#glossary">Glossary</a>
+  </div>
+</nav>
+
+<main class="wrap">
+
+  <section id="overview">
+    <div class="section-head">
+      <p class="kicker">Overview</p>
+      <h2>What Week 9 covers</h2>
+      <p>You've already managed local users (Week 4, Module 3) and services (Week 5). Module 5 asks the security question behind both of them. When someone logs in, runs <code class="inline">sudo</code>, mounts a share or restarts a service, what decides whether that's allowed, and where does it get written down? On a real network the answer is rarely just <code class="inline">/etc/passwd</code>. Accounts usually live in a directory (LDAP or Active Directory), passwords get checked with Kerberos tickets, and a stack of PAM modules ties it all together on each box.</p>
+    </div>
+    <ul class="obj-list">
+      <li>Define <strong>authentication</strong>, <strong>authorization</strong> and <strong>accounting</strong>, and name the Linux tool for each</li>
+      <li>Read a PAM stack in <code class="inline">/etc/pam.d/</code>: module types and control flags</li>
+      <li>Explain what <strong>polkit</strong> authorizes that <code class="inline">sudo</code> doesn't, and read a <code class="inline">.rules</code> file</li>
+      <li>Describe how <strong>SSSD</strong>, <code class="inline">realm</code> and <strong>Winbind</strong> join a Linux box to a directory</li>
+      <li>Read an LDAP distinguished name and run a basic <code class="inline">ldapsearch</code></li>
+      <li>Walk through a <strong>Kerberos</strong> login: KDC, TGT, service ticket, <code class="inline">kinit</code>/<code class="inline">klist</code></li>
+      <li>Share and connect to an SMB share with <strong>Samba</strong> (<code class="inline">smb.conf</code>, <code class="inline">testparm</code>, <code class="inline">smbpasswd</code>)</li>
+      <li>Find who logged in, and who failed to, with <code class="inline">journalctl</code>, <code class="inline">last</code>/<code class="inline">lastb</code> and <code class="inline">auditd</code></li>
+    </ul>
+    <div class="callout"><b>Supplement, not a replacement:</b> this page follows the Ascend 5.1 topic list (Polkit, PAM, SSSD/Winbind realm, LDAP, Kerberos, Samba, Logging) but is written independently. Use it to drill the vocabulary and the "which tool answers this?" reflex. Ascend has the full reading, and Lab 5.1 in ExtremeLabs is where you get the hands-on reps with a real directory. Don't experiment with PAM on the LFS host VM; one bad line can lock you out of the box you're building on.</div>
+  </section>
+
+  <section id="diagrams">
+    <div class="section-head">
+      <p class="kicker">Concepts</p>
+      <h2>Two ways to see it</h2>
+      <p>The AAA map sorts this week's tools by <em>which question they answer</em>. The Kerberos diagram shows <em>the order</em> of a ticket-based login, which is the sequence the exam likes to scramble.</p>
+    </div>
+    <div class="diagram-grid">
+      <figure>
+        <svg viewBox="0 0 460 260" role="img" aria-label="AAA map: Authentication (who are you) uses PAM, SSSD, Kerberos and LDAP. Authorization (what may you do) uses polkit, sudo, permissions and Samba share rules. Accounting (what did you do) uses journalctl, last and lastb, and auditd.">
+          <g font-family="JetBrains Mono" font-size="11.5" font-weight="600">
+            <rect x="10" y="10" width="130" height="40" rx="6" fill="var(--accent-soft)" stroke="var(--accent)"/>
+            <text x="75" y="28" text-anchor="middle" fill="var(--accent)">Authentication</text>
+            <text x="75" y="43" text-anchor="middle" fill="var(--accent)" font-size="9.5" font-weight="500">who are you?</text>
+            <rect x="10" y="60" width="130" height="82" rx="6" fill="none" stroke="currentColor" opacity=".85"/>
+            <text x="75" y="80" text-anchor="middle" fill="currentColor" font-size="10.5">PAM</text>
+            <text x="75" y="96" text-anchor="middle" fill="currentColor" font-size="10.5">SSSD / Winbind</text>
+            <text x="75" y="112" text-anchor="middle" fill="currentColor" font-size="10.5">Kerberos</text>
+            <text x="75" y="128" text-anchor="middle" fill="currentColor" font-size="10.5">LDAP (identity)</text>
+
+            <rect x="165" y="10" width="130" height="40" rx="6" fill="var(--accent-2-soft)" stroke="var(--accent-2)"/>
+            <text x="230" y="28" text-anchor="middle" fill="var(--accent-2)">Authorization</text>
+            <text x="230" y="43" text-anchor="middle" fill="var(--accent-2)" font-size="9.5" font-weight="500">what may you do?</text>
+            <rect x="165" y="60" width="130" height="82" rx="6" fill="none" stroke="currentColor" opacity=".85"/>
+            <text x="230" y="80" text-anchor="middle" fill="currentColor" font-size="10.5">polkit</text>
+            <text x="230" y="96" text-anchor="middle" fill="currentColor" font-size="10.5">sudo</text>
+            <text x="230" y="112" text-anchor="middle" fill="currentColor" font-size="10.5">file permissions</text>
+            <text x="230" y="128" text-anchor="middle" fill="currentColor" font-size="10.5">Samba share rules</text>
+
+            <rect x="320" y="10" width="130" height="40" rx="6" fill="var(--danger-soft)" stroke="var(--danger)"/>
+            <text x="385" y="28" text-anchor="middle" fill="var(--danger)">Accounting</text>
+            <text x="385" y="43" text-anchor="middle" fill="var(--danger)" font-size="9.5" font-weight="500">what did you do?</text>
+            <rect x="320" y="60" width="130" height="82" rx="6" fill="none" stroke="currentColor" opacity=".85"/>
+            <text x="385" y="80" text-anchor="middle" fill="currentColor" font-size="10.5">journalctl</text>
+            <text x="385" y="96" text-anchor="middle" fill="currentColor" font-size="10.5">auth.log / secure</text>
+            <text x="385" y="112" text-anchor="middle" fill="currentColor" font-size="10.5">last / lastb</text>
+            <text x="385" y="128" text-anchor="middle" fill="currentColor" font-size="10.5">auditd</text>
+          </g>
+          <line x1="75" y1="50" x2="75" y2="60" stroke="currentColor" opacity=".5"/>
+          <line x1="230" y1="50" x2="230" y2="60" stroke="currentColor" opacity=".5"/>
+          <line x1="385" y1="50" x2="385" y2="60" stroke="currentColor" opacity=".5"/>
+          <text x="10" y="175" font-family="IBM Plex Sans" font-size="10.5" fill="var(--muted)">PAM also has "account" and "session" steps, so it touches</text>
+          <text x="10" y="191" font-family="IBM Plex Sans" font-size="10.5" fill="var(--muted)">all three columns, but its first job is authentication.</text>
+          <text x="10" y="215" font-family="IBM Plex Sans" font-size="10.5" fill="var(--muted)">Exam tip: read the scenario's verb. "Prove identity" = AuthN,</text>
+          <text x="10" y="231" font-family="IBM Plex Sans" font-size="10.5" fill="var(--muted)">"allowed to" = AuthZ, "find out who did it" = Accounting.</text>
+        </svg>
+        <figcaption>Authentication proves who you are. Authorization decides what that identity can do. Accounting records what it actually did.</figcaption>
+      </figure>
+
+      <figure>
+        <svg viewBox="0 0 420 260" role="img" aria-label="Kerberos login order: 1, kinit asks the KDC's authentication service for a ticket-granting ticket. 2, the KDC returns a TGT. 3, when you reach a service, the TGT is traded at the ticket-granting service for a service ticket. 4, the service ticket is presented to the server, and the password never crosses the network.">
+          <g font-family="JetBrains Mono" font-size="11">
+            <rect x="10" y="10" width="200" height="40" rx="6" fill="var(--accent-soft)" stroke="var(--accent)"/>
+            <text x="110" y="34" text-anchor="middle" fill="var(--accent)" font-weight="600">1. kinit → KDC (AS)</text>
+            <rect x="10" y="66" width="200" height="40" rx="6" fill="none" stroke="currentColor"/>
+            <text x="110" y="90" text-anchor="middle" fill="currentColor">2. KDC returns a TGT</text>
+            <rect x="10" y="122" width="200" height="40" rx="6" fill="none" stroke="currentColor"/>
+            <text x="110" y="146" text-anchor="middle" fill="currentColor">3. TGT → TGS: service ticket</text>
+            <rect x="10" y="178" width="200" height="40" rx="6" fill="var(--accent-2-soft)" stroke="var(--accent-2)"/>
+            <text x="110" y="202" text-anchor="middle" fill="var(--accent-2)" font-weight="600">4. ticket → service</text>
+          </g>
+          <line x1="110" y1="50" x2="110" y2="66" stroke="currentColor" opacity=".5"/>
+          <line x1="110" y1="106" x2="110" y2="122" stroke="currentColor" opacity=".5"/>
+          <line x1="110" y1="162" x2="110" y2="178" stroke="currentColor" opacity=".5"/>
+          <text x="225" y="28" font-family="IBM Plex Sans" font-size="10" fill="var(--muted)">Password is used once, locally,</text>
+          <text x="225" y="42" font-family="IBM Plex Sans" font-size="10" fill="var(--muted)">to decrypt the KDC's reply.</text>
+          <text x="225" y="56" font-family="IBM Plex Sans" font-size="10" fill="var(--muted)">It never crosses the network.</text>
+          <text x="225" y="92" font-family="IBM Plex Sans" font-size="10" fill="var(--muted)">klist shows the TGT</text>
+          <text x="225" y="106" font-family="IBM Plex Sans" font-size="10" fill="var(--muted)">(krbtgt/REALM@REALM).</text>
+          <text x="225" y="196" font-family="IBM Plex Sans" font-size="10" fill="var(--muted)">Clocks must agree (default</text>
+          <text x="225" y="210" font-family="IBM Plex Sans" font-size="10" fill="var(--muted)">5-minute skew), so chrony</text>
+          <text x="225" y="224" font-family="IBM Plex Sans" font-size="10" fill="var(--muted)">from Module 4 matters here.</text>
+        </svg>
+        <figcaption>One password prompt, then tickets for everything else. That's what "single sign-on" means on a Kerberos network. The three exchanges have names: AS-REQ/AS-REP (steps 1&ndash;2), TGS-REQ/TGS-REP (step 3) and AP-REQ/AP-REP (step 4). In AP-REP the server proves itself back to you, which is <strong>mutual authentication</strong>.</figcaption>
+      </figure>
+    </div>
+
+    <table class="blocks">
+      <caption>Module 5.1 cheat sheet</caption>
+      <thead><tr><th>Piece</th><th>Job</th><th>Where / example</th></tr></thead>
+      <tbody>
+        <tr><td>PAM</td><td>Pluggable stack of modules every login-type program asks "is this person OK?"</td><td><code class="inline">/etc/pam.d/sshd</code>, <code class="inline">/etc/pam.d/sudo</code></td></tr>
+        <tr><td>polkit</td><td>Authorizes unprivileged programs asking privileged system services (over D-Bus) to act</td><td><code class="inline">/etc/polkit-1/rules.d/*.rules</code>, <code class="inline">pkaction</code>, <code class="inline">pkexec</code></td></tr>
+        <tr><td>SSSD</td><td>Daemon that fetches and caches users and logins from LDAP, AD or FreeIPA</td><td><code class="inline">/etc/sssd/sssd.conf</code> (mode 0600), <code class="inline">sss_cache -E</code></td></tr>
+        <tr><td>realm</td><td>realmd front end: discover and join a domain, writes the SSSD/Kerberos config for you</td><td><code class="inline">realm discover</code>, <code class="inline">realm join</code>, <code class="inline">realm list</code></td></tr>
+        <tr><td>Winbind</td><td>Samba's alternative to SSSD for Active Directory users and groups</td><td><code class="inline">winbindd</code>, <code class="inline">wbinfo -u</code></td></tr>
+        <tr><td>NSS</td><td>Decides <em>where</em> user/group lookups go (files, sss, winbind)</td><td><code class="inline">/etc/nsswitch.conf</code>, <code class="inline">getent passwd jsmith</code></td></tr>
+        <tr><td>LDAP</td><td>Directory protocol: a tree of entries (users, groups, hosts). 389, LDAPS 636</td><td><code class="inline">ldapsearch -x -H ldap://dc1 -b dc=corp,dc=example</code></td></tr>
+        <tr><td>Kerberos</td><td>Ticket-based network authentication through a KDC. Port 88</td><td><code class="inline">/etc/krb5.conf</code>, <code class="inline">kinit</code>, <code class="inline">klist</code>, <code class="inline">kdestroy</code></td></tr>
+        <tr><td>Samba</td><td>SMB file and print sharing with Windows; can also be an AD member or DC. Port 445</td><td><code class="inline">/etc/samba/smb.conf</code>, <code class="inline">testparm</code>, <code class="inline">smbpasswd -a</code></td></tr>
+        <tr><td>Logging</td><td>The accounting record: logins, sudo, failures, audited file access</td><td><code class="inline">journalctl</code>, <code class="inline">last</code>, <code class="inline">lastb</code>, <code class="inline">ausearch</code></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="pam">
+    <div class="section-head">
+      <p class="kicker">Closer look</p>
+      <h2>Reading a PAM stack</h2>
+      <p>PAM is the piece most likely to show up as "read this config and say what happens." Each file in <code class="inline">/etc/pam.d/</code> is named after the program that uses it, and each line has three parts: a <strong>type</strong>, a <strong>control flag</strong> and a <strong>module</strong> with its options. Lines of the same type run top to bottom.</p>
+    </div>
+    <pre class="term"># /etc/pam.d/example  (type   control     module         options)
+auth       required    pam_faillock.so preauth deny=5 unlock_time=900
+auth       sufficient  pam_sss.so
+auth       required    pam_unix.so     try_first_pass
+account    required    pam_unix.so
+password   requisite   pam_pwquality.so retry=3 minlen=12
+session    optional    pam_systemd.so</pre>
+    <div class="callout"><b>Four types = four separate stacks.</b> A program calls PAM at different moments: <code class="inline">auth</code> lines run when you type your password, <code class="inline">account</code> lines run right after, <code class="inline">session</code> lines run as the login opens and closes, and <code class="inline">password</code> lines run <em>only</em> when you change a password. Control flags only act inside their own type. So a <code class="inline">sufficient</code> line under <code class="inline">password</code> can never let someone log in, and a <code class="inline">requisite</code> failure under <code class="inline">account</code> stops the account checks, not the auth ones. Read a PAM file one type at a time, not straight down the page.</div>
+
+    <table class="blocks">
+      <caption>The four module types</caption>
+      <thead><tr><th>Type</th><th>Question it answers</th><th>Typical modules</th></tr></thead>
+      <tbody>
+        <tr><td>auth</td><td>Is this really you? (password, key, token)</td><td>pam_unix, pam_sss, pam_faillock</td></tr>
+        <tr><td>account</td><td>Even if it's you, is the account allowed in right now? (expired, locked, wrong time or group)</td><td>pam_unix, pam_access, pam_nologin</td></tr>
+        <tr><td>password</td><td>Rules for <em>changing</em> a password</td><td>pam_pwquality, pam_unix</td></tr>
+        <tr><td>session</td><td>Setup and teardown around the login (limits, home dir, logging)</td><td>pam_limits, pam_mkhomedir, pam_systemd</td></tr>
+      </tbody>
+    </table>
+
+    <table class="blocks">
+      <caption>Control flags: what happens on pass / fail</caption>
+      <thead><tr><th>Flag</th><th>If it passes</th><th>If it fails</th></tr></thead>
+      <tbody>
+        <tr><td>required</td><td>Keep going</td><td>The result will be <em>fail</em>, but the rest of the stack still runs (so an attacker can't tell which step failed)</td></tr>
+        <tr><td>requisite</td><td>Keep going</td><td>Stop now and fail immediately</td></tr>
+        <tr><td>sufficient</td><td>Stop now and succeed, if nothing <code class="inline">required</code> above it already failed</td><td>Ignored; keep going</td></tr>
+        <tr><td>optional</td><td>Only matters if it's the only module of that type</td><td>Only matters if it's the only module of that type</td></tr>
+        <tr><td>include / substack</td><td colspan="2">Pull in another file's lines (e.g. Debian's <code class="inline">@include common-auth</code>, RHEL's <code class="inline">system-auth</code>)</td></tr>
+      </tbody>
+    </table>
+    <div class="callout"><b>Distro split:</b> Debian/Ubuntu share common lines through <code class="inline">/etc/pam.d/common-*</code>, edited with <code class="inline">pam-auth-update</code>. RHEL/Fedora generate <code class="inline">system-auth</code> and <code class="inline">password-auth</code> with <code class="inline">authselect</code>, so hand edits there get overwritten. Either way, <b>keep a root shell open in a second terminal</b> while you change PAM, and test a fresh login before you close it.</div>
+  </section>
+
+  <section id="flashcards">
+    <div class="section-head">
+      <p class="kicker">Study</p>
+      <h2>Flashcards</h2>
+      <p>Click a card to flip it. Double-click to mark it known once you've got it cold.</p>
+    </div>
+    <div class="toolbar">
+      <button class="btn" id="shuffleBtn">Shuffle</button>
+      <button class="btn" id="resetKnownBtn">Reset progress</button>
+      <span id="cardProgress"></span>
+    </div>
+    <div class="card-grid" id="cardGrid"></div>
+  </section>
+
+  <section id="quiz">
+    <div class="section-head">
+      <p class="kicker">Check yourself</p>
+      <h2>Sample questions</h2>
+      <p>Pick an answer to see if you're right. These are original practice questions, not the Ascend quiz.</p>
+    </div>
+    <div id="quizScore"></div>
+    <div id="quizList"></div>
+    <button class="btn" id="resetQuizBtn">Reset quiz</button>
+  </section>
+
+  <section id="examples">
+    <div class="section-head">
+      <p class="kicker">Applied</p>
+      <h2>Worked examples</h2>
+      <p>Think it through before you expand the answer.</p>
+    </div>
+
+    <div class="example">
+      <span class="tag">PAM</span>
+      <h3>Lock an account after five bad passwords</h3>
+      <p>Policy says an account locks for 15 minutes after five failed logins. A user named <code class="inline">dana</code> mistyped their password five times and is now locked out. Which PAM module enforces the policy, and how do you see and clear their failures?</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <pre class="term"># the policy, in /etc/security/faillock.conf
+deny = 5
+unlock_time = 900
+
+sudo faillock --user dana     # list recorded failures
+sudo faillock --user dana --reset</pre>
+          <p><code class="inline">pam_faillock</code> counts failures and refuses the <code class="inline">auth</code> step once the count hits <code class="inline">deny</code>. It replaced the older <code class="inline">pam_tally2</code>, which you'll still see in old guides. The settings can go on the PAM line or in <code class="inline">faillock.conf</code>; on RHEL you turn it on with <code class="inline">authselect enable-feature with-faillock</code> instead of editing the file by hand.</p>
+        </div>
+      </details>
+    </div>
+
+    <div class="example">
+      <span class="tag">polkit</span>
+      <h3>Let a group restart one service without sudo</h3>
+      <p>The web team (group <code class="inline">webops</code>) needs to run <code class="inline">systemctl restart nginx</code> without a password. You don't want to hand them <code class="inline">sudo</code> at all. What do you write, and where?</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <pre class="term">// /etc/polkit-1/rules.d/50-webops-nginx.rules
+polkit.addRule(function(action, subject) {
+    if (action.id == "org.freedesktop.systemd1.manage-units" &amp;&amp;
+        action.lookup("unit") == "nginx.service" &amp;&amp;
+        subject.isInGroup("webops")) {
+        return polkit.Result.YES;
+    }
+});</pre>
+          <p>When a regular user runs <code class="inline">systemctl restart</code>, systemctl doesn't become root. It asks systemd over D-Bus, and systemd asks <strong>polkit</strong> whether to allow it. Rules are JavaScript files read in filename order. Return <code class="inline">YES</code>, <code class="inline">NO</code> or <code class="inline">AUTH_ADMIN</code> (ask for an admin password); return nothing to let the next rule decide. <code class="inline">pkaction</code> lists the action IDs you can match on. Each ID is defined, with its default answer, in an XML <code class="inline">.policy</code> file under <code class="inline">/usr/share/polkit-1/actions/</code> that the package installs. Your <code class="inline">.rules</code> file overrides that default; don't edit the <code class="inline">.policy</code> file, because an update will replace it.</p>
+        </div>
+      </details>
+    </div>
+
+    <div class="example">
+      <span class="tag">SSSD</span>
+      <h3>SSSD won't start after you edited its config</h3>
+      <p>You copied a working <code class="inline">sssd.conf</code> from a teammate's laptop. Now <code class="inline">systemctl status sssd</code> shows <code class="inline">failed</code>, and the journal complains about the config file. The contents are identical. What's different?</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <pre class="term">ls -l /etc/sssd/sssd.conf
+sudo chown root:root /etc/sssd/sssd.conf
+sudo chmod 600 /etc/sssd/sssd.conf
+sudo systemctl restart sssd
+getent passwd jsmith@corp.example.com    # does the lookup work now?</pre>
+          <p>The config can hold a bind password, so SSSD refuses to read it unless it's owned by root and readable only by root. Copying usually leaves it at 0644. Once it starts, <code class="inline">getent</code> proves NSS can resolve directory users. If an old answer is cached, <code class="inline">sss_cache -E</code> clears it.</p>
+        </div>
+      </details>
+    </div>
+
+    <div class="example">
+      <span class="tag">realm</span>
+      <h3>Join a Linux server to Active Directory</h3>
+      <p>A new Ubuntu server needs to accept logins from the <code class="inline">CORP.EXAMPLE.COM</code> AD domain, and only the <code class="inline">linux-admins</code> group may log in. What's the shortest path?</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <pre class="term">realm discover corp.example.com           # what is it, what packages are needed?
+sudo realm join -U Administrator corp.example.com
+realm list                                # confirm: configured, client-software: sssd
+sudo realm permit -g linux-admins@corp.example.com</pre>
+          <p><code class="inline">realm</code> (realmd) does the work you'd otherwise do by hand. It finds the domain through DNS, creates the computer account, writes <code class="inline">sssd.conf</code> and <code class="inline">krb5.conf</code>, and fetches a keytab. <code class="inline">realm permit</code> is authorization: everyone can still <em>authenticate</em>, but only that group is <em>allowed in</em>. DNS has to point at the domain controllers, or discovery fails before anything else happens.</p>
+        </div>
+      </details>
+    </div>
+
+    <div class="example">
+      <span class="tag">Kerberos</span>
+      <h3>"Clock skew too great"</h3>
+      <p>Logins with a domain account worked yesterday. Today <code class="inline">kinit jsmith</code> fails with a clock-skew error, and the password is definitely right. What's wrong, and what tools confirm it?</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <pre class="term">timedatectl                  # "System clock synchronized: no"?
+chronyc tracking             # how far off, and from which source
+sudo systemctl restart chronyd     # "chrony" on Debian/Ubuntu
+kinit jsmith &amp;&amp; klist         # should now show krbtgt/CORP.EXAMPLE.COM@...</pre>
+          <p>Kerberos tickets carry timestamps to stop replay attacks. By default, if the client and KDC clocks are more than <strong>5 minutes</strong> apart, the KDC rejects the request. Time sync isn't optional on a Kerberos network, which is where Module 4's chrony comes back. <code class="inline">klist</code> shows your tickets and their expiry; <code class="inline">kdestroy</code> throws them away.</p>
+        </div>
+      </details>
+    </div>
+
+    <div class="example">
+      <span class="tag">LDAP</span>
+      <h3>Find one user in the directory</h3>
+      <p>You need to confirm the directory server has an entry for <code class="inline">jsmith</code> and see which groups they're in. The base of the tree is <code class="inline">dc=corp,dc=example,dc=com</code>.</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <pre class="term">ldapsearch -x -H ldaps://ldap.corp.example.com \
+  -D "cn=reader,dc=corp,dc=example,dc=com" -W \
+  -b "dc=corp,dc=example,dc=com" "(uid=jsmith)" cn memberOf</pre>
+          <p>Read it piece by piece. <code class="inline">-x</code> means simple bind (username and password). <code class="inline">-H</code> is the server, here LDAPS on 636 so the password is encrypted. <code class="inline">-D</code>/<code class="inline">-W</code> bind as a reader account and prompt for its password. <code class="inline">-b</code> is where to start searching, then the filter, then the attributes to return. The full name of that entry is a DN like <code class="inline">uid=jsmith,ou=People,dc=corp,dc=example,dc=com</code>, read from the most specific part on the left to the root on the right.</p>
+        </div>
+      </details>
+    </div>
+
+    <div class="example">
+      <span class="tag">Samba</span>
+      <h3>Share a folder with Windows users</h3>
+      <p>Accounting wants a share called <code class="inline">reports</code> pointing at <code class="inline">/srv/reports</code>, writable only by the <code class="inline">acct</code> group. You've added the section to <code class="inline">smb.conf</code>, but user <code class="inline">lee</code> gets "access denied" even though lee is a Linux user in that group.</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <pre class="term">[reports]
+   path = /srv/reports
+   valid users = @acct
+   writable = yes
+
+testparm                            # check the file's syntax
+sudo smbpasswd -a lee               # give lee a Samba password
+sudo systemctl restart smbd         # smb on RHEL/Fedora
+smbclient //localhost/reports -U lee</pre>
+          <p>In a standalone setup, Samba keeps its <strong>own</strong> password database, separate from <code class="inline">/etc/shadow</code>, so a Linux account isn't enough. <code class="inline">smbpasswd -a</code> adds lee. Run <code class="inline">testparm</code> after every edit to catch typos. Linux permissions on <code class="inline">/srv/reports</code> still apply underneath, and on RHEL/Fedora SELinux has to allow the share too (Week 10).</p>
+        </div>
+      </details>
+    </div>
+
+    <div class="example">
+      <span class="tag">Accounting</span>
+      <h3>Who tried to get in last night?</h3>
+      <p>A manager asks whether anyone tried to SSH into a server overnight, and whether anyone actually succeeded. Where do you look?</p>
+      <details class="solution">
+        <summary>Show answer</summary>
+        <div class="solbody">
+          <pre class="term">journalctl -u ssh --since yesterday | grep -E "Failed|Accepted"   # sshd on RHEL/Fedora
+sudo lastb | head          # failed logins (btmp); not on Debian 13+
+last | head                # successful logins and reboots (wtmp)
+sudo grep sshd /var/log/auth.log    # Debian/Ubuntu text log, if rsyslog is installed
+sudo grep sshd /var/log/secure      # RHEL/Fedora text log</pre>
+          <p>The journal is the one source every systemd distro has. The text files depend on rsyslog: a fresh Debian 12+ install doesn't include it, so <code class="inline">/var/log/auth.log</code> may not exist at all. Debian 13 also moved <code class="inline">last</code> into the <code class="inline">wtmpdb</code> package and dropped <code class="inline">lastb</code>; there, failed logins come from the journal. Learn both tools anyway, because the exam still asks about them. For "who opened this file?" questions that logins can't answer, <code class="inline">auditd</code> records events you choose with <code class="inline">auditctl -w /etc/shadow -p wa</code>, and you search them with <code class="inline">ausearch</code> and summarize with <code class="inline">aureport</code>.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section id="lfs">
+    <div class="section-head">
+      <p class="kicker">Lab connection</p>
+      <h2>Where this shows up in your LFS build</h2>
+      <p>Your 9.2&ndash;15.2 lab is building Linux from source. That puts you on the other side of every tool on this page: instead of configuring them, you get to see where they come from, and which ones a minimal system doesn't have at all.</p>
+    </div>
+    <ul class="obj-list">
+      <li><strong>The <code class="inline">lfs</code> user (Ch. 4).</strong> You build as an unprivileged user with a stripped, clean environment (<code class="inline">env -i</code> in <code class="inline">.bash_profile</code>), not as root. That's least privilege: a mistake can't wreck the host.</li>
+      <li><strong>Shadow (Ch. 8).</strong> This package gives you <code class="inline">passwd</code>, <code class="inline">useradd</code>, <code class="inline">login</code> and the <code class="inline">/etc/shadow</code> file itself. The book has you pick the hash method in <code class="inline">/etc/login.defs</code>.</li>
+      <li><strong>Libxcrypt (Ch. 8).</strong> This library provides <code class="inline">crypt()</code>, which turns a password into the hash in <code class="inline">/etc/shadow</code>. The prefix tells you the algorithm: <code class="inline">$y$</code> is yescrypt, <code class="inline">$6$</code> is SHA-512.</li>
+      <li><strong>What's missing.</strong> LFS installs no Linux-PAM, polkit, SSSD, Kerberos or Samba. Linux-PAM, polkit, MIT Kerberos and Samba are in the follow-on book (BLFS). A system that works with none of them is a good way to see that they're layers added on top, not part of the core.</li>
+    </ul>
+  </section>
+
+  <section id="glossary">
+    <div class="section-head">
+      <p class="kicker">Reference</p>
+      <h2>Glossary &amp; index</h2>
+      <p>Every term from this week, searchable and indexed A–Z.</p>
+    </div>
+    <input type="text" id="glossarySearch" placeholder="Search terms…" aria-label="Search glossary">
+    <div class="alpha-nav" id="alphaNav"></div>
+    <dl class="glossary" id="glossaryList"></dl>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>IT251 · Linux+ (XK0-006) · Module 5.1 AAA in Linux · Week 9 reference. Original study material that follows the Ascend 5.1 topic list; not affiliated with Ascend Education or CompTIA.</p>
+  </div>
+</footer>
+
+<script>
+  const TERMS = [
+    {t:"AAA", d:"Authentication (prove who you are), Authorization (decide what you may do), Accounting (record what you did)."},
+    {t:"PAM", d:"Pluggable Authentication Modules: a stack of modules, configured per program in /etc/pam.d/, that login, sshd, sudo and others ask before letting someone in."},
+    {t:"PAM module types", d:"auth (verify identity), account (is the account allowed now?), password (rules for changing it), session (setup/teardown around the login)."},
+    {t:"required vs. requisite", d:"Both make the stack fail. required keeps running the remaining modules first; requisite stops immediately."},
+    {t:"sufficient", d:"If this module passes and nothing required above it failed, the stack succeeds right away. If it fails, it's ignored."},
+    {t:"pam_unix", d:"The PAM module that checks local accounts in /etc/passwd and /etc/shadow."},
+    {t:"pam_faillock", d:"Counts failed logins and locks the account after a set number (deny=). Clear it with faillock --user NAME --reset. Replaced pam_tally2."},
+    {t:"pam_pwquality", d:"Enforces password strength (length, character classes, dictionary checks) when a password is changed. Settings in /etc/security/pwquality.conf."},
+    {t:"pam_limits", d:"Session module that applies resource limits from /etc/security/limits.conf (max processes, open files)."},
+    {t:"authselect", d:"RHEL/Fedora tool that generates the system-auth and password-auth PAM files. Hand edits to those files get overwritten."},
+    {t:"pam-auth-update", d:"Debian/Ubuntu tool that manages the shared /etc/pam.d/common-* files."},
+    {t:"polkit", d:"Authorization framework for unprivileged programs asking privileged services (over D-Bus) to do something: restart a unit, reboot, change network settings."},
+    {t:"polkit rules", d:"JavaScript files in /etc/polkit-1/rules.d/ (local) and /usr/share/polkit-1/rules.d/ (packages). Return polkit.Result.YES, NO, AUTH_SELF or AUTH_ADMIN."},
+    {t:"pkexec", d:"polkit's way to run a command as another user (root by default), after polkit approves. Famous for the 2021 PwnKit local root bug."},
+    {t:".policy files", d:"XML files in /usr/share/polkit-1/actions/ that define each polkit action ID and its default answer. Packages own them; override with a .rules file instead of editing."},
+    {t:"polkit vs. PAM", d:"PAM answers 'is this really you?' (authentication) for logins. polkit answers 'may this user make that service do this?' (authorization). polkit can call on PAM when it needs a password (AUTH_ADMIN)."},
+    {t:"pkaction", d:"Lists the polkit action IDs installed on the system, e.g. org.freedesktop.systemd1.manage-units."},
+    {t:"SSSD", d:"System Security Services Daemon: gets users, groups and logins from LDAP, Active Directory or FreeIPA, and caches them so logins work offline."},
+    {t:"sssd.conf", d:"/etc/sssd/sssd.conf. Must be owned by root with mode 0600, or SSSD refuses to start."},
+    {t:"realm (realmd)", d:"Front end that discovers and joins a domain and writes the SSSD and Kerberos config: realm discover, realm join, realm list, realm permit."},
+    {t:"Winbind", d:"Samba's daemon (winbindd) for resolving Active Directory users and groups; the alternative to SSSD. wbinfo -u lists domain users."},
+    {t:"NSS / nsswitch.conf", d:"Name Service Switch. /etc/nsswitch.conf says where lookups go, e.g. 'passwd: files sss'. getent passwd NAME tests it."},
+    {t:"LDAP", d:"Lightweight Directory Access Protocol: a tree of entries (users, groups, hosts). Port 389 (StartTLS) or 636 (LDAPS). OpenLDAP's server is slapd."},
+    {t:"DN (distinguished name)", d:"An entry's full path in the LDAP tree, most specific first: uid=jsmith,ou=People,dc=corp,dc=example,dc=com."},
+    {t:"ldapsearch", d:"Command-line LDAP query tool. -x simple bind, -H server URI, -D bind DN, -W prompt for password, -b search base, then a filter like (uid=jsmith)."},
+    {t:"LDIF", d:"Plain-text format for LDAP entries and changes, fed to ldapadd and ldapmodify."},
+    {t:"Kerberos", d:"Ticket-based network authentication. You prove your password once to the KDC, then present tickets to services. Port 88."},
+    {t:"KDC", d:"Key Distribution Center: the Kerberos server. Its Authentication Service issues TGTs; its Ticket-Granting Service issues service tickets."},
+    {t:"TGT", d:"Ticket-Granting Ticket: what kinit gets you. You trade it for service tickets without typing your password again."},
+    {t:"AS-REQ / TGS-REQ / AP-REQ", d:"The three Kerberos exchanges: ask the Authentication Service for a TGT, trade the TGT at the Ticket-Granting Service for a service ticket, present that ticket to the service. Each has a matching -REP reply."},
+    {t:"Mutual authentication", d:"Both sides prove who they are. In Kerberos the service answers AP-REQ with an AP-REP only the real service could create, so the client knows it isn't talking to an impostor."},
+    {t:"Realm (Kerberos)", d:"A Kerberos administrative domain, written in uppercase by convention: CORP.EXAMPLE.COM."},
+    {t:"kinit / klist / kdestroy", d:"Get a TGT / list your tickets (klist -k lists a keytab) / throw your tickets away."},
+    {t:"keytab", d:"File holding a service's or host's long-term Kerberos keys (/etc/krb5.keytab), so it can authenticate without a typed password. Protect it like a password."},
+    {t:"Clock skew", d:"Kerberos rejects requests when client and KDC clocks differ by more than the allowed skew, 5 minutes by default. Keep chrony running."},
+    {t:"Samba", d:"SMB/CIFS file and print sharing between Linux and Windows. Daemons smbd (files), nmbd (NetBIOS names), winbindd (domain users). Port 445."},
+    {t:"smb.conf", d:"/etc/samba/smb.conf: [global] settings plus one [section] per share. Check it with testparm."},
+    {t:"smbpasswd -a", d:"Adds a user to Samba's own password database. A standalone Samba server doesn't use /etc/shadow."},
+    {t:"smbclient", d:"FTP-style SMB client. smbclient -L //host lists shares; smbclient //host/share -U user connects."},
+    {t:"mount -t cifs", d:"Mounts an SMB share into the Linux filesystem, e.g. mount -t cifs //srv/reports /mnt/reports -o username=lee (needs cifs-utils)."},
+    {t:"/var/log/auth.log vs. /var/log/secure", d:"Authentication text logs: auth.log on Debian/Ubuntu, secure on RHEL/Fedora. Both are written by rsyslog; journalctl works everywhere."},
+    {t:"last / lastb", d:"last reads wtmp (successful logins, reboots). lastb reads btmp (failed logins) and needs root. Debian 13: last comes from the wtmpdb package and lastb is gone; use journalctl."},
+    {t:"auditd", d:"Kernel audit daemon. auditctl -w FILE -p wa watches a file; ausearch finds events; aureport summarizes. Persistent rules go in /etc/audit/rules.d/."},
+  ];
+
+  const QUIZ = [
+    {
+      q:"A help-desk script must answer 'which user deleted this file at 2 a.m.?' Which part of AAA is that?",
+      choices:["Authentication","Authorization","Accounting","Availability"],
+      correct:2,
+      explain:"Accounting is the record of what an identity did after it got in. auditd and the logs are accounting tools."
+    },
+    {
+      q:"In a PAM auth stack, a 'requisite' module fails. What happens next?",
+      choices:[
+        "The remaining modules run, then the stack fails",
+        "The stack fails immediately; no more modules run",
+        "The failure is ignored if a later module passes",
+        "The user is prompted to try a different module"
+      ],
+      correct:1,
+      explain:"requisite stops right away on failure. required also causes failure, but lets the rest of the stack run first."
+    },
+    {
+      q:"Which PAM module type checks whether an account is expired or outside its allowed login hours, after the password has already been accepted?",
+      choices:["auth","account","password","session"],
+      correct:1,
+      explain:"auth proves identity; account decides whether that identity is allowed in right now."
+    },
+    {
+      q:"A regular user runs 'systemctl restart nginx' without sudo and gets an admin password prompt. Which component decided to ask?",
+      choices:["PAM","polkit","SSSD","sudoers"],
+      correct:1,
+      explain:"systemctl asks systemd over D-Bus, and systemd asks polkit whether the caller may manage that unit."
+    },
+    {
+      q:"SSSD fails to start right after you copied in a new sssd.conf. The file's contents are valid. What is the most likely cause?",
+      choices:[
+        "The file isn't owned by root with mode 0600",
+        "SSSD needs a reboot to read new config",
+        "nsswitch.conf is missing 'files'",
+        "The Kerberos ticket expired"
+      ],
+      correct:0,
+      explain:"SSSD refuses a config file that other users can read, because it may hold a bind password."
+    },
+    {
+      q:"Which command both joins a Linux host to an AD domain and writes the SSSD and Kerberos configuration for you?",
+      choices:["smbpasswd -a","kinit -k","realm join","ldapadd"],
+      correct:2,
+      explain:"realm (realmd) discovers the domain, creates the computer account and writes sssd.conf and krb5.conf."
+    },
+    {
+      q:"In the DN 'uid=lee,ou=Staff,dc=corp,dc=example,dc=com', which part identifies the top of the tree?",
+      choices:["uid=lee","ou=Staff","dc=corp,dc=example,dc=com","The whole string is the top"],
+      correct:2,
+      explain:"DNs read from most specific (left) to the root (right). The dc= parts are the domain components at the top."
+    },
+    {
+      q:"kinit fails with a clock-skew error even though the password is correct. What should you check first?",
+      choices:["The keytab's file mode","Time synchronization (chrony / timedatectl)","The Samba password database","The PAM password stack"],
+      correct:1,
+      explain:"Kerberos rejects requests when clocks are more than 5 minutes apart by default. Fix time sync, then kinit again."
+    },
+    {
+      q:"A Linux user can SSH in fine but can't connect to a standalone Samba share with the same password. What's missing?",
+      choices:[
+        "An LDAP entry",
+        "A Samba password, set with smbpasswd -a",
+        "A Kerberos keytab",
+        "A polkit rule"
+      ],
+      correct:1,
+      explain:"A standalone Samba server keeps its own password database, separate from /etc/shadow."
+    },
+    {
+      q:"On a fresh Debian 13 server, /var/log/auth.log doesn't exist. Where are the SSH login records?",
+      choices:["/var/log/secure","In the systemd journal (journalctl)","Nowhere; logging is off","In /etc/pam.d/sshd"],
+      correct:1,
+      explain:"Recent Debian installs don't include rsyslog, which writes auth.log. The journal still has everything."
+    },
+    {
+      q:"A PAM file has 'password sufficient pam_sss.so'. A user types the right directory password at the SSH login prompt. Does that line decide whether they get in?",
+      choices:[
+        "Yes; sufficient success grants access immediately",
+        "No; password lines only run when a password is being changed",
+        "Yes, but only if it's the last line in the file",
+        "No; sufficient lines are always ignored"
+      ],
+      correct:1,
+      explain:"Each PAM type is its own stack. Logging in runs the auth and account stacks; the password stack runs for passwd and similar changes."
+    },
+    {
+      q:"In Kerberos, how does the client know the server it's talking to is genuine?",
+      choices:["It pings the KDC","The server's AP-REP proves it holds the service key (mutual authentication)","The TGT contains the server's IP","It doesn't; Kerberos only authenticates the client"],
+      correct:1,
+      explain:"Only the real service can decrypt the ticket and build a valid AP-REP, so both sides end up authenticated."
+    },
+  ];
+
+  const grid = document.getElementById('cardGrid');
+  TERMS.forEach((item, i) => {
+    const card = document.createElement('button');
+    card.className = 'flashcard';
+    card.setAttribute('aria-label', 'Flashcard: ' + item.t + '. Press to flip.');
+    card.dataset.i = i;
+    card.innerHTML = `
+      <div class="flashcard-inner">
+        <div class="flashcard-face front"><div class="lbl">Term</div><div class="term">${item.t}</div></div>
+        <div class="flashcard-face back"><div class="lbl">Definition</div><div class="def">${item.d}</div></div>
+      </div>`;
+    card.addEventListener('click', () => card.classList.toggle('flipped'));
+    card.addEventListener('dblclick', () => { card.classList.toggle('known'); updateProgress(); });
+    grid.appendChild(card);
+  });
+  function updateProgress(){
+    const known = document.querySelectorAll('#cardGrid .flashcard.known').length;
+    document.getElementById('cardProgress').textContent = `${known} / ${TERMS.length} marked known (double-click a card to mark it)`;
+  }
+  updateProgress();
+  document.getElementById('shuffleBtn').addEventListener('click', () => {
+    const cards = Array.from(grid.children);
+    cards.sort(() => Math.random() - 0.5);
+    cards.forEach(c => { c.classList.remove('flipped'); grid.appendChild(c); });
+  });
+  document.getElementById('resetKnownBtn').addEventListener('click', () => {
+    document.querySelectorAll('#cardGrid .flashcard.known').forEach(c => c.classList.remove('known'));
+    updateProgress();
+  });
+
+  const quizList = document.getElementById('quizList');
+  let score = 0, answered = 0;
+  function renderQuiz(){
+    quizList.innerHTML = ''; score = 0; answered = 0;
+    QUIZ.forEach((item, qi) => {
+      const box = document.createElement('div');
+      box.className = 'quiz-q';
+      box.innerHTML = `<p class="qtext"><span class="qnum">Q${qi+1}.</span>${item.q}</p><div class="choices"></div><p class="explain"></p>`;
+      const choicesEl = box.querySelector('.choices');
+      item.choices.forEach((c, ci) => {
+        const b = document.createElement('button');
+        b.className = 'choice'; b.textContent = c;
+        b.addEventListener('click', () => {
+          if (box.dataset.done) return;
+          box.dataset.done = '1'; answered++;
+          if (ci === item.correct) score++;
+          Array.from(choicesEl.children).forEach((el, ei) => {
+            el.disabled = true;
+            if (ei === item.correct) el.classList.add('correct');
+            else if (ei === ci) el.classList.add('incorrect');
+          });
+          box.querySelector('.explain').textContent = item.explain;
+          box.querySelector('.explain').classList.add('show');
+          updateScore();
+        });
+        choicesEl.appendChild(b);
+      });
+      quizList.appendChild(box);
+    });
+    updateScore();
+  }
+  function updateScore(){
+    document.getElementById('quizScore').textContent =
+      answered === 0 ? `${QUIZ.length} questions — click an answer to check yourself` : `Score: ${score} / ${answered} answered`;
+  }
+  renderQuiz();
+  document.getElementById('resetQuizBtn').addEventListener('click', renderQuiz);
+
+  // Glossary is alphabetized so each letter heading appears once
+  const firstLetter = s => s.replace(/^[^A-Za-z]+/, '')[0].toUpperCase();
+  const sortKey = s => s.replace(/^[^A-Za-z]+/, '');
+  const SORTED = [...TERMS].sort((a, b) => sortKey(a.t).localeCompare(sortKey(b.t), 'en', {sensitivity:'base'}));
+  const glossaryList = document.getElementById('glossaryList');
+  const alphaNav = document.getElementById('alphaNav');
+  const letters = [...new Set(SORTED.map(t => firstLetter(t.t)))];
+  'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').forEach(L => {
+    const a = document.createElement('a');
+    a.textContent = L;
+    if (letters.includes(L)) { a.href = '#g-' + L; a.className = 'has'; }
+    else { a.href = 'javascript:void(0)'; }
+    alphaNav.appendChild(a);
+  });
+  let currentLetter = '';
+  SORTED.forEach(item => {
+    const L = firstLetter(item.t);
+    if (L !== currentLetter) {
+      currentLetter = L;
+      const h = document.createElement('div');
+      h.className = 'glossary-letter'; h.id = 'g-' + L; h.textContent = L;
+      glossaryList.appendChild(h);
+    }
+    const wrap = document.createElement('div');
+    wrap.className = 'gitem';
+    wrap.innerHTML = `<dt>${item.t}</dt><dd>${item.d}</dd>`;
+    wrap.dataset.search = (item.t + ' ' + item.d).toLowerCase();
+    glossaryList.appendChild(wrap);
+  });
+  document.getElementById('glossarySearch').addEventListener('input', (e) => {
+    const q = e.target.value.toLowerCase().trim();
+    document.querySelectorAll('.gitem').forEach(el => {
+      el.classList.toggle('hidden', q && !el.dataset.search.includes(q));
+    });
+  });
+</script>
+
+<button id="backToTop" class="back-to-top" aria-label="Back to top" title="Back to top">&uarr;</button>
+
+<script>
+  const backToTop = document.getElementById('backToTop');
+  function toggleBackToTop(){ backToTop.classList.toggle('show', window.scrollY > 480); }
+  window.addEventListener('scroll', toggleBackToTop, {passive:true});
+  toggleBackToTop();
+  backToTop.addEventListener('click', () => window.scrollTo({top:0, behavior:'smooth'}));
+</script>
