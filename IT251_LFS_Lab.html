@@ -1,0 +1,808 @@
+<title>Linux From Scratch Lab</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --bg:#f2f6f4;
+    --surface:#ffffff;
+    --surface-2:#e6efec;
+    --text:#0c1a15;
+    --muted:#51655d;
+    --border:#cddcd5;
+    --accent:#0f7a5c;
+    --accent-soft:#dcf1e7;
+    --accent-2:#0e7490;
+    --accent-2-soft:#dbeff4;
+    --danger:#b3261e;
+    --danger-soft:#f8dcd9;
+    --correct:#0f7a5c;
+    --correct-soft:#dcf1e7;
+    --shadow: 0 1px 2px rgba(12,26,21,.06), 0 8px 24px rgba(12,26,21,.07);
+    --mono:'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    --sans:'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0a0f0d; --surface:#0f1613; --surface-2:#131c18;
+      --text:#d9f5e8; --muted:#82a99a; --border:#1e2b26;
+      --accent:#3ddc97; --accent-soft:#123024;
+      --accent-2:#22d3ee; --accent-2-soft:#0c2b30;
+      --danger:#ff7a68; --danger-soft:#33150f;
+      --correct:#3ddc97; --correct-soft:#123024;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 12px 32px rgba(0,0,0,.45);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0a0f0d; --surface:#0f1613; --surface-2:#131c18;
+    --text:#d9f5e8; --muted:#82a99a; --border:#1e2b26;
+    --accent:#3ddc97; --accent-soft:#123024;
+    --accent-2:#22d3ee; --accent-2-soft:#0c2b30;
+    --danger:#ff7a68; --danger-soft:#33150f;
+    --correct:#3ddc97; --correct-soft:#123024;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 12px 32px rgba(0,0,0,.45);
+  }
+
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto;} *{animation-duration:.001ms !important; transition-duration:.001ms !important;} }
+  body{ margin:0; background:var(--bg); color:var(--text); font-family:var(--sans); line-height:1.55; -webkit-font-smoothing:antialiased; }
+  a{ color:var(--accent-2); }
+  ::selection{ background:var(--accent-soft); }
+  .wrap{ max-width:1080px; margin:0 auto; padding:0 24px; }
+
+  header.hero{
+    border-bottom:1px solid var(--border);
+    background:repeating-linear-gradient(180deg, var(--surface-2) 0 1px, var(--bg) 1px 28px);
+    padding:56px 0 40px;
+  }
+  .termbar{ display:flex; gap:6px; margin-bottom:20px; }
+  .termbar span{ width:11px; height:11px; border-radius:50%; }
+  .termbar span:nth-child(1){ background:#ff5f57; }
+  .termbar span:nth-child(2){ background:#febc2e; }
+  .termbar span:nth-child(3){ background:#28c840; }
+  .eyebrow{ font-family:var(--mono); font-size:.8rem; color:var(--accent); }
+  .eyebrow::before{ content:"$ "; opacity:.7; }
+  h1{ font-family:var(--mono); font-weight:700; font-size:clamp(2rem,4vw,3rem); line-height:1.08; margin:.4em 0 .3em; text-wrap:balance; letter-spacing:-.01em; }
+  h1 .cursor{ display:inline-block; width:.5ch; background:var(--accent); margin-left:.15em; animation:blink 1.1s steps(1) infinite; }
+  @keyframes blink{ 50%{ opacity:0; } }
+  .hero p.lede{ max-width:62ch; font-size:1.1rem; color:var(--muted); margin:0 0 1.6em; }
+  .factrow{ display:flex; flex-wrap:wrap; gap:10px; }
+  .fact{ font-family:var(--mono); font-size:.78rem; background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:.5em .8em; display:flex; gap:.5em; }
+  .fact b{ color:var(--muted); font-weight:500; text-transform:uppercase; letter-spacing:.06em; font-size:.72rem; }
+
+  nav.index{ position:sticky; top:0; z-index:20; background:color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter:blur(8px); border-bottom:1px solid var(--border); }
+  nav.index .wrap{ display:flex; gap:4px; overflow-x:auto; padding:10px 24px; scrollbar-width:none; }
+  nav.index .wrap::-webkit-scrollbar{ display:none; }
+  nav.index a{ font-family:var(--mono); font-size:.82rem; text-decoration:none; color:var(--muted); padding:.5em .9em; border-radius:6px; white-space:nowrap; border:1px solid transparent; }
+  nav.index a:hover{ color:var(--text); border-color:var(--border); background:var(--surface); }
+  nav.index a.toc-link{ font-weight:600; color:var(--accent); border-right:1px solid var(--border); border-radius:0; margin-right:8px; padding-right:16px; }
+  nav.index a.toc-link:hover{ color:var(--accent); background:transparent; border-right-color:var(--border); }
+  nav.index a:not(.toc-link)::before{ content:'#'; opacity:.5; margin-right:.3em; }
+
+  .back-to-top{ position:fixed; bottom:22px; right:22px; z-index:40; width:46px; height:46px;
+    background:var(--surface); border:1px solid var(--border); border-radius:10px; box-shadow:var(--shadow);
+    font-family:var(--mono); font-size:1.15rem; color:var(--accent); line-height:1;
+    display:flex; align-items:center; justify-content:center; padding:0; cursor:pointer; text-decoration:none;
+    opacity:0; visibility:hidden; transform:translateY(10px);
+    transition:opacity .25s ease, transform .25s ease, visibility 0s .25s; }
+  .back-to-top.show{ opacity:1; visibility:visible; transform:translateY(0); transition:opacity .25s ease, transform .25s ease, visibility 0s; }
+  .back-to-top:hover{ background:var(--accent-soft); border-color:var(--accent); }
+  .back-to-top:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+  @media print{ nav.index, .back-to-top{ display:none; } }
+
+  section{ padding:52px 0; border-bottom:1px solid var(--border); }
+  section:last-of-type{ border-bottom:none; }
+  .section-head{ margin-bottom:28px; max-width:70ch; }
+  .kicker{ font-family:var(--mono); font-size:.75rem; letter-spacing:.1em; text-transform:uppercase; color:var(--accent-2); margin:0 0 .5em; }
+  .kicker::before{ content:"// "; opacity:.6; }
+  h2{ font-family:var(--mono); font-size:clamp(1.4rem,2.4vw,1.9rem); margin:0 0 .3em; text-wrap:balance; }
+  h3{ font-family:var(--mono); font-size:1.05rem; margin:1.6em 0 .5em; }
+  .section-head p{ color:var(--muted); margin:.4em 0 0; }
+
+  .obj-list{ display:grid; gap:12px; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); list-style:none; margin:0; padding:0; }
+  .obj-list li{ background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:16px 18px; box-shadow:var(--shadow); font-size:.95rem; }
+  .obj-list li::before{ content:"$"; color:var(--accent); font-family:var(--mono); margin-right:.6em; font-weight:700; }
+
+  .example{ background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px 22px; margin-bottom:16px; box-shadow:var(--shadow); }
+  .example h3{ font-family:var(--mono); font-size:1.02rem; margin:0 0 8px; }
+  .example .tag{ display:inline-block; font-family:var(--mono); font-size:.68rem; text-transform:uppercase; letter-spacing:.08em; color:var(--accent-2); background:var(--accent-2-soft); border-radius:5px; padding:.25em .6em; margin-bottom:10px; }
+  code.inline{ font-family:var(--mono); background:var(--surface-2); border-radius:4px; padding:.1em .4em; font-size:.92em; }
+  pre.term{ font-family:var(--mono); font-size:.85rem; background:var(--surface-2); border:1px solid var(--border); border-radius:8px; padding:12px 14px; overflow-x:auto; margin:10px 0; white-space:pre; }
+  details.solution{ margin-top:12px; }
+  details.solution summary{ cursor:pointer; font-family:var(--mono); font-size:.82rem; color:var(--accent); list-style:none; display:inline-flex; align-items:center; gap:.4em; }
+  details.solution summary::-webkit-details-marker{ display:none; }
+  details.solution summary::before{ content:"▸"; transition:transform .15s; }
+  details.solution[open] summary::before{ transform:rotate(90deg); }
+  details.solution .solbody{ margin-top:10px; padding:14px 16px; background:var(--surface-2); border-radius:8px; font-size:.92rem; }
+
+  table.blocks{ width:100%; border-collapse:collapse; font-size:.9rem; margin:10px 0 24px; }
+  table.blocks caption{ caption-side:top; text-align:left; font-family:var(--mono); font-size:.75rem; text-transform:uppercase; letter-spacing:.08em; color:var(--accent-2); margin-bottom:.5em; }
+  table.blocks th, table.blocks td{ border:1px solid var(--border); padding:.55em .8em; text-align:left; vertical-align:top; }
+  table.blocks th{ background:var(--surface-2); font-family:var(--mono); font-size:.78rem; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); white-space:nowrap; }
+  table.blocks td:first-child{ font-family:var(--mono); white-space:nowrap; color:var(--accent); }
+  table.blocks tbody tr:nth-child(odd){ background:var(--surface); }
+  table.blocks tbody tr:nth-child(even){ background:color-mix(in srgb, var(--surface) 60%, var(--surface-2)); }
+
+  .toolbar{ display:flex; gap:10px; align-items:center; margin-bottom:16px; flex-wrap:wrap; }
+  button.btn{ font-family:var(--mono); font-size:.82rem; background:var(--surface); color:var(--text); border:1px solid var(--border); border-radius:7px; padding:.6em 1em; cursor:pointer; }
+  button.btn:hover{ border-color:var(--accent); color:var(--accent); }
+  button.btn:focus-visible, a:focus-visible, input:focus-visible, .checklist li:focus-within{ outline:2px solid var(--accent); outline-offset:2px; }
+  #pveProgress{ font-family:var(--mono); font-size:.8rem; color:var(--muted); }
+
+  ul.checklist{ list-style:none; margin:0 0 24px; padding:0; display:grid; gap:8px; }
+  ul.checklist li{ background:var(--surface); border:1px solid var(--border); border-radius:9px; box-shadow:var(--shadow); }
+  ul.checklist label{ display:flex; align-items:flex-start; gap:.7em; padding:.7em .9em; cursor:pointer; font-size:.94rem; }
+  ul.checklist input[type="checkbox"]{ margin-top:.25em; width:16px; height:16px; accent-color:var(--accent); flex:0 0 auto; }
+  ul.checklist li.checked label{ color:var(--muted); text-decoration:line-through; text-decoration-color:var(--accent-2); }
+  ul.checklist li.checked{ border-color:var(--accent-2); }
+
+  #glossarySearch{ width:100%; max-width:420px; font-family:var(--sans); font-size:.95rem; padding:.7em .9em; border-radius:8px; border:1px solid var(--border); background:var(--surface); color:var(--text); margin-bottom:16px; }
+  .alpha-nav{ display:flex; flex-wrap:wrap; gap:4px; margin-bottom:24px; }
+  .alpha-nav a{ font-family:var(--mono); font-size:.78rem; width:1.9em; height:1.9em; display:flex; align-items:center; justify-content:center; border:1px solid var(--border); border-radius:5px; text-decoration:none; color:var(--muted); }
+  .alpha-nav a.has{ color:var(--text); }
+  .alpha-nav a.has:hover{ border-color:var(--accent); color:var(--accent); }
+  .glossary-letter{ font-family:var(--mono); color:var(--accent); font-size:1.1rem; margin:22px 0 8px; }
+  dl.glossary{ margin:0; }
+  dl.glossary .gitem{ border-top:1px solid var(--border); padding:12px 0; }
+  dl.glossary dt{ font-family:var(--mono); font-weight:600; }
+  dl.glossary dd{ margin:.3em 0 0; color:var(--muted); font-size:.92rem; }
+  .gitem.hidden{ display:none; }
+
+  .callout{ border-left:3px solid var(--accent); background:var(--accent-soft); border-radius:0 8px 8px 0; padding:14px 18px; margin:10px 0 24px; font-size:.92rem; }
+  .callout b{ font-family:var(--mono); }
+
+  footer{ padding:32px 0 60px; }
+  footer p{ color:var(--muted); font-size:.85rem; font-family:var(--mono); }
+</style>
+
+<style>
+  .callout.warn{ border-left-color:var(--danger); background:var(--danger-soft); }
+  .callout.info{ border-left-color:var(--accent-2); background:var(--accent-2-soft); }
+  .netdiagram{ font-family:var(--mono); font-size:.8rem; background:var(--surface-2); border:1px solid var(--border); border-radius:8px; padding:14px 16px; overflow-x:auto; white-space:pre; line-height:1.45; }
+  ol.steps{ padding-left:1.4em; } ol.steps > li{ margin-bottom:.6em; }
+  .calc{ display:flex; flex-wrap:wrap; gap:12px; align-items:center; margin:8px 0 6px; }
+  .calc input{ font-family:var(--mono); font-size:.95rem; width:8em; padding:.5em .7em; border-radius:7px; border:1px solid var(--border); background:var(--surface); color:var(--text); }
+  .calc output{ font-family:var(--mono); color:var(--accent); font-weight:600; }
+  .session-meta{ font-family:var(--mono); font-size:.8rem; color:var(--muted); margin:.2em 0 0; }
+  .evidence{ border:1px dashed var(--accent-2); border-radius:8px; padding:12px 16px; margin:10px 0 24px; font-size:.92rem; }
+  .evidence b{ font-family:var(--mono); color:var(--accent-2); }
+  @media (max-width:700px){ table.blocks td:first-child, table.blocks th{ white-space:normal; } table.blocks{ font-size:.85rem; } table.blocks td, table.blocks th{ padding:.45em .55em; overflow-wrap:anywhere; } }
+</style>
+
+
+<header class="hero">
+  <div class="wrap">
+    <div class="termbar"><span></span><span></span><span></span></div>
+    <p class="eyebrow">IT251 · Weeks 9–15 · Lab days</p>
+    <h1>Linux From Scratch<span class="cursor">&nbsp;</span></h1>
+    <p class="lede">For the rest of the semester, every lab day goes to one project: building your own Linux system from source code, one package at a time, using the official <i>Linux From Scratch</i> book. By the end you'll boot a system you compiled yourself. Your name will be in the kernel version, and you'll know what every piece does, because you put it there.</p>
+    <div class="factrow">
+      <span class="fact"><b>Labs</b> 9.2 · 10.2 · 11.2 · 12.2 · 13.2 · 15.2 (Wk 14 self-study)</span>
+      <span class="fact"><b>Book</b> LFS 13.1-systemd</span>
+      <span class="fact"><b>Host</b> Class Debian 13 VM (OVA)</span>
+      <span class="fact"><b>Needs</b> Intel/AMD laptop · 60 GB free disk</span>
+    </div>
+  </div>
+</header>
+
+<nav class="index" aria-label="Section index">
+  <div class="wrap">
+    <a href="index.html" class="toc-link">&larr; Table of Contents</a>
+    <a href="#overview">Overview</a>
+    <a href="#milestones">Milestones</a>
+    <a href="#setup">Get Ready</a>
+    <a href="#resume">Resume Cards</a>
+    <a href="#s92">9.2</a>
+    <a href="#s102">10.2</a>
+    <a href="#s112">11.2</a>
+    <a href="#s122">12.2</a>
+    <a href="#later">13.2 →</a>
+    <a href="#safety">Snapshots &amp; Tests</a>
+    <a href="#troubleshooting">Common Snags</a>
+    <a href="#journal">Build Journal</a>
+    <a href="#glossary">Glossary</a>
+  </div>
+</nav>
+
+<main class="wrap">
+
+  <section id="overview">
+    <div class="section-head">
+      <p class="kicker">Start here</p>
+      <h2>What this project is</h2>
+      <p>Every distro you've used (Ubuntu, Fedora, Debian) was built by someone running thousands of compile commands. LFS has you run them yourself, in order, with an explanation for each one.</p>
+    </div>
+    <ul class="obj-list">
+      <li>Build a <b>cross-toolchain</b> (compiler, linker, C library) that can't accidentally pick up your host system's files</li>
+      <li>Use it to build temporary tools, then step <b>inside</b> your new system with <code class="inline">chroot</code></li>
+      <li>Compile the real system: about 80 packages, from glibc and GCC to systemd and bash</li>
+      <li>Configure it, compile a <b>kernel</b>, install a <b>bootloader</b>, and boot it</li>
+    </ul>
+
+    <div class="example">
+      <span class="tag">Analogy</span>
+      <h3>Building a kitchen with borrowed tools</h3>
+      <p>Your Debian VM is a borrowed kitchen. First you use its tools to forge your own knives (the cross-toolchain, Chapters 5–6). Then you move into an empty room and use only <i>your</i> knives to build the rest (chroot, Chapters 7–8). The careful separation keeps anything from the borrowed kitchen from leaking into yours. That's why the book is so strict about which user you are and which directory you're in.</p>
+    </div>
+
+    <h3>How it fits Linux+</h3>
+    <p>The lectures (9.1, 10.1, …) stay on Ascend Modules 5–7. The build reuses everything from Modules 1–4, from the inside: partitions and filesystems, mounts, users and groups, permissions, environment variables, the FHS (you'll create it by hand), the boot process, kernel modules, systemd. It also gives you concrete examples of security (least privilege, password hashing, chroot) and automation (every package is a shell script).</p>
+
+    <div class="callout warn"><b>Be honest with your calendar.</b> Six lab sessions are for <i>learning, checkpoints, and getting unstuck</i>. Most of the compiling happens between classes, often overnight. On 9.2 you'll measure your own laptop's speed and calculate how many hours <i>your</i> build will take. Plan around that number.</div>
+
+    <h3>The book</h3>
+    <p>Work from the official book, LFS <b>13.1-systemd</b>: <a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/">linuxfromscratch.org/lfs/view/13.1-systemd</a>. This page doesn't replace it. It tells you <i>which</i> sections to do each week, adds class-specific warnings, and explains why things matter. When this page and the book seem to disagree, check this page's warnings first (they exist because our VM setup differs from the book's examples), then ask.</p>
+    <div class="callout info"><b>Make sure it says "systemd".</b> The LFS site also has a "System V" edition. Make sure the book header says <b>Version 13.1-systemd</b>, and use the <code class="inline">wget-list-systemd</code> file, not plain <code class="inline">wget-list</code>.</div>
+  </section>
+
+  <section id="milestones">
+    <div class="section-head">
+      <p class="kicker">Grading</p>
+      <h2>Milestones, not pass/fail</h2>
+      <p>Getting partway through a first LFS build is normal. You earn credit for each stage you reach and document, so getting stuck at Chapter 8 with a clear diagnosis is still real progress. Your instructor will confirm how the milestones are weighted.</p>
+    </div>
+    <table class="blocks">
+      <caption>What to turn in</caption>
+      <thead><tr><th>Milestone</th><th>Book</th><th>Evidence</th></tr></thead>
+      <tbody>
+        <tr><td>M1 · Host ready</td><td>Ch. 2–4</td><td><code class="inline">version-check.sh</code> output (all OK) · <code class="inline">findmnt /mnt/lfs</code> · your SBU time and projected build time</td></tr>
+        <tr><td>M2 · Cross toolchain</td><td>Ch. 5–6</td><td>The Ch. 5 sanity-check output (<a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/chapter05/glibc.html">§5.5</a>) · <code class="inline">ls $LFS/tools/bin</code></td></tr>
+        <tr><td>M3 · Inside chroot</td><td>Ch. 7</td><td>Screenshot of the <code class="inline">(lfs chroot) root:/#</code> prompt · <code class="inline">ls -lh</code> of your §7.15 backup file</td></tr>
+        <tr><td>M4 · Final system</td><td>Ch. 8–9</td><td>Glibc, Binutils and GCC test summaries compared with the official logs · your Ch. 9 config files</td></tr>
+        <tr><td>M5 · It boots</td><td>Ch. 10–11</td><td>Demo or screenshot: <code class="inline">uname -a</code> showing <b>your username</b>, <code class="inline">hostnamectl</code>, empty <code class="inline">systemctl --failed</code>, <code class="inline">ip addr</code> with an address</td></tr>
+        <tr><td>Build journal</td><td>All weeks</td><td>One entry per session (<a href="#journal">template</a>)</td></tr>
+      </tbody>
+    </table>
+    <div class="callout info"><b>Make it yours.</b> Everyone's LFS is otherwise identical, so you'll mark yours: hostname <code class="inline">lfs-&lt;username&gt;</code> (Ch. 9), and your username in the kernel version (Ch. 10, done together in class). Optionally, run <code class="inline">script -a ~/lfs-chN.log</code> before a work session to record everything you type. It's honest evidence, and very useful when asking for help.</div>
+  </section>
+
+  <section id="setup">
+    <div class="section-head">
+      <p class="kicker">Before 9.2 · at home</p>
+      <h2>Get ready: the class VM</h2>
+      <p>Everyone builds on the same prepared Debian 13 VM, so we all start from the same, tested setup. Do all of this <b>before</b> the first lab day.</p>
+    </div>
+
+    <h3>Can my laptop do this?</h3>
+    <table class="blocks">
+      <thead><tr><th>You need</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr><td>Intel or AMD CPU</td><td>LFS builds an x86-64 system. <b>Apple Silicon (M1–M4) Macs can't run it at a usable speed. See your instructor.</b></td></tr>
+        <tr><td>60 GB free disk</td><td>25 GB VM + 30 GB LFS disk + room for snapshots</td></tr>
+        <tr><td>8 GB RAM (16 GB better)</td><td>Works on 8 GB, just slower</td></tr>
+        <tr><td>VirtualBox 7.x</td><td>Same as earlier labs</td></tr>
+      </tbody>
+    </table>
+
+    <ol class="steps">
+      <li><b>Download</b> <code class="inline">IT251-LFS-host-deb13-lfs13.1.ova</code> and its <code class="inline">.sha256</code> file. <i>Your instructor will post the download link.</i> Check the download:
+        <pre class="term">sha256sum -c IT251-LFS-host-deb13-lfs13.1.ova.sha256          # Linux / macOS
+Get-FileHash .\IT251-LFS-host-deb13-lfs13.1.ova                  # Windows PowerShell: compare to the .sha256 file</pre></li>
+      <li><b>Import:</b> VirtualBox → <b>File → Import Appliance</b>. Set MAC Address Policy to <i>Generate new MAC addresses for all network adapters</i>. On a 16 GB+ laptop, raise CPU to <b>4</b> and RAM to <b>8192 MB</b>. On 8 GB, leave the defaults (2 CPU / 4096 MB).</li>
+      <li><b>Add your LFS disk:</b> VM <b>Settings → Storage → Controller: SATA</b> → "add hard disk" icon → <b>Create</b>: VDI, dynamically allocated, <b>30 GB</b>, named <code class="inline">lfs.vdi</code>. It goes on <b>SATA port 1</b>. Leave it blank; you'll partition it in class.</li>
+      <li><b>First login:</b> start the VM and log in as <code class="inline">student</code> / <code class="inline">lfs-student</code>. You'll be made to set your own password right away.</li>
+      <li><b>Use SSH so you can copy and paste</b> (strongly recommended). From your laptop's terminal (Windows Terminal, macOS Terminal, or Linux):
+        <pre class="term">ssh -p 2222 student@127.0.0.1</pre>
+        If you change your password over SSH, it disconnects you afterward, so just log in again. If SSH won't connect, check that no other VM (like your Proxmox lab) is running and using port 2222.</li>
+      <li><b>Check the host</b> (this is part of milestone M1):
+        <pre class="term">version-check.sh        # every line should say OK
+lsblk                   # sda = 25G (your OS), sdb = 30G with NO partitions</pre></li>
+      <li><b>Download the sources at home</b> (about 630 MB; please not on campus Wi-Fi). Your LFS disk isn't formatted yet, so download into your home directory now:
+        <pre class="term">mkdir -p ~/lfs-sources &amp;&amp; cd ~/lfs-sources
+wget https://www.linuxfromscratch.org/lfs/view/13.1-systemd/wget-list-systemd
+wget https://www.linuxfromscratch.org/lfs/view/13.1-systemd/md5sums
+wget --input-file=wget-list-systemd --continue
+md5sum -c md5sums | grep -v ': OK$'      # no output = every file is good</pre>
+        If a file says <code class="inline">FAILED</code> or is missing, run the <code class="inline">wget --input-file</code> line again. If a download site is down, use a <a href="https://www.linuxfromscratch.org/lfs/mirrors.html#files">mirror</a>.</li>
+      <li><b>Take a VirtualBox snapshot</b> named <code class="inline">ready</code>.</li>
+    </ol>
+    <div class="callout warn"><b>Two disks, one rule.</b> <code class="inline">sda</code> is the Debian system you're working <i>from</i>. <code class="inline">sdb</code> is the LFS system you're building. The book's examples say things like <code class="inline">/dev/&lt;xxx&gt;</code> or <code class="inline">/dev/sda</code>, but <b>while you build, your LFS disk is <code class="inline">/dev/sdb</code> and its partition is <code class="inline">/dev/sdb1</code></b>. A command aimed at the wrong disk can wipe your host VM.</div>
+  </section>
+
+  <section id="resume">
+    <div class="section-head">
+      <p class="kicker">Keep these open</p>
+      <h2>Resume cards: coming back after a break</h2>
+      <p>The book is "designed to be built in one session." You will shut your laptop many times, so every time you come back, a few things must be set up again (<a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/chapter02/stages.html">§2.3</a>). Use the card for the chapter you're in. Skipping this is the #1 way people break their builds.</p>
+    </div>
+
+    <div class="example">
+      <span class="tag">Card 1 · Chapters 2–4 · root on the host</span>
+      <pre class="term">sudo -i                  # root; the class VM already sets LFS and umask for root
+echo $LFS                # must print /mnt/lfs
+findmnt $LFS             # must show /dev/sdb1   (STOP if either line is empty)</pre>
+      <p>After 9.2 your LFS partition mounts automatically at boot (we add it to Debian's <code class="inline">/etc/fstab</code>). If <code class="inline">findmnt</code> shows nothing, run <code class="inline">mount -v -t ext4 /dev/sdb1 $LFS</code>.</p>
+    </div>
+
+    <div class="example">
+      <span class="tag">Card 2 · Chapters 5–6 · user lfs, never root</span>
+      <pre class="term">sudo -i                  # Card 1 checks first, then:
+su - lfs                 # the "-" matters: it loads the clean build environment
+echo $LFS $LFS_TGT       # /mnt/lfs x86_64-lfs-linux-gnu
+echo $PATH               # must START with /mnt/lfs/tools/bin</pre>
+      <p>In the book's words, building these chapters as anyone else risks "installing packages to the host, and potentially rendering it unusable." Your prompt should look like <code class="inline">lfs:~$</code>.</p>
+    </div>
+
+    <div class="example">
+      <span class="tag">Card 3 · Chapters 7–10 · root on the host, then chroot</span>
+      <pre class="term">sudo -i                  # Card 1 checks first, then mount the virtual filesystems (§7.3):
+mount -v --bind /dev $LFS/dev
+mount -vt devpts devpts -o gid=5,mode=0620 $LFS/dev/pts
+mount -vt proc proc $LFS/proc
+mount -vt sysfs sysfs $LFS/sys
+mount -vt tmpfs tmpfs $LFS/run
+# + the /dev/shm lines at the end of §7.3.2
+findmnt -R $LFS          # should list dev, dev/pts, proc, sys, run under /mnt/lfs</pre>
+      <p>Then enter with the full <code class="inline">chroot</code> command from <a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/chapter07/chroot.html">§7.4</a>. Your prompt becomes <code class="inline">(lfs chroot) root:/#</code>. Only mount these <b>once</b> per boot; mounting them twice causes confusing errors.</p>
+    </div>
+
+    <div class="callout info"><b>Linux+ bonus:</b> these cards are exam material in disguise: bind mounts, virtual filesystems (<code class="inline">/proc</code>, <code class="inline">/sys</code>, devpts, tmpfs), environment variables, and <code class="inline">su -</code> vs. <code class="inline">su</code>. Be ready to explain each line.</div>
+  </section>
+
+  <section id="s92">
+    <div class="section-head">
+      <p class="kicker">Lab 9.2 · Session 1</p>
+      <h2>Prepare the disk, the user, and measure your SBU</h2>
+      <p class="session-meta">Book: Chapters 2–4, then §5.2 · Milestone M1 · Homework: finish Chapter 5</p>
+    </div>
+
+    <div class="toolbar">
+      <button class="btn" id="reset92">Reset progress</button>
+      <span id="prog92"></span>
+    </div>
+    <ul class="checklist" id="list92">
+      <li><label><input type="checkbox" data-id="a"> Class VM imported, LFS disk added, sources downloaded and <code class="inline">md5sum -c</code> clean (<a href="#setup">Get Ready</a>)</label></li>
+      <li><label><input type="checkbox" data-id="b"> <code class="inline">/dev/sdb1</code> created, formatted ext4, mounted at <code class="inline">/mnt/lfs</code>, and in Debian's fstab</label></li>
+      <li><label><input type="checkbox" data-id="c"> Sources copied to <code class="inline">$LFS/sources</code> and verified there</label></li>
+      <li><label><input type="checkbox" data-id="d"> Directory layout (§4.2), <code class="inline">lfs</code> user (§4.3), environment (§4.4) done</label></li>
+      <li><label><input type="checkbox" data-id="e"> Binutils pass 1 built with <code class="inline">time</code>; SBU recorded</label></li>
+      <li><label><input type="checkbox" data-id="f"> Projected build time calculated; journal entry written</label></li>
+      <li><label><input type="checkbox" data-id="g"> Snapshot <code class="inline">ch4-ready</code> taken (any time after §4.4)</label></li>
+    </ul>
+
+    <h3>Step 1 · Read first (Ch. 1–2)</h3>
+    <p>Skim <a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/chapter02/hostreqs.html">§2.2 Host System Requirements</a>. Your <code class="inline">version-check.sh</code> already passed, because the class VM was built to meet them. Read <a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/chapter02/stages.html">§2.3</a> carefully; it's the reason for the <a href="#resume">resume cards</a>.</p>
+
+    <h3>Step 2 · Partition the LFS disk (§2.4)</h3>
+    <p>Become root and <b>prove you have the right disk</b> before touching it:</p>
+    <pre class="term">sudo -i
+lsblk /dev/sdb           # must say 30G and show NO partitions under it</pre>
+    <p>If <code class="inline">sdb</code> isn't 30G and empty, stop and ask. Then create one partition on a classic MBR ("dos") partition table:</p>
+    <pre class="term">fdisk /dev/sdb
+  o        # new empty DOS (MBR) partition table
+  n        # new partition
+  p        # primary
+  1        # partition number 1
+  Enter    # default first sector
+  Enter    # default last sector (use the whole disk)
+  w        # write and quit
+lsblk /dev/sdb           # now shows sdb1</pre>
+    <div class="callout info"><b>Why MBR and not GPT?</b> Our VMs boot with legacy BIOS. With an MBR disk, GRUB needs nothing extra. A GPT disk on BIOS needs an extra tiny "BIOS boot" partition (the book explains it in Chapter 10). Same result, fewer moving parts. We skip swap: the host VM already has some.</div>
+
+    <h3>Step 3 · Filesystem, $LFS, mount (§2.5–2.7)</h3>
+    <pre class="term">mkfs -v -t ext4 /dev/sdb1
+echo $LFS ; umask        # /mnt/lfs and 0022 (the class VM sets both for root)
+mount -v -t ext4 /dev/sdb1 $LFS
+findmnt $LFS</pre>
+    <p>Now make it mount automatically every boot. The <code class="inline">nofail</code> option means that if the disk is ever missing, Debian still boots instead of dropping you into emergency mode:</p>
+    <pre class="term">echo "UUID=$(blkid -s UUID -o value /dev/sdb1)  /mnt/lfs  ext4  defaults,nofail  0 0" &gt;&gt; /etc/fstab
+systemctl daemon-reload
+umount $LFS &amp;&amp; mount -a &amp;&amp; findmnt $LFS     # proves the fstab line works</pre>
+
+    <h3>Step 4 · Sources (§3.1)</h3>
+    <p>Create the sources directory exactly as <a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/chapter03/introduction.html">§3.1</a> says (<code class="inline">mkdir</code> + <code class="inline">chmod a+wt</code>). Then, instead of downloading again, copy what you downloaded at home and re-check it in its new home:</p>
+    <pre class="term">cp -v ~student/lfs-sources/* $LFS/sources/
+cd $LFS/sources &amp;&amp; md5sum -c md5sums | grep -v ': OK$' ; cd
+chown root:root $LFS/sources/*</pre>
+
+    <h3>Step 5 · Layout, the lfs user, the clean environment (Ch. 4)</h3>
+    <p>Do <a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/chapter04/creatingminlayout.html">§4.2</a>, <a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/chapter04/addinguser.html">§4.3</a> and <a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/chapter04/settingenvironment.html">§4.4</a> exactly as written. Things people miss:</p>
+    <ul>
+      <li>§4.4 moves <code class="inline">/etc/bash.bashrc</code> out of the way. <b>Debian has this file, so do that step.</b></li>
+      <li>§4.4 ends by adding <code class="inline">MAKEFLAGS=-j$(nproc)</code> to the lfs user's <code class="inline">.bashrc</code> and running <code class="inline">source ~/.bash_profile</code>. Do both.</li>
+      <li>Check yourself with Card 2: prompt <code class="inline">lfs:~$</code>, and <code class="inline">$PATH</code> starts with <code class="inline">/mnt/lfs/tools/bin</code>.</li>
+    </ul>
+    <div class="example">
+      <span class="tag">Why it matters</span>
+      <h3>Least privilege, for real</h3>
+      <p>The book builds Chapters 5–6 as a throwaway, unprivileged <code class="inline">lfs</code> user with a <i>scrubbed</i> environment (<code class="inline">env -i</code>). If a command is mistyped, it fails with "Permission denied" instead of overwriting files in your host's <code class="inline">/usr</code>. That's the same idea as running a web server as <code class="inline">www-data</code> instead of root, which is Module 5 material.</p>
+    </div>
+
+    <h3>Step 6 · Measure your SBU (§4.5 + §5.2)</h3>
+    <p>Read <a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/chapter04/aboutsbus.html">§4.5 About SBUs</a> and <a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/partintro/generalinstructions.html">General Compilation Instructions</a>. The <b>SBU</b> (Standard Build Unit) is how long <b>Binutils pass 1 takes on one core</b> on your machine. Every other build time in the book is a multiple of it.</p>
+    <ol class="steps">
+      <li>Plug in your laptop and set it to <b>performance</b> power mode. Don't let it sleep.</li>
+      <li>As <code class="inline">lfs</code>, follow <a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/chapter05/binutils-pass1.html">§5.2</a>. Extract the tarball and <code class="inline">cd</code> in, then create and enter <code class="inline">build</code>.</li>
+      <li>Wrap the configure/make/install in <code class="inline">time { … }</code> as the book's note shows. <b>Use <code class="inline">make -j1</code> for this one package</b>, because the SBU is defined on a single core:
+        <pre class="term">time { ../configure --prefix=$LFS/tools ...(rest exactly as in §5.2)... &amp;&amp; make -j1 &amp;&amp; make install; }</pre></li>
+      <li>Write down the <code class="inline">real</code> time. That's your SBU.</li>
+      <li>Clean up: <code class="inline">cd $LFS/sources &amp;&amp; rm -rf binutils-2.47</code>. From now on, keep the book's normal <code class="inline">MAKEFLAGS</code> (all cores).</li>
+    </ol>
+
+    <div class="example" id="sbuCalc">
+      <span class="tag">Calculator</span>
+      <h3>How long will my build take?</h3>
+      <div class="calc">
+        <label for="sbuMin">My SBU (minutes):</label>
+        <input id="sbuMin" type="number" min="0.5" max="60" step="0.1" placeholder="e.g. 2.5">
+        <output id="sbuOut" for="sbuMin"></output>
+      </div>
+      <table class="blocks" id="sbuTable" hidden>
+        <thead><tr><th>Chapter</th><th>≈ SBU (book)</th><th>Your estimate</th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <p class="session-meta">The SBU totals come from the book's per-package figures (with test suites). The book times everything except Binutils pass 1 with 4 cores. With 2 cores, expect it to take longer than this; with 8, a bit less. It's compile time only; your reading and typing time is extra.</p>
+    </div>
+
+    <h3>Homework before 10.2</h3>
+    <p>Finish Chapter 5: <a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/chapter05/gcc-pass1.html">GCC pass 1</a>, <a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/chapter05/linux-headers.html">Linux API headers</a>, <a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/chapter05/glibc.html">Glibc</a> (including its sanity check), and <a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/chapter05/gcc-libstdc++.html">Libstdc++</a>. Use Card 2 every time.</p>
+    <div class="evidence"><b>M1 evidence:</b> <code class="inline">version-check.sh</code> output · <code class="inline">findmnt /mnt/lfs</code> · your SBU and projected total · journal entry.</div>
+  </section>
+
+  <section id="s102">
+    <div class="section-head">
+      <p class="kicker">Lab 10.2 · Session 2</p>
+      <h2>The cross-toolchain and temporary tools</h2>
+      <p class="session-meta">Book: finish Chapter 5 → Chapter 6 · Milestone M2 · Card 2 (user lfs) all session</p>
+    </div>
+
+    <div class="toolbar">
+      <button class="btn" id="reset102">Reset progress</button>
+      <span id="prog102"></span>
+    </div>
+    <ul class="checklist" id="list102">
+      <li><label><input type="checkbox" data-id="a"> Chapter 5 complete; the §5.5 sanity check prints the expected interpreter line</label></li>
+      <li><label><input type="checkbox" data-id="b"> Read the Toolchain Technical Notes; can explain what <code class="inline">$LFS_TGT</code> is for</label></li>
+      <li><label><input type="checkbox" data-id="c"> Chapter 6 §6.2–6.16 done (M4 through Xz)</label></li>
+      <li><label><input type="checkbox" data-id="d"> Binutils pass 2 and GCC pass 2 done (§6.17–6.18)</label></li>
+      <li><label><input type="checkbox" data-id="e"> Snapshot <code class="inline">ch6-temptools</code> taken; journal entry written</label></li>
+    </ul>
+
+    <h3>The habit that saves you: General Compilation Instructions</h3>
+    <p>For <b>every</b> package (re-read <a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/partintro/generalinstructions.html">the page</a> if unsure):</p>
+    <pre class="term">cd $LFS/sources
+tar -xf &lt;package&gt;.tar.xz        # (or .gz) extract
+cd &lt;package&gt;                    # enter it
+# ...the book's commands for this package...
+cd $LFS/sources
+rm -rf &lt;package&gt;                # ALWAYS delete the extracted directory when done</pre>
+    <p>If a build fails halfway, don't fix it in place. Delete the directory, extract again, and redo the whole package.</p>
+
+    <h3>What's actually happening</h3>
+    <div class="example">
+      <span class="tag">Concept</span>
+      <h3>Why build the compiler twice?</h3>
+      <p>Your Debian GCC makes programs that link against <i>Debian's</i> C library. Chapter 5 builds a <b>cross</b>-compiler with a different name (<code class="inline">x86_64-lfs-linux-gnu-gcc</code>, from <code class="inline">$LFS_TGT</code>) that only looks inside <code class="inline">$LFS</code>. Because its name is different, nothing can accidentally use the host's tools or libraries. Chapter 6 uses it to build temporary tools that are already <i>inside</i> your new system. The <a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/partintro/toolchaintechnotes.html">Toolchain Technical Notes</a> explain this in depth. Read them; they're the heart of LFS.</p>
+    </div>
+    <div class="example">
+      <span class="tag">Checkpoint</span>
+      <h3>The Chapter 5 sanity check (§5.5)</h3>
+      <p>After Glibc, the book has you compile an empty C program with the new toolchain and inspect it with <code class="inline">readelf</code>. The output must name the new dynamic linker, <code class="inline">[Requesting program interpreter: /lib64/ld-linux-x86-64.so.2]</code>. If it doesn't, <b>stop</b>: everything after this depends on it. Screenshot it for M2.</p>
+    </div>
+
+    <h3>Homework before 11.2</h3>
+    <p>Finish Chapter 6. GCC pass 2 (<a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/chapter06/gcc-pass2.html">§6.18</a>) is the longest build so far, so start it when you have time to let it run. Then shut down and take snapshot <code class="inline">ch6-temptools</code>.</p>
+    <div class="evidence"><b>M2 evidence:</b> §5.5 sanity-check output · <code class="inline">ls $LFS/tools/bin</code> · journal entry.</div>
+  </section>
+
+  <section id="s112">
+    <div class="section-head">
+      <p class="kicker">Lab 11.2 · Session 3</p>
+      <h2>Into the chroot</h2>
+      <p class="session-meta">Book: Chapter 7 → start Chapter 8 · Milestone M3 · From here on: root and Card 3, never lfs</p>
+    </div>
+
+    <div class="toolbar">
+      <button class="btn" id="reset112">Reset progress</button>
+      <span id="prog112"></span>
+    </div>
+    <ul class="checklist" id="list112">
+      <li><label><input type="checkbox" data-id="a"> Back to root (<code class="inline">exit</code> from lfs); <code class="inline">echo $LFS</code> prints /mnt/lfs</label></li>
+      <li><label><input type="checkbox" data-id="b"> Ownership changed (§7.2); virtual filesystems mounted (§7.3)</label></li>
+      <li><label><input type="checkbox" data-id="c"> Entered chroot (§7.4); directories and essential files created (§7.5–7.6)</label></li>
+      <li><label><input type="checkbox" data-id="d"> Additional temporary tools built (§7.7–7.14)</label></li>
+      <li><label><input type="checkbox" data-id="e"> Cleaned up and made the §7.15 backup; snapshot <code class="inline">ch7-backup</code> taken</label></li>
+      <li><label><input type="checkbox" data-id="f"> Back in chroot (Card 3) and started Chapter 8</label></li>
+    </ul>
+
+    <div class="callout warn"><b>User switch!</b> Chapter 7 onward is done as <b>root</b>, not lfs (<a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/chapter07/changingowner.html">§7.2</a>). Type <code class="inline">exit</code> to leave the lfs shell, then confirm <code class="inline">whoami</code> = root and <code class="inline">echo $LFS</code> = /mnt/lfs. Running §7.2's <code class="inline">chown</code> with an empty <code class="inline">$LFS</code> would change ownership on your host's <code class="inline">/usr</code>.</div>
+
+    <h3>Steps</h3>
+    <ol class="steps">
+      <li><a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/chapter07/changingowner.html">§7.2 Changing ownership</a>, then <a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/chapter07/kernfs.html">§7.3 virtual kernel filesystems</a> (these are the Card 3 mounts).</li>
+      <li><a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/chapter07/chroot.html">§7.4 Enter the chroot</a>. Screenshot the <code class="inline">(lfs chroot) root:/#</code> prompt for M3.</li>
+      <li><a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/chapter07/creatingdirs.html">§7.5</a> and <a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/chapter07/createfiles.html">§7.6</a>: you're building the FHS (Week 1!) and <code class="inline">/etc/passwd</code> / <code class="inline">/etc/group</code> (Week 4!) by hand.</li>
+      <li>§7.7–7.14: Gettext, Bison, Perl, Zlib, mpdecimal, Python, Texinfo, Util-linux. Same compile habit as before.</li>
+      <li><a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/chapter07/cleanup.html">§7.15 Cleanup and backup</a>. The backup is optional in the book, but <b>required for this class</b>. Follow its steps exactly: <code class="inline">exit</code> the chroot, unmount the virtual filesystems, then create the tarball in root's home. The book warns that compressing takes "over 10 minutes." Afterward, shut down and take snapshot <code class="inline">ch7-backup</code>.</li>
+      <li>Re-enter the chroot (Card 3) and start Chapter 8.</li>
+    </ol>
+    <div class="callout warn"><b>Read the restore warning twice.</b> §7.15's restore runs <code class="inline">rm -rf ./*</code> as root. With the wrong directory or an empty <code class="inline">$LFS</code>, the book says it "will destroy your entire host system." In this class, <b>restore by reverting your VirtualBox snapshot</b> instead; use the tarball only if your instructor tells you to.</div>
+
+    <div class="example">
+      <span class="tag">Concept</span>
+      <h3>chroot: a changed root, not a cage</h3>
+      <p><code class="inline">chroot</code> makes a process see <code class="inline">/mnt/lfs</code> as <code class="inline">/</code>, so programs inside find <i>your</i> new libraries and tools. But it is <b>not a security boundary</b>: root inside a chroot can escape it, and it shares the host's kernel, processes, and network. Containers (namespaces + cgroups) and SELinux/AppArmor exist to provide the real isolation chroot lacks. That's a classic Module 6 exam distinction.</p>
+    </div>
+
+    <h3>Homework before 12.2</h3>
+    <p>In Chapter 8, do <a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/chapter08/man-pages.html">§8.3 Man-pages</a> and <a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/chapter08/iana-etc.html">§8.4 Iana-Etc</a>. If you have time, also do <a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/chapter08/glibc.html">§8.5 Glibc</a> (about 11 SBU with tests; save its test summary). Read <a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/chapter08/pkgmgt.html">§8.2 Package Management</a>: LFS has no package manager. Why might that be a problem for an auditor?</p>
+    <div class="evidence"><b>M3 evidence:</b> chroot-prompt screenshot · <code class="inline">ls -lh ~/lfs-temp-tools-13.1-systemd.tar.xz</code> (run as root on the host) · journal entry.</div>
+  </section>
+
+  <section id="s122">
+    <div class="section-head">
+      <p class="kicker">Lab 12.2 · Session 4</p>
+      <h2>The big build: Glibc, Binutils, GCC</h2>
+      <p class="session-meta">Book: Chapter 8 (through GCC and beyond) · Milestone M4 (part 1) · Card 3</p>
+    </div>
+
+    <div class="toolbar">
+      <button class="btn" id="reset122">Reset progress</button>
+      <span id="prog122"></span>
+    </div>
+    <ul class="checklist" id="list122">
+      <li><label><input type="checkbox" data-id="a"> §8.5 Glibc built; test summary saved and compared to the official log</label></li>
+      <li><label><input type="checkbox" data-id="b"> §8.6–8.21 done (compression libs through Pkgconf)</label></li>
+      <li><label><input type="checkbox" data-id="c"> §8.22 Binutils tests checked</label></li>
+      <li><label><input type="checkbox" data-id="d"> Snapshot <code class="inline">pre-gcc</code> taken, then §8.32 GCC built with its test suite</label></li>
+      <li><label><input type="checkbox" data-id="e"> GCC test summary compared to the official log; journal entry written</label></li>
+    </ul>
+
+    <p>Chapter 8 is about <b>83% of all compile time</b> (≈103 SBU of ≈124), and most of that is a few big packages. It's long and repetitive. Today's class time is for getting through the parts where the test suites matter, with help in the room.</p>
+
+    <h3>Test suites: what's required</h3>
+    <table class="blocks">
+      <thead><tr><th>Package</th><th>Run the tests?</th></tr></thead>
+      <tbody>
+        <tr><td>Glibc, Binutils, GCC</td><td><b>Required.</b> The book calls these "of the utmost importance."</td></tr>
+        <tr><td>Everything else in Ch. 8</td><td>Optional. Skip them if you're short on time; it doesn't affect your grade.</td></tr>
+      </tbody>
+    </table>
+    <p>Some failures are <b>expected</b>. Compare your summary with the official logs at <a href="https://www.linuxfromscratch.org/lfs/build-logs/13.1/">linuxfromscratch.org/lfs/build-logs/13.1</a> (<a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/chapter04/abouttestsuites.html">§4.6</a>). A handful of failures that also appear there is normal. Hundreds of failures is not; see <a href="#troubleshooting">Common Snags</a>.</p>
+
+    <h3>GCC: plan for it</h3>
+    <ol class="steps">
+      <li>Shut down and take snapshot <code class="inline">pre-gcc</code>, then boot and run Card 3.</li>
+      <li><a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/chapter08/gcc.html">§8.32 GCC</a> is about <b>53 SBU including its tests</b>. Use your SBU calculator number. On many laptops that means <b>start it before bed</b>, plugged in, with sleep disabled.</li>
+      <li>Read the whole GCC page before starting. It runs the tests as a non-root user and ends with sanity checks similar to Chapter 5's. Do them all.</li>
+    </ol>
+
+    <div class="example">
+      <span class="tag">Concept</span>
+      <h3>Where passwords come from</h3>
+      <p>On the way to GCC you'll build <a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/chapter08/libxcrypt.html">Libxcrypt</a> (password hashing) and <a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/chapter08/shadow.html">Shadow</a> (<code class="inline">/etc/shadow</code>, <code class="inline">passwd</code>, <code class="inline">useradd</code>). Read how the book configures Shadow's hashing method. That's the AAA material from 9.1, in source-code form.</p>
+    </div>
+
+    <h3>Homework before 13.2</h3>
+    <p>Keep going through Chapter 8, aiming for <a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/chapter08/cleanup.html">§8.85 Cleaning Up</a> by 13.2. Systemd (§8.77) is near the end. Check off packages in your journal as you go.</p>
+    <div class="evidence"><b>M4 evidence (part 1):</b> Glibc, Binutils and GCC test summaries, each next to the matching official log · journal entry.</div>
+  </section>
+
+  <section id="later">
+    <div class="section-head">
+      <p class="kicker">Coming next</p>
+      <h2>13.2 → Week 14 → 15.2: configure, kernel, boot</h2>
+      <p>Instructions for these sessions will be posted here before 13.2.</p>
+    </div>
+    <table class="blocks">
+      <thead><tr><th>When</th><th>Book</th><th>What</th></tr></thead>
+      <tbody>
+        <tr><td>13.2</td><td>Ch. 8 end → Ch. 9 → Ch. 10 config</td><td>System configuration (network, hostname <code class="inline">lfs-&lt;username&gt;</code>, locale, clock). <b>Kernel configuration together in class.</b></td></tr>
+        <tr><td>Week 14</td><td>Ch. 10</td><td>Self-study: compile the kernel, write <code class="inline">/etc/fstab</code>, set up GRUB, first boot attempt</td></tr>
+        <tr><td>15.2</td><td>Ch. 11</td><td><b>Boot day:</b> fix boots that fail, demo, what comes next (BLFS)</td></tr>
+      </tbody>
+    </table>
+    <div class="callout warn"><b>Don't race ahead into Chapter 10.</b> The book's GRUB section runs <code class="inline">grub-install /dev/sda</code>. In our VM, <code class="inline">/dev/sda</code> is your <b>Debian host disk</b>, so running it as written breaks your host's bootloader. Our setup also boots LFS by swapping the two disks in VirtualBox, which changes device names. Wait for the 13.2 instructions; the in-class steps account for both.</div>
+  </section>
+
+  <section id="safety">
+    <div class="section-head">
+      <p class="kicker">Protect your hours</p>
+      <h2>Snapshots &amp; backups</h2>
+      <p>A failed build late in Chapter 8 shouldn't cost you three weeks. Take these VirtualBox snapshots with the VM <b>shut down</b>:</p>
+    </div>
+    <table class="blocks">
+      <thead><tr><th>Snapshot</th><th>When</th><th>Protects</th></tr></thead>
+      <tbody>
+        <tr><td>ready</td><td>After Get Ready</td><td>Clean import + sources</td></tr>
+        <tr><td>ch4-ready</td><td>End of Ch. 4</td><td>Partition, lfs user, environment</td></tr>
+        <tr><td>ch6-temptools</td><td>End of Ch. 6</td><td>The whole cross-toolchain</td></tr>
+        <tr><td>ch7-backup</td><td>End of Ch. 7 (+ the §7.15 tarball)</td><td>A working chroot system</td></tr>
+        <tr><td>pre-gcc</td><td>Before §8.32</td><td>An interrupted GCC build</td></tr>
+        <tr><td>pre-boot</td><td>Before Ch. 10 GRUB</td><td>Your host's bootloader</td></tr>
+      </tbody>
+    </table>
+    <div class="callout info"><b>Snapshot vs. backup, again.</b> A VirtualBox snapshot saves the whole VM, on your laptop's disk. The §7.15 tarball saves just the LFS filesystem, as a file. If your laptop's drive dies, both are gone. That's why real backups live on a different device. (You saw the same rule in the Proxmox lab.) Snapshots also use disk space, so delete old ones once you're safely past them.</div>
+  </section>
+
+  <section id="troubleshooting">
+    <div class="section-head">
+      <p class="kicker">When it breaks</p>
+      <h2>Common snags</h2>
+      <p>Before asking for help, collect three things: the <b>book section</b>, the <b>exact command</b> you ran, and the <b>last ~30 lines</b> of output. That's how to ask in class, on the course discussion board, or on the LFS <a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/chapter01/askforhelp.html">support channels</a>.</p>
+    </div>
+    <table class="blocks">
+      <thead><tr><th>Symptom</th><th>Likely cause → fix</th></tr></thead>
+      <tbody>
+        <tr><td>$LFS is empty</td><td>You're in a new shell. Run the <a href="#resume">resume card</a>. <b>Never run root commands from the book with an empty <code class="inline">$LFS</code>.</b></td></tr>
+        <tr><td>Ch. 5–6 "Permission denied"</td><td>Usually a sign you're doing it right, as lfs, but a step was skipped: check the §4.3 <code class="inline">chown</code> commands ran. If you got around it by using root, stop and ask.</td></tr>
+        <tr><td>Wrong compiler / "not found"</td><td>Not in the clean environment. Card 2: <code class="inline">su - lfs</code> (with the dash); <code class="inline">echo $PATH</code> must start with <code class="inline">/mnt/lfs/tools/bin</code>.</td></tr>
+        <tr><td>Build fails halfway</td><td>Delete the package directory, re-extract, start the package over. Compare each command with the book character by character. To read the error clearly, rerun with <code class="inline">make -j1</code>.</td></tr>
+        <tr><td>Laptop slept / rebooted mid-build</td><td>Run your resume card, then redo <i>that package</i> from a fresh extract.</td></tr>
+        <tr><td>"No space left on device"</td><td><code class="inline">df -h /mnt/lfs</code>. You probably forgot to delete extracted source directories in <code class="inline">$LFS/sources</code>. Old snapshots can also fill your <i>laptop's</i> disk.</td></tr>
+        <tr><td>Hundreds of test failures (Binutils/GCC)</td><td>Usually no pseudo-terminals: <code class="inline">devpts</code> isn't mounted. Exit the chroot, check <code class="inline">findmnt $LFS/dev/pts</code>, redo Card 3. See <a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/chapter04/abouttestsuites.html">§4.6</a>.</td></tr>
+        <tr><td>"mount point does not exist" / weird chroot errors</td><td>Virtual filesystems not mounted, or mounted twice. Check <code class="inline">findmnt -R $LFS</code>.</td></tr>
+        <tr><td>md5sum: FAILED</td><td>The download was corrupted or cut off. Delete that file and run <code class="inline">wget --input-file=wget-list-systemd --continue</code> again.</td></tr>
+        <tr><td>Debian boots to emergency mode</td><td>The LFS disk is missing or moved and its fstab line lacks <code class="inline">nofail</code>. Log in as root at the emergency prompt and fix <code class="inline">/etc/fstab</code>.</td></tr>
+        <tr><td>Can't SSH to port 2222</td><td>VM not fully booted, or another VM is using port 2222. Use the VirtualBox console meanwhile.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="journal">
+    <div class="section-head">
+      <p class="kicker">Every session</p>
+      <h2>Build journal</h2>
+      <p>One entry per lab day (and per long homework session). Keep it in a plain text file, which you might as well keep on the host VM: <code class="inline">~/lfs-journal.txt</code>. Write the entries as you go; a journal written at the end is easy to spot.</p>
+    </div>
+    <pre class="term">== Date / session ==
+Book sections done:   (e.g. §5.3–5.6)
+Time spent:           (your time + compile time)
+What broke:           (exact error, or "nothing")
+How I diagnosed it:   (what I checked, what I found)
+One "why":            (pick one command from today and explain why the book does it)
+Next time I start at: (book section + which resume card)</pre>
+  </section>
+
+  <section id="glossary">
+    <div class="section-head">
+      <p class="kicker">Reference</p>
+      <h2>Glossary &amp; index</h2>
+      <p>Every term from this project, searchable and indexed A–Z.</p>
+    </div>
+    <input type="text" id="glossarySearch" placeholder="Search terms…" aria-label="Search glossary">
+    <div class="alpha-nav" id="alphaNav"></div>
+    <dl class="glossary" id="glossaryList"></dl>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>IT251 · Linux+ (XK0-006) · Linux From Scratch lab series, built on LFS 13.1-systemd. Progress checkboxes save to this browser only.</p>
+    <p>Linux From Scratch © 1999–2026 Gerard Beekmans, published under a Creative Commons license; this page links to it rather than copying it. Short command excerpts from the book (resume cards) are used under the book's MIT License for computer instructions.</p>
+  </div>
+</footer>
+
+<script>
+  const TERMS = [
+    {t:"LFS (Linux From Scratch)", d:"A free book and project that walks you through building a complete Linux system from source code. BLFS (Beyond LFS) continues with extras like desktops and servers."},
+    {t:"$LFS", d:"The environment variable holding the LFS mount point (/mnt/lfs in this class). Many book commands use it, so an empty $LFS can make a command hit your host instead."},
+    {t:"SBU (Standard Build Unit)", d:"The time your machine takes to build Binutils pass 1 on one core. Every other build time in the book is given as a multiple of it."},
+    {t:"Host system", d:"The working Linux you build from: the class Debian 13 VM. Its compiler and tools are used only to create the first cross-toolchain."},
+    {t:"Toolchain", d:"The set of programs that turn source code into programs: the compiler (GCC), assembler and linker (Binutils), and the C library (Glibc)."},
+    {t:"Cross-compiler", d:"A compiler that builds programs for a different target than the one it runs on. LFS uses one, named after $LFS_TGT, so the host's libraries can't leak into the new system."},
+    {t:"$LFS_TGT", d:"The target triplet for the cross-toolchain, e.g. x86_64-lfs-linux-gnu. The custom 'lfs' part is what keeps the cross-tools separate from the host's."},
+    {t:"Binutils", d:"GNU's assembler (as), linker (ld), and object-file tools (readelf, objdump, strip). Built three times in LFS: pass 1, pass 2, and final."},
+    {t:"GCC", d:"The GNU Compiler Collection (C, C++, and more). The longest single build in LFS, especially with its test suite."},
+    {t:"Glibc", d:"The GNU C Library: the core library almost every program links against (printf, open, malloc...). Also provides the dynamic linker."},
+    {t:"Libstdc++", d:"The C++ standard library, part of GCC. Built separately in Chapter 5 because it needs Glibc to exist first."},
+    {t:"Linux API headers", d:"Kernel header files describing the system-call interface, installed in Chapter 5 so Glibc knows how to talk to the kernel."},
+    {t:"Dynamic linker (ld-linux)", d:"The program that loads a binary's shared libraries at run time. The §5.5 sanity check confirms new programs ask for /lib64/ld-linux-x86-64.so.2."},
+    {t:"Temporary tools", d:"Programs built in Chapters 6–7 just to build the final system. Chapter 8 overwrites them with the real versions."},
+    {t:"chroot", d:"Runs a process with a different directory as its /. LFS uses it to work inside the new system. Not a security boundary: it shares the host's kernel, and root can escape it."},
+    {t:"Virtual kernel filesystems", d:"Filesystems that live in memory and expose kernel information: /proc, /sys, /dev (devtmpfs), devpts, and tmpfs at /run. Mounted into $LFS before entering chroot."},
+    {t:"Bind mount", d:"Makes an existing directory visible at a second location (mount --bind). LFS bind-mounts the host's /dev into $LFS/dev."},
+    {t:"devpts", d:"The filesystem that provides pseudo-terminals (/dev/pts). If it isn't mounted, test suites that need terminals fail by the hundreds."},
+    {t:"env -i", d:"Starts a program with an empty environment. The lfs user's .bash_profile uses it so no host variables leak into the build."},
+    {t:"set +h", d:"Turns off bash's command-path hashing, so newly built tools in $LFS/tools/bin are used right away."},
+    {t:"MAKEFLAGS", d:"An environment variable make reads as extra options. -j$(nproc) runs one build job per CPU core."},
+    {t:"umask 022", d:"Makes new files 644 and directories 755 by default. Set in LFS so permissions in the new system come out right."},
+    {t:"Test suite", d:"A package's own checks (make check / make test). Required in this class for Glibc, Binutils and GCC; optional for the rest."},
+    {t:"md5sum", d:"Computes a checksum. md5sum -c md5sums confirms every downloaded tarball is complete and unchanged. It detects corruption, not a malicious mirror."},
+    {t:"Tarball", d:"A .tar archive, usually compressed (.tar.xz, .tar.gz). Every LFS package arrives as one."},
+    {t:"MBR (dos) partition table", d:"The classic partition table format, used on our LFS disk because our VMs boot in legacy BIOS mode."},
+    {t:"ext4", d:"The standard Linux filesystem used for the LFS partition (mkfs -t ext4)."},
+    {t:"nofail", d:"An fstab option: if the device is missing at boot, keep booting instead of dropping into emergency mode."},
+    {t:"Snapshot", d:"A saved state of the whole VM you can roll back to. Fast undo, but it lives on the same laptop disk, so it isn't a backup."},
+    {t:"FHS", d:"Filesystem Hierarchy Standard: where things go (/etc, /usr/bin, /var...). In §7.5 you create it by hand."},
+    {t:"Package manager", d:"A tool (apt, dnf) that tracks which files belong to which package. LFS deliberately has none (§8.2)."},
+    {t:"GRUB", d:"The bootloader LFS installs in Chapter 10. In our VMs it goes on the LFS disk, not the host disk; see the 13.2 instructions."},
+  ];
+  const glossaryList = document.getElementById('glossaryList');
+  const alphaNav = document.getElementById('alphaNav');
+  const sorted = [...TERMS].sort((a, b) => a.t.replace(/^[^A-Za-z0-9]+/, '').localeCompare(b.t.replace(/^[^A-Za-z0-9]+/, ''), undefined, {sensitivity:'base'}));
+  const letterOf = (t) => { const c = t.replace(/^[^A-Za-z0-9]+/, '')[0].toUpperCase(); return /[A-Z]/.test(c) ? c : '#'; };
+  const letters = [...new Set(sorted.map(t => letterOf(t.t)))];
+  'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').forEach(L => {
+    const a = document.createElement('a');
+    a.textContent = L;
+    if (letters.includes(L)) { a.href = '#g-' + L; a.className = 'has'; }
+    else { a.href = 'javascript:void(0)'; }
+    alphaNav.appendChild(a);
+  });
+  let currentLetter = '';
+  sorted.forEach(item => {
+    const L = letterOf(item.t);
+    if (L !== currentLetter) {
+      currentLetter = L;
+      const h = document.createElement('div');
+      h.className = 'glossary-letter'; h.id = 'g-' + L; h.textContent = L;
+      glossaryList.appendChild(h);
+    }
+    const wrap = document.createElement('div');
+    wrap.className = 'gitem';
+    wrap.innerHTML = `<dt>${item.t}</dt><dd>${item.d}</dd>`;
+    wrap.dataset.search = (item.t + ' ' + item.d).toLowerCase();
+    glossaryList.appendChild(wrap);
+  });
+  document.getElementById('glossarySearch').addEventListener('input', (e) => {
+    const q = e.target.value.toLowerCase().trim();
+    document.querySelectorAll('.gitem').forEach(el => {
+      el.classList.toggle('hidden', q && !el.dataset.search.includes(q));
+    });
+  });
+
+  // Checklist progress, saved per-browser via localStorage
+  function wireChecklist(listId, progressId, resetBtnId, storageKey){
+    const list = document.getElementById(listId);
+    if (!list) return;
+    const boxes = Array.from(list.querySelectorAll('input[type="checkbox"]'));
+    let saved = {};
+    try { saved = JSON.parse(localStorage.getItem(storageKey) || '{}'); } catch(e) { saved = {}; }
+    function save(){
+      try { localStorage.setItem(storageKey, JSON.stringify(saved)); } catch(e) {}
+    }
+    function updateProgress(){
+      const done = boxes.filter(b => b.checked).length;
+      const el = document.getElementById(progressId);
+      if (el) el.textContent = `${done} / ${boxes.length} complete`;
+    }
+    boxes.forEach(b => {
+      const id = b.dataset.id;
+      if (saved[id]) { b.checked = true; b.closest('li').classList.add('checked'); }
+      b.addEventListener('change', () => {
+        saved[id] = b.checked;
+        b.closest('li').classList.toggle('checked', b.checked);
+        save(); updateProgress();
+      });
+    });
+    updateProgress();
+    const resetBtn = document.getElementById(resetBtnId);
+    if (resetBtn) resetBtn.addEventListener('click', () => {
+      boxes.forEach(b => { b.checked = false; b.closest('li').classList.remove('checked'); });
+      saved = {}; save(); updateProgress();
+    });
+  }
+  ['92','102','112','122'].forEach(s => wireChecklist('list'+s, 'prog'+s, 'reset'+s, 'it251_lfs_'+s));
+
+  // SBU calculator: book SBU totals per chapter (13.1-systemd, with test suites)
+  const SBU_CH = [['Ch. 5 · cross-toolchain', 6.9], ['Ch. 6 · temporary tools', 7.8], ['Ch. 7 · chroot tools', 3.3], ['Ch. 8 · final system', 103.2], ['Ch. 10 · kernel (typical)', 2.5]];
+  const sbuIn = document.getElementById('sbuMin'), sbuOut = document.getElementById('sbuOut'), sbuTable = document.getElementById('sbuTable');
+  const fmt = (min) => min < 90 ? Math.round(min) + ' min' : (min / 60).toFixed(1) + ' h';
+  function calcSbu(){
+    const m = parseFloat(sbuIn.value);
+    if (!(m > 0)) { sbuOut.textContent = ''; sbuTable.hidden = true; try { localStorage.removeItem('it251_lfs_sbu'); } catch(e) {} return; }
+    const total = SBU_CH.reduce((s, c) => s + c[1], 0);
+    sbuOut.textContent = '≈ ' + fmt(total * m) + ' of compiling (≈' + Math.round(total) + ' SBU)';
+    sbuTable.querySelector('tbody').innerHTML = SBU_CH.map(c => `<tr><td>${c[0]}</td><td>${c[1]}</td><td>${fmt(c[1] * m)}</td></tr>`).join('');
+    sbuTable.hidden = false;
+    try { localStorage.setItem('it251_lfs_sbu', String(m)); } catch(e) {}
+  }
+  try { const v = localStorage.getItem('it251_lfs_sbu'); if (v) sbuIn.value = v; } catch(e) {}
+  sbuIn.addEventListener('input', calcSbu);
+  calcSbu();
+</script>
+
+<button id="backToTop" class="back-to-top" aria-label="Back to top" title="Back to top">&uarr;</button>
+
+<script>
+  const backToTop = document.getElementById('backToTop');
+  function toggleBackToTop(){ backToTop.classList.toggle('show', window.scrollY > 480); }
+  window.addEventListener('scroll', toggleBackToTop, {passive:true});
+  toggleBackToTop();
+  backToTop.addEventListener('click', () => window.scrollTo({top:0, behavior:'smooth'}));
+</script>
