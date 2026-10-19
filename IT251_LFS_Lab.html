@@ -252,7 +252,7 @@
         <tr><td>M2 · Cross toolchain</td><td>Ch. 5–6</td><td>The Ch. 5 sanity-check output (<a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/chapter05/glibc.html">§5.5</a>) · <code class="inline">ls $LFS/tools/bin</code></td></tr>
         <tr><td>M3 · Inside chroot</td><td>Ch. 7</td><td>Screenshot of the <code class="inline">(lfs chroot) root:/#</code> prompt · <code class="inline">ls -lh</code> of your §7.15 backup file</td></tr>
         <tr><td>M4 · Final system</td><td>Ch. 8–9</td><td>Glibc, Binutils and GCC test summaries compared with the official logs · your Ch. 9 config files</td></tr>
-        <tr><td>M5 · It boots</td><td>Ch. 10–11</td><td>Demo or screenshot: <code class="inline">uname -a</code> showing <b>your username</b>, <code class="inline">hostnamectl</code>, empty <code class="inline">systemctl --failed</code>, <code class="inline">ip addr</code> with an address</td></tr>
+        <tr><td>M5 · It boots</td><td>Ch. 10–11</td><td>Demo or screenshot: <code class="inline">uname -a</code> showing <b>your username</b>, <code class="inline">hostnamectl</code>, empty <code class="inline">systemctl --failed</code>, <code class="inline">ip addr</code> with an address. Due by finals week.</td></tr>
         <tr><td>Build journal</td><td>All weeks</td><td>One entry per session (<a href="#journal">template</a>)</td></tr>
       </tbody>
     </table>
@@ -278,7 +278,7 @@
     </table>
 
     <ol class="steps">
-      <li><b>Download</b> <code class="inline">IT251-LFS-host-deb13-lfs13.1.ova</code> and its <code class="inline">.sha256</code> file. <i>Your instructor will post the download link.</i> Check the download:
+      <li><b>Get the VM from your instructor.</b> Your instructor will give you <code class="inline">IT251-LFS-host-deb13-lfs13.1.ova</code> and its <code class="inline">.sha256</code> file. Check that the copy is complete:
         <pre class="term">sha256sum -c IT251-LFS-host-deb13-lfs13.1.ova.sha256          # Linux / macOS
 Get-FileHash .\IT251-LFS-host-deb13-lfs13.1.ova                  # Windows PowerShell: compare to the .sha256 file</pre></li>
       <li><b>Import:</b> VirtualBox → <b>File → Import Appliance</b>. Set MAC Address Policy to <i>Generate new MAC addresses for all network adapters</i>. On a 16 GB+ laptop, raise CPU to <b>4</b> and RAM to <b>8192 MB</b>. On 8 GB, leave the defaults (2 CPU / 4096 MB).</li>
@@ -297,6 +297,8 @@ wget https://www.linuxfromscratch.org/lfs/view/13.1-systemd/md5sums
 wget --input-file=wget-list-systemd --continue
 md5sum -c md5sums | grep -v ': OK$'      # no output = every file is good</pre>
         If a file says <code class="inline">FAILED</code> or is missing, run the <code class="inline">wget --input-file</code> line again. If a download site is down, use a <a href="https://www.linuxfromscratch.org/lfs/mirrors.html#files">mirror</a>.</li>
+      <li><b>Refresh apt once.</b> The VM ships without package lists (to keep the file small), so <code class="inline">sudo apt install</code> fails until you run <code class="inline">sudo apt update</code>. Do that now, and while you're at it install the tools for configuring the kernel later (13.2):
+        <pre class="term">sudo apt update &amp;&amp; sudo apt install libncurses-dev flex bc</pre></li>
       <li><b>Take a VirtualBox snapshot</b> named <code class="inline">ready</code>.</li>
     </ol>
     <div class="callout warn"><b>Two disks, one rule.</b> <code class="inline">sda</code> is the Debian system you're working <i>from</i>. <code class="inline">sdb</code> is the LFS system you're building. The book's examples say things like <code class="inline">/dev/&lt;xxx&gt;</code> or <code class="inline">/dev/sda</code>, but <b>while you build, your LFS disk is <code class="inline">/dev/sdb</code> and its partition is <code class="inline">/dev/sdb1</code></b>. A command aimed at the wrong disk can wipe your host VM.</div>
@@ -346,7 +348,7 @@ findmnt -R $LFS          # should list dev, dev/pts, proc, sys, run under /mnt/l
     <div class="section-head">
       <p class="kicker">Lab 9.2 · Session 1</p>
       <h2>Prepare the disk, the user, and measure your SBU</h2>
-      <p class="session-meta">Book: Chapters 2–4, then §5.2 · Milestone M1 · Homework: finish Chapter 5</p>
+      <p class="session-meta">Week of Oct 19 · Book: Chapters 2–4, then §5.2 · Milestone M1 · Homework: finish Chapter 5</p>
     </div>
 
     <div class="toolbar">
@@ -446,7 +448,7 @@ chown root:root $LFS/sources/*</pre>
     <div class="section-head">
       <p class="kicker">Lab 10.2 · Session 2</p>
       <h2>The cross-toolchain and temporary tools</h2>
-      <p class="session-meta">Book: finish Chapter 5 → Chapter 6 · Milestone M2 · Card 2 (user lfs) all session</p>
+      <p class="session-meta">Week of Oct 26 · Book: finish Chapter 5 → Chapter 6 · Milestone M2 · Card 2 (user lfs) all session · Homework: finish Chapter 6</p>
     </div>
 
     <div class="toolbar">
@@ -492,7 +494,7 @@ rm -rf &lt;package&gt;                # ALWAYS delete the extracted directory wh
     <div class="section-head">
       <p class="kicker">Lab 11.2 · Session 3</p>
       <h2>Into the chroot</h2>
-      <p class="session-meta">Book: Chapter 7 → start Chapter 8 · Milestone M3 · From here on: root and Card 3, never lfs</p>
+      <p class="session-meta">Week of Nov 2 · Book: Chapter 7 → start Chapter 8 · Milestone M3 · From here on: root and Card 3, never lfs · Homework: through §8.5 Glibc</p>
     </div>
 
     <div class="toolbar">
@@ -528,7 +530,7 @@ rm -rf &lt;package&gt;                # ALWAYS delete the extracted directory wh
     </div>
 
     <h3>Homework before 12.2</h3>
-    <p>In Chapter 8, do <a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/chapter08/man-pages.html">§8.3 Man-pages</a> and <a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/chapter08/iana-etc.html">§8.4 Iana-Etc</a>. If you have time, also do <a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/chapter08/glibc.html">§8.5 Glibc</a> (about 11 SBU with tests; save its test summary). Read <a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/chapter08/pkgmgt.html">§8.2 Package Management</a>: LFS has no package manager. Why might that be a problem for an auditor?</p>
+    <p>Get through <a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/chapter08/glibc.html">§8.5 Glibc</a>: do <a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/chapter08/man-pages.html">§8.3 Man-pages</a> and <a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/chapter08/iana-etc.html">§8.4 Iana-Etc</a>, then Glibc itself (about 11 SBU with tests; <b>save its test summary</b> for M4). Read <a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/chapter08/pkgmgt.html">§8.2 Package Management</a>: LFS has no package manager. Why might that be a problem for an auditor?</p>
     <div class="evidence"><b>M3 evidence:</b> chroot-prompt screenshot · <code class="inline">ls -lh ~/lfs-temp-tools-13.1-systemd.tar.xz</code> (run as root on the host) · journal entry.</div>
   </section>
 
@@ -536,7 +538,7 @@ rm -rf &lt;package&gt;                # ALWAYS delete the extracted directory wh
     <div class="section-head">
       <p class="kicker">Lab 12.2 · Session 4</p>
       <h2>The big build: Glibc, Binutils, GCC</h2>
-      <p class="session-meta">Book: Chapter 8 (through GCC and beyond) · Milestone M4 (part 1) · Card 3</p>
+      <p class="session-meta">Week of Nov 9 · Book: Chapter 8 (through GCC and beyond) · Milestone M4 (part 1) · Card 3 · Homework: through §8.77 Systemd</p>
     </div>
 
     <div class="toolbar">
@@ -550,6 +552,8 @@ rm -rf &lt;package&gt;                # ALWAYS delete the extracted directory wh
       <li><label><input type="checkbox" data-id="d"> Snapshot <code class="inline">pre-gcc</code> taken, then §8.32 GCC built with its test suite</label></li>
       <li><label><input type="checkbox" data-id="e"> GCC test summary compared to the official log; journal entry written</label></li>
     </ul>
+
+    <div class="callout warn"><b>Checkpoint:</b> at the start of 12.2, you should be <b>inside the chroot</b> (Chapter 7 done). If you aren't, tell your instructor <i>today</i>. It's the last point where catching up is still realistic.</div>
 
     <p>Chapter 8 is about <b>83% of all compile time</b> (≈103 SBU of ≈124), and most of that is a few big packages. It's long and repetitive. Today's class time is for getting through the parts where the test suites matter, with help in the room.</p>
 
@@ -577,7 +581,7 @@ rm -rf &lt;package&gt;                # ALWAYS delete the extracted directory wh
     </div>
 
     <h3>Homework before 13.2</h3>
-    <p>Keep going through Chapter 8, aiming for <a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/chapter08/cleanup.html">§8.85 Cleaning Up</a> by 13.2. Systemd (§8.77) is near the end. Check off packages in your journal as you go.</p>
+    <p>Keep going through Chapter 8, aiming to reach at least <a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/chapter08/systemd.html">§8.77 Systemd</a> by 13.2. Then finish to <a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/chapter08/cleanup.html">§8.85 Cleaning Up</a> and do Chapter 9 before Week 14 ends. Check off packages in your journal as you go.</p>
     <div class="evidence"><b>M4 evidence (part 1):</b> Glibc, Binutils and GCC test summaries, each next to the matching official log · journal entry.</div>
   </section>
 
@@ -585,14 +589,14 @@ rm -rf &lt;package&gt;                # ALWAYS delete the extracted directory wh
     <div class="section-head">
       <p class="kicker">Coming next</p>
       <h2>13.2 → Week 14 → 15.2: configure, kernel, boot</h2>
-      <p>Instructions for these sessions will be posted here before 13.2.</p>
+      <p>Detailed steps will be posted here before 13.2. The plan is below, so you can pace yourself.</p>
     </div>
     <table class="blocks">
       <thead><tr><th>When</th><th>Book</th><th>What</th></tr></thead>
       <tbody>
-        <tr><td>13.2</td><td>Ch. 8 end → Ch. 9 → Ch. 10 config</td><td>System configuration (network, hostname <code class="inline">lfs-&lt;username&gt;</code>, locale, clock). <b>Kernel configuration together in class.</b></td></tr>
-        <tr><td>Week 14</td><td>Ch. 10</td><td>Self-study: compile the kernel, write <code class="inline">/etc/fstab</code>, set up GRUB, first boot attempt</td></tr>
-        <tr><td>15.2</td><td>Ch. 11</td><td><b>Boot day:</b> fix boots that fail, demo, what comes next (BLFS)</td></tr>
+        <tr><td>13.2 · Nov 16</td><td>Ch. 9 + Ch. 10 kernel config</td><td><b>Kernel configuration together in class, for everyone, wherever you are in Chapter 8.</b> We configure on the Debian host (not in chroot) and save the <code class="inline">.config</code> file for later. Then a walkthrough of Chapter 9 (network, hostname <code class="inline">lfs-&lt;username&gt;</code>, locale, clock). Install the tools beforehand (<a href="#setup">Get Ready</a>, step 8).</td></tr>
+        <tr><td>Week 14 · Nov 23</td><td>Ch. 8–9 + kernel build</td><td>No class (Thanksgiving week). <b>Only work that can run unattended:</b> finish Chapters 8–9, then compile the kernel with your saved <code class="inline">.config</code>. <b>Don't install GRUB or try to boot yet.</b> Take snapshot <code class="inline">pre-boot</code>.</td></tr>
+        <tr><td>15.2 · Nov 30</td><td>Ch. 10–11</td><td><b>Boot day, together:</b> <code class="inline">/etc/fstab</code>, GRUB, and the first boot, step by step in class; then demos and what comes next (BLFS). If yours won't boot that day, you can turn in M5 (or a written diagnosis) through finals week.</td></tr>
       </tbody>
     </table>
     <div class="callout warn"><b>Don't race ahead into Chapter 10.</b> The book's GRUB section runs <code class="inline">grub-install /dev/sda</code>. In our VM, <code class="inline">/dev/sda</code> is your <b>Debian host disk</b>, so running it as written breaks your host's bootloader. Our setup also boots LFS by swapping the two disks in VirtualBox, which changes device names. Wait for the 13.2 instructions; the in-class steps account for both.</div>
