@@ -134,8 +134,8 @@
 
   ul.checklist{ list-style:none; margin:0 0 24px; padding:0; display:grid; gap:8px; }
   ul.checklist li{ background:var(--surface); border:1px solid var(--border); border-radius:9px; box-shadow:var(--shadow); }
-  ul.checklist label{ display:flex; align-items:flex-start; gap:.7em; padding:.7em .9em; cursor:pointer; font-size:.94rem; }
-  ul.checklist input[type="checkbox"]{ margin-top:.25em; width:16px; height:16px; accent-color:var(--accent); flex:0 0 auto; }
+  ul.checklist label{ display:block; padding:.7em .9em .7em 2.6em; cursor:pointer; font-size:.94rem; overflow-wrap:anywhere; }
+  ul.checklist input[type="checkbox"]{ margin:0 .6em 0 -1.7em; vertical-align:-.15em; width:16px; height:16px; accent-color:var(--accent); }
   ul.checklist li.checked label{ color:var(--muted); text-decoration:line-through; text-decoration-color:var(--accent-2); }
   ul.checklist li.checked{ border-color:var(--accent-2); }
 
@@ -320,7 +320,8 @@ wget --input-file=wget-list-systemd --continue
 md5sum -c md5sums | grep -v ': OK$'      # no output = every file is good</pre>
         If a file says <code class="inline">FAILED</code> or is missing, run the <code class="inline">wget --input-file</code> line again. If a download site is down, use a <a href="https://www.linuxfromscratch.org/lfs/mirrors.html#files">mirror</a>.</li>
       <li><b>Refresh apt once.</b> The VM ships without package lists (to keep the file small), so <code class="inline">sudo apt install</code> fails until you run <code class="inline">sudo apt update</code>. Do that now, and while you're at it install the tools for configuring the kernel later (13.2):
-        <pre class="term">sudo apt update &amp;&amp; sudo apt install libncurses-dev flex bc</pre></li>
+        <pre class="term">sudo apt update &amp;&amp; sudo apt install libncurses-dev flex bc tmux</pre>
+        <code class="inline">tmux</code> keeps long builds running if your SSH window closes. See <a href="#tmux">Keep long builds alive</a>.</li>
       <li><b>Take a VirtualBox snapshot</b> named <code class="inline">ready</code>.</li>
     </ol>
     <div class="callout warn"><b>Two disks, one rule.</b> <code class="inline">sda</code> is the Debian system you're working <i>from</i>. <code class="inline">sdb</code> is the LFS system you're building. The book's examples say things like <code class="inline">/dev/&lt;xxx&gt;</code> or <code class="inline">/dev/sda</code>, but <b>while you build, your LFS disk is <code class="inline">/dev/sdb</code> and its partition is <code class="inline">/dev/sdb1</code></b>. A command aimed at the wrong disk can wipe your host VM.</div>
@@ -331,6 +332,20 @@ md5sum -c md5sums | grep -v ': OK$'      # no output = every file is good</pre>
       <p class="kicker">Keep these open</p>
       <h2>Resume cards: coming back after a break</h2>
       <p>The book is "designed to be built in one session." You will shut your laptop many times, so every time you come back, a few things must be set up again (<a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/chapter02/stages.html">§2.3</a>). Use the card for the chapter you're in. Skipping this is the #1 way people break their builds.</p>
+    </div>
+
+    <div class="example" id="tmux">
+      <span class="tag">Before any card · keep long builds alive</span>
+      <h3>Work inside tmux</h3>
+      <p>A build runs <i>inside</i> your SSH window. If that window closes, your Wi-Fi drops, or you close your laptop's terminal, the build is killed halfway. <code class="inline">tmux</code> fixes this: it keeps your session running inside the VM, and you can reconnect to it later. Start it <b>first</b>, as <code class="inline">student</code>, before <code class="inline">sudo -i</code> and before any card:</p>
+      <pre class="term">tmux new -s lfs          # first time: start a session named "lfs"
+tmux attach -t lfs       # every time after: reconnect to it (also after an SSH drop)</pre>
+      <ul>
+        <li>To leave a build running and close the window, press <b>Ctrl+b</b>, let go, then press <b>d</b> ("detach"). The build keeps going.</li>
+        <li>A green bar at the bottom of the window means you're inside tmux.</li>
+        <li>If <code class="inline">tmux attach</code> says <i>no sessions</i>, the VM was rebooted (that ends tmux too). Start a new one, run your resume card, and redo the package you were on.</li>
+        <li>tmux can't help if your <b>laptop</b> goes to sleep, because the whole VM pauses. See <a href="#awake">Keep your laptop awake</a>.</li>
+      </ul>
     </div>
 
     <div class="example">
@@ -438,7 +453,7 @@ chown root:root $LFS/sources/*</pre>
     <h3>Step 6 · Measure your SBU (§4.5 + §5.2)</h3>
     <p>Read <a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/chapter04/aboutsbus.html">§4.5 About SBUs</a> and <a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/partintro/generalinstructions.html">General Compilation Instructions</a>. The <b>SBU</b> (Standard Build Unit) is how long <b>Binutils pass 1 takes on one core</b> on your machine. Every other build time in the book is a multiple of it.</p>
     <ol class="steps">
-      <li>Plug in your laptop and set it to <b>performance</b> power mode. Don't let it sleep.</li>
+      <li>Plug in your laptop and set it to <b>performance</b> power mode. Make sure it won't sleep (<a href="#awake">how</a>), and work inside <a href="#tmux">tmux</a>.</li>
       <li>As <code class="inline">lfs</code>, follow <a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/chapter05/binutils-pass1.html">§5.2</a>. Extract the tarball and <code class="inline">cd</code> in, then create and enter <code class="inline">build</code>.</li>
       <li>Wrap the configure/make/install in <code class="inline">time { … }</code> as the book's note shows. <b>Use <code class="inline">make -j1</code> for this one package</b>, because the SBU is defined on a single core:
         <pre class="term">time { ../configure --prefix=$LFS/tools ...(rest exactly as in §5.2)... &amp;&amp; make -j1 &amp;&amp; make install; }</pre></li>
@@ -485,15 +500,66 @@ chown root:root $LFS/sources/*</pre>
       <li><label><input type="checkbox" data-id="e"> Snapshot <code class="inline">ch6-temptools</code> taken; journal entry written</label></li>
     </ul>
 
-    <h3>The habit that saves you: General Compilation Instructions</h3>
-    <p>For <b>every</b> package (re-read <a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/partintro/generalinstructions.html">the page</a> if unsure):</p>
-    <pre class="term">cd $LFS/sources
-tar -xf &lt;package&gt;.tar.xz        # (or .gz) extract
-cd &lt;package&gt;                    # enter it
-# ...the book's commands for this package...
+    <h3 id="package-routine">The habit that saves you: one package, start to finish</h3>
+    <p>Chapters 5–8 are about 100 packages, and every one follows the same routine from the book's <a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/partintro/generalinstructions.html">General Compilation Instructions</a>. Learn it once on a small package and the rest is repetition.</p>
+    <ol class="steps">
+      <li><b>Run your resume card</b> (Card 2 for Chapters 5–6), inside <a href="#tmux">tmux</a>.</li>
+      <li><b>Go to the sources and find the exact file name.</b> Don't guess version numbers; let the shell show you:
+        <pre class="term">cd $LFS/sources
+ls | grep -i m4          # shows: m4-1.4.21.tar.xz</pre></li>
+      <li><b>Extract it and go into the new folder.</b> The folder has the same name without <code class="inline">.tar.xz</code>. Press <b>Tab</b> to complete long names instead of typing them.
+        <pre class="term">tar -xf m4-1.4.21.tar.xz
+cd m4-1.4.21</pre></li>
+      <li><b>Open the package's page in the book</b> and run its commands <b>one grey box at a time</b>, top to bottom. Copy the <i>whole</i> box (some boxes are several lines joined by <code class="inline">\</code>; they're one command), paste it, press Enter, wait for the prompt to come back, and <a href="#did-it-work">check it worked</a> before the next box.</li>
+      <li><b>Leave and delete the folder</b>, even if everything worked. The tarball stays; only the extracted copy goes:
+        <pre class="term">cd $LFS/sources
+rm -rf m4-1.4.21</pre></li>
+      <li><b>Tick it off in your journal</b> (book section + "done"), then go to the next package.</li>
+    </ol>
+
+    <div class="example">
+      <span class="tag">Worked example · §6.2 M4</span>
+      <h3>The first package of Chapter 6, all the way through</h3>
+      <p>This is exactly what one package looks like, using the commands from <a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/chapter06/m4.html">§6.2</a> as they appear in the 13.1-systemd book. For every other package, take the commands from the book itself, not from here.</p>
+      <pre class="term"># Start: go to the sources, extract, enter the folder
 cd $LFS/sources
-rm -rf &lt;package&gt;                # ALWAYS delete the extracted directory when done</pre>
-    <p>If a build fails halfway, don't fix it in place. Delete the directory, extract again, and redo the whole package.</p>
+tar -xf m4-1.4.21.tar.xz
+cd m4-1.4.21
+
+# Box 1: a settings file the book asks for here (paste all 4 lines together)
+cat &gt; $LFS/usr/share/config.site &lt;&lt; EOF
+ac_cv_func_posix_spawn_file_actions_addchdir=yes
+ac_cv_func_posix_spawn_file_actions_addfchdir=yes
+EOF
+
+# Box 2: "Prepare M4 for compilation" (3 lines, one command)
+./configure --prefix=/usr   \
+            --host=$LFS_TGT \
+            --build=$(build-aux/config.guess)
+echo $?                  # 0 = it worked. Anything else: stop.
+
+# Box 3: "Compile the package"
+make
+echo $?                  # 0
+
+# Box 4: "Install the package"
+make DESTDIR=$LFS install
+echo $?                  # 0
+
+# Finish: leave the folder and delete it
+cd $LFS/sources
+rm -rf m4-1.4.21</pre>
+      <p>The <code class="inline">echo $?</code> lines are ours, not the book's. They're an easy way to check each step (see below). Lines starting with <code class="inline">#</code> are comments, so you don't need to type them.</p>
+    </div>
+
+    <div class="callout info" id="did-it-work"><b>Did it work?</b> Thousands of lines scrolling past is normal. Only the <b>end</b> of the output matters.
+      <ul>
+        <li><b>Run <code class="inline">echo $?</code> right after a command.</b> It prints that command's exit status: <code class="inline">0</code> means success, and any other number means it failed. (It only reports the most recent command, so run it right away.)</li>
+        <li><b>Failure looks like</b> <code class="inline">make: *** [...] Error 1</code> (or <code class="inline">Error 2</code>), or <code class="inline">configure: error: …</code>, in the last few lines. Stop there. Don't run the next box.</li>
+        <li><b>Lines with <code class="inline">warning:</code> are fine.</b> Compilers print lots of them, and the book expects that.</li>
+        <li><b>A failed test</b> in the Chapter 8 test suites is not a failed build. See <a href="#s122">Test suites</a>.</li>
+      </ul>
+      <b>If a package fails:</b> don't try to fix it in place. Copy the last ~30 lines into your journal, then <code class="inline">cd $LFS/sources</code>, <code class="inline">rm -rf</code> the folder, extract again, and redo the <i>whole</i> package, comparing each command with the book character by character. Still failing? See <a href="#troubleshooting">Common snags</a>.</div>
 
     <h3>What's actually happening</h3>
     <div class="example">
@@ -539,7 +605,7 @@ rm -rf &lt;package&gt;                # ALWAYS delete the extracted directory wh
       <li><a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/chapter07/changingowner.html">§7.2 Changing ownership</a>, then <a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/chapter07/kernfs.html">§7.3 virtual kernel filesystems</a> (these are the Card 3 mounts).</li>
       <li><a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/chapter07/chroot.html">§7.4 Enter the chroot</a>. Screenshot the <code class="inline">(lfs chroot) root:/#</code> prompt for M3.</li>
       <li><a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/chapter07/creatingdirs.html">§7.5</a> and <a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/chapter07/createfiles.html">§7.6</a>: you're building the FHS (Week 1!) and <code class="inline">/etc/passwd</code> / <code class="inline">/etc/group</code> (Week 4!) by hand.</li>
-      <li>§7.7–7.14: Gettext, Bison, Perl, Zlib, mpdecimal, Python, Texinfo, Util-linux. Same compile habit as before.</li>
+      <li>§7.7–7.14: Gettext, Bison, Perl, Zlib, mpdecimal, Python, Texinfo, Util-linux. Use the same <a href="#package-routine">one-package routine</a>, with one change: <b>inside the chroot, the sources are at <code class="inline">/sources</code></b> (your new system's view of <code class="inline">/mnt/lfs/sources</code>), so start each package with <code class="inline">cd /sources</code>.</li>
       <li><a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/chapter07/cleanup.html">§7.15 Cleanup and backup</a>. The backup is optional in the book, but <b>required for this class</b>. Follow its steps exactly: <code class="inline">exit</code> the chroot, unmount the virtual filesystems, then create the tarball in root's home. The book warns that compressing takes "over 10 minutes." Afterward, shut down and take snapshot <code class="inline">ch7-backup</code>.</li>
       <li>Re-enter the chroot (Card 3) and start Chapter 8.</li>
     </ol>
@@ -592,7 +658,7 @@ rm -rf &lt;package&gt;                # ALWAYS delete the extracted directory wh
     <h3>GCC: plan for it</h3>
     <ol class="steps">
       <li>Shut down and take snapshot <code class="inline">pre-gcc</code>, then boot and run Card 3.</li>
-      <li><a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/chapter08/gcc.html">§8.32 GCC</a> is about <b>53 SBU including its tests</b>. Use your SBU calculator number. On many laptops that means <b>start it before bed</b>, plugged in, with sleep disabled.</li>
+      <li><a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/chapter08/gcc.html">§8.32 GCC</a> is about <b>53 SBU including its tests</b>. Use your SBU calculator number. On many laptops that means <b>start it before bed</b>, plugged in, <a href="#awake">with sleep turned off</a>, inside <a href="#tmux">tmux</a>.</li>
       <li>Read the whole GCC page before starting. It runs the tests as a non-root user and ends with sanity checks similar to Chapter 5's. Do them all.</li>
     </ol>
 
@@ -641,6 +707,28 @@ rm -rf &lt;package&gt;                # ALWAYS delete the extracted directory wh
         <tr><td>pre-boot</td><td>Before Ch. 10 GRUB</td><td>Your host's bootloader</td></tr>
       </tbody>
     </table>
+    <h3 id="snapshot-howto">How to take a snapshot</h3>
+    <ol class="steps">
+      <li><b>Get out of the chroot</b> if you're in it: type <code class="inline">exit</code> until the prompt no longer says <code class="inline">(lfs chroot)</code>.</li>
+      <li><b>Shut the VM down</b> from its terminal: <code class="inline">sudo poweroff</code>. Wait until VirtualBox shows the VM as <i>Powered Off</i>.</li>
+      <li>In the <b>VirtualBox Manager</b> window, click your VM, then open its <b>Snapshots</b> view. (Depending on your VirtualBox version, that's the list/menu button next to the VM's name, or <b>Machine → Tools → Snapshots</b>.)</li>
+      <li>Click <b>Take</b>, type the name from the table above (e.g. <code class="inline">ch6-temptools</code>), and click OK.</li>
+      <li>Start the VM again and run your <a href="#resume">resume card</a>.</li>
+    </ol>
+    <p><b>To go back to a snapshot:</b> power the VM off, open the same Snapshots view, click the snapshot, and choose <b>Restore</b>. Everything after that snapshot is lost, so note in your journal where you're starting again.</p>
+
+    <h3 id="awake">Keep your laptop awake during long builds</h3>
+    <p>When your laptop sleeps, the VM freezes, and a build that's interrupted that way often has to be redone. Before any long build, plug in and turn off automatic sleep:</p>
+    <table class="blocks">
+      <thead><tr><th>Laptop</th><th>How</th></tr></thead>
+      <tbody>
+        <tr><td>Windows 11</td><td><b>Settings → System → Power &amp; battery → Screen and sleep</b> (newer versions: <i>Screen, sleep &amp; hibernate timeouts</i>): set the <i>plugged in</i> sleep option to <b>Never</b>. Closing the lid can still sleep it, so leave it open.</td></tr>
+        <tr><td>macOS</td><td>Open Terminal and run <code class="inline">caffeinate -i</code>. Your Mac stays awake until you press Ctrl+C or close that window. Leave the lid open.</td></tr>
+        <tr><td>Linux</td><td>In your desktop's <b>Settings → Power</b>, turn off <i>Automatic suspend</i> while plugged in.</td></tr>
+      </tbody>
+    </table>
+    <p>The screen turning off by itself is fine. Only <i>sleep</i> stops the VM.</p>
+
     <div class="callout info"><b>Snapshot vs. backup, again.</b> A VirtualBox snapshot saves the whole VM, on your laptop's disk. The §7.15 tarball saves just the LFS filesystem, as a file. If your laptop's drive dies, both are gone. That's why real backups live on a different device. Snapshots also use disk space, so delete old ones once you're safely past them.</div>
   </section>
 
@@ -687,13 +775,14 @@ cat /mnt/lfs/etc/it251-catchup            # confirms the restore</pre>
         <tr><td>Ch. 5–6 "Permission denied"</td><td>Usually a sign you're doing it right, as lfs, but a step was skipped: check the §4.3 <code class="inline">chown</code> commands ran. If you got around it by using root, stop and ask.</td></tr>
         <tr><td>Wrong compiler / "not found"</td><td>Not in the clean environment. Card 2: <code class="inline">su - lfs</code> (with the dash); <code class="inline">echo $PATH</code> must start with <code class="inline">/mnt/lfs/tools/bin</code>.</td></tr>
         <tr><td>Build fails halfway</td><td>Delete the package directory, re-extract, start the package over. Compare each command with the book character by character. To read the error clearly, rerun with <code class="inline">make -j1</code>.</td></tr>
-        <tr><td>Laptop slept / rebooted mid-build</td><td>Run your resume card, then redo <i>that package</i> from a fresh extract.</td></tr>
+        <tr><td>Laptop slept / rebooted mid-build</td><td>Run your resume card, then redo <i>that package</i> from a fresh extract. Next time, <a href="#awake">turn off sleep</a> first.</td></tr>
+        <tr><td>SSH window closed or Wi-Fi dropped during a build</td><td>If you were inside tmux, SSH back in and run <code class="inline">tmux attach -t lfs</code>; the build kept going. If you weren't, the build was killed: run your resume card and redo that package from a fresh extract. Use <a href="#tmux">tmux</a> from now on.</td></tr>
         <tr><td>"No space left on device"</td><td><code class="inline">df -h /mnt/lfs</code>. You probably forgot to delete extracted source directories in <code class="inline">$LFS/sources</code>. Old snapshots can also fill your <i>laptop's</i> disk.</td></tr>
         <tr><td>Hundreds of test failures (Binutils/GCC)</td><td>Usually no pseudo-terminals: <code class="inline">devpts</code> isn't mounted. Exit the chroot, check <code class="inline">findmnt $LFS/dev/pts</code>, redo Card 3. See <a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/chapter04/abouttestsuites.html">§4.6</a>.</td></tr>
         <tr><td>"mount point does not exist" / weird chroot errors</td><td>Virtual filesystems not mounted, or mounted twice. Check <code class="inline">findmnt -R $LFS</code>.</td></tr>
         <tr><td>My build is beyond repair</td><td>First try your most recent VirtualBox snapshot. If that doesn't help, ask about the <a href="#catchup">catch-up snapshot</a>.</td></tr>
         <tr><td>md5sum: FAILED</td><td>The download was corrupted or cut off. Delete that file and run <code class="inline">wget --input-file=wget-list-systemd --continue</code> again.</td></tr>
-        <tr><td>Debian boots to emergency mode</td><td>The LFS disk is missing or moved and its fstab line lacks <code class="inline">nofail</code>. Log in as root at the emergency prompt and fix <code class="inline">/etc/fstab</code>.</td></tr>
+        <tr><td>Debian boots to emergency mode, or says "the root account is locked"</td><td>The class VM has no root password, so you can't use the emergency prompt; that's expected. Power the VM off. In <b>Settings → Storage</b>, check that <code class="inline">lfs.vdi</code> is still attached on <b>SATA port 1</b> and the OS disk on port 0, then boot again. Still stuck? <a href="#snapshot-howto">Restore your latest snapshot</a> and tell your instructor. (Usually caused by an <code class="inline">/etc/fstab</code> line without <code class="inline">nofail</code>, or a missing LFS disk.)</td></tr>
         <tr><td>Can't SSH to port 2222</td><td>VM not fully booted, or another VM is using port 2222. Use the VirtualBox console meanwhile.</td></tr>
       </tbody>
     </table>
@@ -730,7 +819,7 @@ Next time I start at: (book section + which resume card)</pre>
 <footer>
   <div class="wrap">
     <p>IT251 · Linux+ (XK0-006) · Linux From Scratch lab series, built on LFS 13.1-systemd. Progress checkboxes save to this browser only.</p>
-    <p>Linux From Scratch © 1999–2026 Gerard Beekmans, published under a Creative Commons license; this page links to it rather than copying it. Short command excerpts from the book (resume cards) are used under the book's MIT License for computer instructions.</p>
+    <p>Linux From Scratch © 1999–2026 Gerard Beekmans, published under a Creative Commons license; this page links to it rather than copying it. Short command excerpts from the book (resume cards and the §6.2 worked example) are used under the book's MIT License for computer instructions.</p>
   </div>
 </footer>
 
