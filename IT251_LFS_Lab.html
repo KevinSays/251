@@ -267,6 +267,20 @@
       <p>Everyone builds on the same prepared Debian 13 VM, so we all start from the same, tested setup. Do all of this <b>before</b> the first lab day.</p>
     </div>
 
+    <h3 id="about-vm">What the class VM is</h3>
+    <p>The class VM (<code class="inline">IT251-LFS-host-deb13-lfs13.1.ova</code>) is a minimal, console-only <b>Debian 13 "trixie"</b> system that your instructor prepared as the <b>host</b> you build LFS <i>from</i>. LFS needs a host Linux with specific build tools at specific versions. This VM already passes the book's host check (<a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/chapter02/hostreqs.html">§2.2</a>), so nobody loses the first lab day fixing their distro. <b>It is not LFS itself:</b> you build LFS on a second, blank disk that you add in step 3.</p>
+    <table class="blocks">
+      <thead><tr><th>Question</th><th>Answer</th></tr></thead>
+      <tbody>
+        <tr><td>What's it for?</td><td>Lab days 9.2–15.2: building <i>Linux From Scratch</i> 13.1-systemd. It's your workshop for the whole build.</td></tr>
+        <tr><td>Where did it come from?</td><td>Installed unattended from the <b>official Debian 13.7.0 amd64 netinst</b> image (<a href="https://www.debian.org/distrib/netinst">debian.org</a>), with every package from Debian's official mirrors (<code class="inline">deb.debian.org</code>, <code class="inline">security.debian.org</code>), fully updated on 2026-10-18. Nothing comes from a third party. It's not an official Debian or LFS image.</td></tr>
+        <tr><td>What's inside?</td><td>Linux kernel 6.12 (Debian), no desktop, SSH server, and the LFS build tools from Debian's own packages: GCC 14.2, Binutils 2.44, Bash 5.2, Make, Bison, Gawk, M4, Texinfo, Perl, Python 3.</td></tr>
+        <tr><td>What was changed from stock Debian?</td><td>Only what the book asks for: <code class="inline">/bin/sh</code> → bash and <code class="inline">awk</code> → gawk (§2.2); root's <code class="inline">.bashrc</code> sets <code class="inline">LFS=/mnt/lfs</code> and <code class="inline">umask 022</code> (§2.6); and the book's <code class="inline">version-check.sh</code> is installed as a command.</td></tr>
+        <tr><td>Is my copy unique?</td><td>Yes. SSH keys and the machine ID were removed before export and are regenerated on your first boot, and you set your own password at first login.</td></tr>
+        <tr><td>Can I see how it was built?</td><td>Yes. The <a href="https://github.com/KevinSays/251/releases/tag/lfs-host-13.1">release page</a> has the full notes, the checksum, and the exact install and cleanup scripts used, plus where to get the source code for every package.</td></tr>
+      </tbody>
+    </table>
+
     <h3>Can my laptop do this?</h3>
     <table class="blocks">
       <thead><tr><th>You need</th><th>Why</th></tr></thead>
@@ -279,9 +293,16 @@
     </table>
 
     <ol class="steps">
-      <li><b>Get the VM from your instructor.</b> Your instructor will give you <code class="inline">IT251-LFS-host-deb13-lfs13.1.ova</code> and its <code class="inline">.sha256</code> file. Check that the copy is complete:
-        <pre class="term">sha256sum -c IT251-LFS-host-deb13-lfs13.1.ova.sha256          # Linux / macOS
-Get-FileHash .\IT251-LFS-host-deb13-lfs13.1.ova                  # Windows PowerShell: compare to the .sha256 file</pre></li>
+      <li><b>Download the VM</b> (644 MB, at home if you can) from the <a href="https://github.com/KevinSays/251/releases/tag/lfs-host-13.1">class VM release page</a>. You need two files, saved in the same folder:
+        <ul>
+          <li><a href="https://github.com/KevinSays/251/releases/download/lfs-host-13.1/IT251-LFS-host-deb13-lfs13.1.ova"><code class="inline">IT251-LFS-host-deb13-lfs13.1.ova</code></a></li>
+          <li><a href="https://github.com/KevinSays/251/releases/download/lfs-host-13.1/IT251-LFS-host-deb13-lfs13.1.ova.sha256"><code class="inline">IT251-LFS-host-deb13-lfs13.1.ova.sha256</code></a></li>
+        </ul>
+        No good internet at home? Your instructor has copies on USB in class. Either way, check that your copy is complete:
+        <pre class="term">sha256sum -c IT251-LFS-host-deb13-lfs13.1.ova.sha256          # Linux: should print OK
+shasum -a 256 -c IT251-LFS-host-deb13-lfs13.1.ova.sha256       # macOS: should print OK
+(Get-FileHash .\IT251-LFS-host-deb13-lfs13.1.ova).Hash -eq 'ecb2f0d8124103f72a72dce1470dd79f6c186e32b6c34a081f7c5c4867abe0dd'   # Windows PowerShell: should print True</pre>
+        Anything else means the download is damaged. Download it again.</li>
       <li><b>Import:</b> VirtualBox → <b>File → Import Appliance</b>. Set MAC Address Policy to <i>Generate new MAC addresses for all network adapters</i>. On a 16 GB+ laptop, raise CPU to <b>4</b> and RAM to <b>8192 MB</b>. On 8 GB, leave the defaults (2 CPU / 4096 MB).</li>
       <li><b>Add your LFS disk:</b> VM <b>Settings → Storage → Controller: SATA</b> → "add hard disk" icon → <b>Create</b>: VDI, dynamically allocated, <b>30 GB</b>, named <code class="inline">lfs.vdi</code>. It goes on <b>SATA port 1</b>. Leave it blank; you'll partition it in class.</li>
       <li><b>First login:</b> start the VM and log in as <code class="inline">student</code> / <code class="inline">lfs-student</code>. You'll be made to set your own password right away.</li>
