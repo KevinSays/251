@@ -1,0 +1,361 @@
+<title>LFS Lab 11.2</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --bg:#f2f6f4;
+    --surface:#ffffff;
+    --surface-2:#e6efec;
+    --text:#0c1a15;
+    --muted:#51655d;
+    --border:#cddcd5;
+    --accent:#0f7a5c;
+    --accent-soft:#dcf1e7;
+    --accent-2:#0e7490;
+    --accent-2-soft:#dbeff4;
+    --danger:#b3261e;
+    --danger-soft:#f8dcd9;
+    --correct:#0f7a5c;
+    --correct-soft:#dcf1e7;
+    --shadow: 0 1px 2px rgba(12,26,21,.06), 0 8px 24px rgba(12,26,21,.07);
+    --mono:'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    --sans:'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0a0f0d; --surface:#0f1613; --surface-2:#131c18;
+      --text:#d9f5e8; --muted:#82a99a; --border:#1e2b26;
+      --accent:#3ddc97; --accent-soft:#123024;
+      --accent-2:#22d3ee; --accent-2-soft:#0c2b30;
+      --danger:#ff7a68; --danger-soft:#33150f;
+      --correct:#3ddc97; --correct-soft:#123024;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 12px 32px rgba(0,0,0,.45);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0a0f0d; --surface:#0f1613; --surface-2:#131c18;
+    --text:#d9f5e8; --muted:#82a99a; --border:#1e2b26;
+    --accent:#3ddc97; --accent-soft:#123024;
+    --accent-2:#22d3ee; --accent-2-soft:#0c2b30;
+    --danger:#ff7a68; --danger-soft:#33150f;
+    --correct:#3ddc97; --correct-soft:#123024;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 12px 32px rgba(0,0,0,.45);
+  }
+
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto;} *{animation-duration:.001ms !important; transition-duration:.001ms !important;} }
+  body{ margin:0; background:var(--bg); color:var(--text); font-family:var(--sans); line-height:1.55; -webkit-font-smoothing:antialiased; }
+  a{ color:var(--accent-2); }
+  ::selection{ background:var(--accent-soft); }
+  .wrap{ max-width:1080px; margin:0 auto; padding:0 24px; }
+
+  header.hero{
+    border-bottom:1px solid var(--border);
+    background:repeating-linear-gradient(180deg, var(--surface-2) 0 1px, var(--bg) 1px 28px);
+    padding:56px 0 40px;
+  }
+  .termbar{ display:flex; gap:6px; margin-bottom:20px; }
+  .termbar span{ width:11px; height:11px; border-radius:50%; }
+  .termbar span:nth-child(1){ background:#ff5f57; }
+  .termbar span:nth-child(2){ background:#febc2e; }
+  .termbar span:nth-child(3){ background:#28c840; }
+  .eyebrow{ font-family:var(--mono); font-size:.8rem; color:var(--accent); }
+  .eyebrow::before{ content:"$ "; opacity:.7; }
+  h1{ font-family:var(--mono); font-weight:700; font-size:clamp(2rem,4vw,3rem); line-height:1.08; margin:.4em 0 .3em; text-wrap:balance; letter-spacing:-.01em; }
+  h1 .cursor{ display:inline-block; width:.5ch; background:var(--accent); margin-left:.15em; animation:blink 1.1s steps(1) infinite; }
+  @keyframes blink{ 50%{ opacity:0; } }
+  .hero p.lede{ max-width:62ch; font-size:1.1rem; color:var(--muted); margin:0 0 1.6em; }
+  .factrow{ display:flex; flex-wrap:wrap; gap:10px; }
+  .fact{ font-family:var(--mono); font-size:.78rem; background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:.5em .8em; display:flex; gap:.5em; }
+  .fact b{ color:var(--muted); font-weight:500; text-transform:uppercase; letter-spacing:.06em; font-size:.72rem; }
+
+  nav.index{ position:sticky; top:0; z-index:20; background:color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter:blur(8px); border-bottom:1px solid var(--border); }
+  nav.index .wrap{ display:flex; gap:4px; overflow-x:auto; padding:10px 24px; scrollbar-width:none; }
+  nav.index .wrap::-webkit-scrollbar{ display:none; }
+  nav.index a{ font-family:var(--mono); font-size:.82rem; text-decoration:none; color:var(--muted); padding:.5em .9em; border-radius:6px; white-space:nowrap; border:1px solid transparent; }
+  nav.index a:hover{ color:var(--text); border-color:var(--border); background:var(--surface); }
+  nav.index a.toc-link{ font-weight:600; color:var(--accent); border-right:1px solid var(--border); border-radius:0; margin-right:8px; padding-right:16px; }
+  nav.index a.toc-link:hover{ color:var(--accent); background:transparent; border-right-color:var(--border); }
+  nav.index a:not(.toc-link)::before{ content:'#'; opacity:.5; margin-right:.3em; }
+
+  .back-to-top{ position:fixed; bottom:22px; right:22px; z-index:40; width:46px; height:46px;
+    background:var(--surface); border:1px solid var(--border); border-radius:10px; box-shadow:var(--shadow);
+    font-family:var(--mono); font-size:1.15rem; color:var(--accent); line-height:1;
+    display:flex; align-items:center; justify-content:center; padding:0; cursor:pointer; text-decoration:none;
+    opacity:0; visibility:hidden; transform:translateY(10px);
+    transition:opacity .25s ease, transform .25s ease, visibility 0s .25s; }
+  .back-to-top.show{ opacity:1; visibility:visible; transform:translateY(0); transition:opacity .25s ease, transform .25s ease, visibility 0s; }
+  .back-to-top:hover{ background:var(--accent-soft); border-color:var(--accent); }
+  .back-to-top:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+  @media print{ nav.index, .back-to-top{ display:none; } }
+
+  section{ padding:52px 0; border-bottom:1px solid var(--border); }
+  section:last-of-type{ border-bottom:none; }
+  .section-head{ margin-bottom:28px; max-width:70ch; }
+  .kicker{ font-family:var(--mono); font-size:.75rem; letter-spacing:.1em; text-transform:uppercase; color:var(--accent-2); margin:0 0 .5em; }
+  .kicker::before{ content:"// "; opacity:.6; }
+  h2{ font-family:var(--mono); font-size:clamp(1.4rem,2.4vw,1.9rem); margin:0 0 .3em; text-wrap:balance; }
+  h3{ font-family:var(--mono); font-size:1.05rem; margin:1.6em 0 .5em; }
+  .section-head p{ color:var(--muted); margin:.4em 0 0; }
+
+  .obj-list{ display:grid; gap:12px; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); list-style:none; margin:0; padding:0; }
+  .obj-list li{ background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:16px 18px; box-shadow:var(--shadow); font-size:.95rem; }
+  .obj-list li::before{ content:"$"; color:var(--accent); font-family:var(--mono); margin-right:.6em; font-weight:700; }
+
+  .example{ background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px 22px; margin-bottom:16px; box-shadow:var(--shadow); }
+  .example h3{ font-family:var(--mono); font-size:1.02rem; margin:0 0 8px; }
+  .example .tag{ display:inline-block; font-family:var(--mono); font-size:.68rem; text-transform:uppercase; letter-spacing:.08em; color:var(--accent-2); background:var(--accent-2-soft); border-radius:5px; padding:.25em .6em; margin-bottom:10px; }
+  code.inline{ font-family:var(--mono); background:var(--surface-2); border-radius:4px; padding:.1em .4em; font-size:.92em; }
+  pre.term{ font-family:var(--mono); font-size:.85rem; background:var(--surface-2); border:1px solid var(--border); border-radius:8px; padding:12px 14px; overflow-x:auto; margin:10px 0; white-space:pre; }
+  details.solution{ margin-top:12px; }
+  details.solution summary{ cursor:pointer; font-family:var(--mono); font-size:.82rem; color:var(--accent); list-style:none; display:inline-flex; align-items:center; gap:.4em; }
+  details.solution summary::-webkit-details-marker{ display:none; }
+  details.solution summary::before{ content:"▸"; transition:transform .15s; }
+  details.solution[open] summary::before{ transform:rotate(90deg); }
+  details.solution .solbody{ margin-top:10px; padding:14px 16px; background:var(--surface-2); border-radius:8px; font-size:.92rem; }
+
+  table.blocks{ width:100%; border-collapse:collapse; font-size:.9rem; margin:10px 0 24px; }
+  table.blocks caption{ caption-side:top; text-align:left; font-family:var(--mono); font-size:.75rem; text-transform:uppercase; letter-spacing:.08em; color:var(--accent-2); margin-bottom:.5em; }
+  table.blocks th, table.blocks td{ border:1px solid var(--border); padding:.55em .8em; text-align:left; vertical-align:top; }
+  table.blocks th{ background:var(--surface-2); font-family:var(--mono); font-size:.78rem; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); white-space:nowrap; }
+  table.blocks td:first-child{ font-family:var(--mono); white-space:nowrap; color:var(--accent); }
+  table.blocks tbody tr:nth-child(odd){ background:var(--surface); }
+  table.blocks tbody tr:nth-child(even){ background:color-mix(in srgb, var(--surface) 60%, var(--surface-2)); }
+
+  .toolbar{ display:flex; gap:10px; align-items:center; margin-bottom:16px; flex-wrap:wrap; }
+  button.btn{ font-family:var(--mono); font-size:.82rem; background:var(--surface); color:var(--text); border:1px solid var(--border); border-radius:7px; padding:.6em 1em; cursor:pointer; }
+  button.btn:hover{ border-color:var(--accent); color:var(--accent); }
+  button.btn:focus-visible, a:focus-visible, input:focus-visible, .checklist li:focus-within{ outline:2px solid var(--accent); outline-offset:2px; }
+  #pveProgress{ font-family:var(--mono); font-size:.8rem; color:var(--muted); }
+
+  ul.checklist{ list-style:none; margin:0 0 24px; padding:0; display:grid; gap:8px; }
+  ul.checklist li{ background:var(--surface); border:1px solid var(--border); border-radius:9px; box-shadow:var(--shadow); }
+  ul.checklist label{ display:block; padding:.7em .9em .7em 2.6em; cursor:pointer; font-size:.94rem; overflow-wrap:anywhere; }
+  ul.checklist input[type="checkbox"]{ margin:0 .6em 0 -1.7em; vertical-align:-.15em; width:16px; height:16px; accent-color:var(--accent); }
+  ul.checklist li.checked label{ color:var(--muted); text-decoration:line-through; text-decoration-color:var(--accent-2); }
+  ul.checklist li.checked{ border-color:var(--accent-2); }
+
+  #glossarySearch{ width:100%; max-width:420px; font-family:var(--sans); font-size:.95rem; padding:.7em .9em; border-radius:8px; border:1px solid var(--border); background:var(--surface); color:var(--text); margin-bottom:16px; }
+  .alpha-nav{ display:flex; flex-wrap:wrap; gap:4px; margin-bottom:24px; }
+  .alpha-nav a{ font-family:var(--mono); font-size:.78rem; width:1.9em; height:1.9em; display:flex; align-items:center; justify-content:center; border:1px solid var(--border); border-radius:5px; text-decoration:none; color:var(--muted); }
+  .alpha-nav a.has{ color:var(--text); }
+  .alpha-nav a.has:hover{ border-color:var(--accent); color:var(--accent); }
+  .glossary-letter{ font-family:var(--mono); color:var(--accent); font-size:1.1rem; margin:22px 0 8px; }
+  dl.glossary{ margin:0; }
+  dl.glossary .gitem{ border-top:1px solid var(--border); padding:12px 0; }
+  dl.glossary dt{ font-family:var(--mono); font-weight:600; }
+  dl.glossary dd{ margin:.3em 0 0; color:var(--muted); font-size:.92rem; }
+  .gitem.hidden{ display:none; }
+
+  .callout{ border-left:3px solid var(--accent); background:var(--accent-soft); border-radius:0 8px 8px 0; padding:14px 18px; margin:10px 0 24px; font-size:.92rem; }
+  .callout b{ font-family:var(--mono); }
+
+  footer{ padding:32px 0 60px; }
+  footer p{ color:var(--muted); font-size:.85rem; font-family:var(--mono); }
+</style>
+
+<style>
+  .callout.warn{ border-left-color:var(--danger); background:var(--danger-soft); }
+  .callout.info{ border-left-color:var(--accent-2); background:var(--accent-2-soft); }
+  .netdiagram{ font-family:var(--mono); font-size:.8rem; background:var(--surface-2); border:1px solid var(--border); border-radius:8px; padding:14px 16px; overflow-x:auto; white-space:pre; line-height:1.45; }
+  ol.steps{ padding-left:1.4em; } ol.steps > li{ margin-bottom:.6em; }
+  .calc{ display:flex; flex-wrap:wrap; gap:12px; align-items:center; margin:8px 0 6px; }
+  .calc input{ font-family:var(--mono); font-size:.95rem; width:8em; padding:.5em .7em; border-radius:7px; border:1px solid var(--border); background:var(--surface); color:var(--text); }
+  .calc output{ font-family:var(--mono); color:var(--accent); font-weight:600; }
+  .session-meta{ font-family:var(--mono); font-size:.8rem; color:var(--muted); margin:.2em 0 0; }
+  .evidence{ border:1px dashed var(--accent-2); border-radius:8px; padding:12px 16px; margin:10px 0 24px; font-size:.92rem; }
+  .evidence b{ font-family:var(--mono); color:var(--accent-2); }
+  @media (max-width:700px){ table.blocks td:first-child, table.blocks th{ white-space:normal; } table.blocks{ font-size:.85rem; } table.blocks td, table.blocks th{ padding:.45em .55em; overflow-wrap:anywhere; } }
+</style>
+
+
+<style>
+  .daynav{ display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; margin:36px 0 12px; padding-top:18px; border-top:1px solid var(--border); font-family:var(--mono); font-size:.9rem; }
+  .daynav a{ text-decoration:none; }
+  .daynav .muted{ color:var(--muted); }
+</style>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="termbar"><span></span><span></span><span></span></div>
+    <p class="eyebrow">IT251 · Linux From Scratch · Lab 11.2 · Session 3</p>
+    <h1>Lab 11.2<span class="cursor">&nbsp;</span></h1>
+    <p class="lede">Into the chroot.</p>
+    <div class="factrow">
+      <span class="fact"><b>When</b> Week of Nov 2</span>
+      <span class="fact"><b>Book</b> Ch. 7 → start Ch. 8</span>
+      <span class="fact"><b>Milestone</b> M3</span>
+    </div>
+  </div>
+</header>
+
+<nav class="index" aria-label="Lab days">
+  <div class="wrap">
+    <a href="IT251_LFS_Lab.html" class="toc-link">&larr; LFS: Start here</a>
+    <a href="IT251_LFS_9.2.html">9.2</a>
+    <a href="IT251_LFS_10.2.html">10.2</a>
+    <a href="IT251_LFS_11.2.html" aria-current="page">11.2</a>
+    <a href="IT251_LFS_12.2.html">12.2</a>
+    <a href="IT251_LFS_Lab.html#resume">Resume Cards</a>
+    <a href="IT251_LFS_Lab.html#troubleshooting">Common Snags</a>
+    <a href="IT251_LFS_Lab.html#glossary">Glossary</a>
+  </div>
+</nav>
+
+<main class="wrap">
+
+  <section id="start">
+    <div class="section-head">
+      <p class="kicker">Every session · do this first</p>
+      <h2>Before you start</h2>
+    </div>
+    <p>Run <b>Card 1</b> first. If you still have Chapter 6 packages left, finish them as <code class="inline">lfs</code> with <b>Card 2</b>. Today you switch to <b>root</b> for good: the steps below do Card 3's mounts for the first time (§7.3). <b>From your next session on, use Card 1, then Card 3.</b></p>
+    <div class="example" id="tmux">
+      <span class="tag">Every session · keep long builds alive</span>
+      <h3>Work inside tmux</h3>
+      <p>A build runs <i>inside</i> your SSH window. If that window closes, your Wi-Fi drops, or you close your laptop's terminal, the build is killed halfway. <code class="inline">tmux</code> fixes this: it keeps your session running inside the VM, and you can reconnect to it later. Start it <b>first</b> every time you sit down to build, as <code class="inline">student</code>, before <code class="inline">sudo -i</code>:</p>
+      <pre class="term">tmux new -s lfs          # first time: start a session named "lfs"
+tmux attach -t lfs       # every time after: reconnect to it (also after an SSH drop)</pre>
+      <ul>
+        <li>To leave a build running and close the window, press <b>Ctrl+b</b>, let go, then press <b>d</b> ("detach"). The build keeps going.</li>
+        <li>A green bar at the bottom of the window means you're inside tmux.</li>
+        <li>If <code class="inline">tmux attach</code> says <i>no sessions</i>, the VM was rebooted (that ends tmux too). Start a new one, run your resume card, and redo the package you were on.</li>
+        <li>tmux can't help if your <b>laptop</b> goes to sleep, because the whole VM pauses. See <a href="IT251_LFS_Lab.html#awake">Keep your laptop awake</a>.</li>
+      </ul>
+    </div>
+    <div class="example">
+      <span class="tag">Card 1 · Chapters 2–4 · root on the host</span>
+      <pre class="term">sudo -i                  # root; the class VM already sets LFS and umask for root
+echo $LFS                # must print /mnt/lfs
+findmnt $LFS             # must show /dev/sdb1   (STOP if either line is empty)</pre>
+      <p>After 9.2 your LFS partition mounts automatically at boot (we add it to Debian's <code class="inline">/etc/fstab</code>). If <code class="inline">findmnt</code> shows nothing, run <code class="inline">mount -v -t ext4 /dev/sdb1 $LFS</code>.</p>
+    </div>
+    <div class="example">
+      <span class="tag">Card 2 · Chapters 5–6 · user lfs, never root</span>
+      <pre class="term">sudo -i                  # Card 1 checks first, then:
+su - lfs                 # the "-" matters: it loads the clean build environment
+echo $LFS $LFS_TGT       # /mnt/lfs x86_64-lfs-linux-gnu
+echo $PATH               # must START with /mnt/lfs/tools/bin</pre>
+      <p>In the book's words, building these chapters as anyone else risks "installing packages to the host, and potentially rendering it unusable." Your prompt should look like <code class="inline">lfs:~$</code>.</p>
+    </div>
+    <div class="example">
+      <span class="tag">Card 3 · Chapters 7–10 · root on the host, then chroot</span>
+      <pre class="term">sudo -i                  # Card 1 checks first, then mount the virtual filesystems (§7.3):
+mount -v --bind /dev $LFS/dev
+mount -vt devpts devpts -o gid=5,mode=0620 $LFS/dev/pts
+mount -vt proc proc $LFS/proc
+mount -vt sysfs sysfs $LFS/sys
+mount -vt tmpfs tmpfs $LFS/run
+# + the /dev/shm lines at the end of §7.3.2
+findmnt -R $LFS          # should list dev, dev/pts, proc, sys, run under /mnt/lfs</pre>
+      <p>Then enter with the full <code class="inline">chroot</code> command from <a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/chapter07/chroot.html">§7.4</a>. Your prompt becomes <code class="inline">(lfs chroot) root:/#</code>. Only mount these <b>once</b> per boot; mounting them twice causes confusing errors.</p>
+    </div>
+    <p class="session-meta">All the cards, and why each line matters: <a href="IT251_LFS_Lab.html#resume">Resume cards</a>.</p>
+  </section>
+
+  <section id="s112">
+    <div class="section-head">
+      <p class="kicker">Lab 11.2 · Session 3</p>
+      <h2>Into the chroot</h2>
+      <p class="session-meta">Week of Nov 2 · Book: Chapter 7 → start Chapter 8 · Milestone M3 · From here on: root and Card 3, never lfs · Homework: through §8.5 Glibc</p>
+    </div>
+
+    <div class="toolbar">
+      <button class="btn" id="reset112">Reset progress</button>
+      <span id="prog112"></span>
+    </div>
+    <ul class="checklist" id="list112">
+      <li><label><input type="checkbox" data-id="a"> Back to root (<code class="inline">exit</code> from lfs); <code class="inline">echo $LFS</code> prints /mnt/lfs</label></li>
+      <li><label><input type="checkbox" data-id="b"> Ownership changed (§7.2); virtual filesystems mounted (§7.3)</label></li>
+      <li><label><input type="checkbox" data-id="c"> Entered chroot (§7.4); directories and essential files created (§7.5–7.6)</label></li>
+      <li><label><input type="checkbox" data-id="d"> Additional temporary tools built (§7.7–7.14)</label></li>
+      <li><label><input type="checkbox" data-id="e"> Cleaned up and made the §7.15 backup; snapshot <code class="inline">ch7-backup</code> taken</label></li>
+      <li><label><input type="checkbox" data-id="f"> Back in chroot (Card 3) and started Chapter 8</label></li>
+    </ul>
+
+    <div class="callout warn"><b>User switch!</b> Chapter 7 onward is done as <b>root</b>, not lfs (<a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/chapter07/changingowner.html">§7.2</a>). Type <code class="inline">exit</code> to leave the lfs shell, then confirm <code class="inline">whoami</code> = root and <code class="inline">echo $LFS</code> = /mnt/lfs. Running §7.2's <code class="inline">chown</code> with an empty <code class="inline">$LFS</code> would change ownership on your host's <code class="inline">/usr</code>.</div>
+
+    <h3>Steps</h3>
+    <ol class="steps">
+      <li><a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/chapter07/changingowner.html">§7.2 Changing ownership</a>, then <a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/chapter07/kernfs.html">§7.3 virtual kernel filesystems</a> (these are the Card 3 mounts).</li>
+      <li><a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/chapter07/chroot.html">§7.4 Enter the chroot</a>. Screenshot the <code class="inline">(lfs chroot) root:/#</code> prompt for M3.</li>
+      <li><a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/chapter07/creatingdirs.html">§7.5</a> and <a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/chapter07/createfiles.html">§7.6</a>: you're building the FHS (Week 1!) and <code class="inline">/etc/passwd</code> / <code class="inline">/etc/group</code> (Week 4!) by hand.</li>
+      <li>§7.7–7.14: Gettext, Bison, Perl, Zlib, mpdecimal, Python, Texinfo, Util-linux. Use the same <a href="IT251_LFS_10.2.html#package-routine">one-package routine</a>, with one change: <b>inside the chroot, the sources are at <code class="inline">/sources</code></b> (your new system's view of <code class="inline">/mnt/lfs/sources</code>), so start each package with <code class="inline">cd /sources</code>.</li>
+      <li><a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/chapter07/cleanup.html">§7.15 Cleanup and backup</a>. The backup is optional in the book, but <b>required for this class</b>. Follow its steps exactly: <code class="inline">exit</code> the chroot, unmount the virtual filesystems, then create the tarball in root's home. The book warns that compressing takes "over 10 minutes." Afterward, shut down and take snapshot <code class="inline">ch7-backup</code>.</li>
+      <li>Re-enter the chroot (Card 3) and start Chapter 8.</li>
+    </ol>
+    <div class="callout warn"><b>Read the restore warning twice.</b> §7.15's restore runs <code class="inline">rm -rf ./*</code> as root. With the wrong directory or an empty <code class="inline">$LFS</code>, the book says it "will destroy your entire host system." In this class, <b>restore by reverting your VirtualBox snapshot</b> instead; use the tarball only if your instructor tells you to.</div>
+
+    <div class="example">
+      <span class="tag">Concept</span>
+      <h3>chroot: a changed root, not a cage</h3>
+      <p><code class="inline">chroot</code> makes a process see <code class="inline">/mnt/lfs</code> as <code class="inline">/</code>, so programs inside find <i>your</i> new libraries and tools. But it is <b>not a security boundary</b>: root inside a chroot can escape it, and it shares the host's kernel, processes, and network. Containers (namespaces + cgroups) and SELinux/AppArmor exist to provide the real isolation chroot lacks. That's a classic Module 6 exam distinction.</p>
+    </div>
+
+    <h3>Homework before 12.2</h3>
+    <p>Get through <a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/chapter08/glibc.html">§8.5 Glibc</a>: do <a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/chapter08/man-pages.html">§8.3 Man-pages</a> and <a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/chapter08/iana-etc.html">§8.4 Iana-Etc</a>, then Glibc itself (about 11 SBU with tests; <b>save its test summary</b> for M4). Read <a href="https://www.linuxfromscratch.org/lfs/view/13.1-systemd/chapter08/pkgmgt.html">§8.2 Package Management</a>: LFS has no package manager. Why might that be a problem for an auditor?</p>
+    <div class="evidence"><b>M3 evidence:</b> chroot-prompt screenshot · <code class="inline">ls -lh ~/lfs-temp-tools-13.1-systemd.tar.xz</code> (run as root on the host) · journal entry.</div>
+  </section>
+<div class="daynav">
+  <a href="IT251_LFS_10.2.html">&larr; Lab 10.2</a>
+  <a href="IT251_LFS_Lab.html">LFS: Start here</a>
+  <a href="IT251_LFS_12.2.html">Lab 12.2 &rarr;</a>
+</div>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>IT251 · Linux+ (XK0-006) · Linux From Scratch lab series, built on LFS 13.1-systemd. Progress checkboxes save to this browser only.</p>
+    <p>Linux From Scratch © 1999–2026 Gerard Beekmans, published under a Creative Commons license; this page links to it rather than copying it. Short command excerpts from the book (resume cards and the §6.2 worked example) are used under the book's MIT License for computer instructions.</p>
+  </div>
+</footer>
+
+<script>
+  // Checklist progress, saved per-browser via localStorage (same key as the old single page, so progress carries over)
+  function wireChecklist(listId, progressId, resetBtnId, storageKey){
+    const list = document.getElementById(listId);
+    if (!list) return;
+    const boxes = Array.from(list.querySelectorAll('input[type="checkbox"]'));
+    let saved = {};
+    try { saved = JSON.parse(localStorage.getItem(storageKey) || '{}'); } catch(e) { saved = {}; }
+    function save(){
+      try { localStorage.setItem(storageKey, JSON.stringify(saved)); } catch(e) {}
+    }
+    function updateProgress(){
+      const done = boxes.filter(b => b.checked).length;
+      const el = document.getElementById(progressId);
+      if (el) el.textContent = `${done} / ${boxes.length} complete`;
+    }
+    boxes.forEach(b => {
+      const id = b.dataset.id;
+      if (saved[id]) { b.checked = true; b.closest('li').classList.add('checked'); }
+      b.addEventListener('change', () => {
+        saved[id] = b.checked;
+        b.closest('li').classList.toggle('checked', b.checked);
+        save(); updateProgress();
+      });
+    });
+    updateProgress();
+    const resetBtn = document.getElementById(resetBtnId);
+    if (resetBtn) resetBtn.addEventListener('click', () => {
+      boxes.forEach(b => { b.checked = false; b.closest('li').classList.remove('checked'); });
+      saved = {}; save(); updateProgress();
+    });
+  }
+  wireChecklist('list112', 'prog112', 'reset112', 'it251_lfs_112');
+</script>
+
+<button id="backToTop" class="back-to-top" aria-label="Back to top" title="Back to top">&uarr;</button>
+
+<script>
+  const backToTop = document.getElementById('backToTop');
+  function toggleBackToTop(){ backToTop.classList.toggle('show', window.scrollY > 480); }
+  window.addEventListener('scroll', toggleBackToTop, {passive:true});
+  toggleBackToTop();
+  backToTop.addEventListener('click', () => window.scrollTo({top:0, behavior:'smooth'}));
+</script>
