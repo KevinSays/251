@@ -476,14 +476,18 @@ findmnt -R $LFS          # should list dev, dev/pts, proc, sys, run under /mnt/l
 
     <h3>The rules</h3>
     <ul>
-      <li><b>Ask first.</b> Your instructor gives you the file (<code class="inline">lfs-temp-tools-13.1-systemd.tar.xz</code> plus a <code class="inline">.sha256</code>). It's offered at the 12.2 checkpoint, or later if your build can't be recovered.</li>
+      <li><b>Ask first.</b> Your instructor tells you when to use it: at the 12.2 checkpoint, or later if your build can't be recovered. The file (<code class="inline">lfs-temp-tools-13.1-systemd.tar.xz</code>, 1.2 GB, plus a <code class="inline">.sha256</code>) is on the <a href="https://github.com/KevinSays/251/releases/tag/lfs-catchup-13.1">class GitHub Release</a>. It's public, but using it without your instructor's OK still counts as using it.</li>
       <li><b>Once per student.</b> After that, use your own snapshots.</li>
       <li><b>Grading:</b> you keep full credit for milestones you already earned. Milestones the snapshot skips (M2 and/or M3) earn <b>half credit</b>. Your journal must explain what went wrong, and still answer the "why" questions from Chapters 5–7: why the toolchain is built twice, what <code class="inline">env -i</code> protects against, and why chroot isn't a security boundary.</li>
       <li>It contains a marker file, <code class="inline">/etc/it251-catchup</code>. That's expected; you'll show it at your boot demo.</li>
     </ul>
 
     <h3>How to use it</h3>
-    <p>You need the 9.2 disk setup done (your <code class="inline">/dev/sdb1</code> and its fstab line). Copy the file into the VM (e.g. <code class="inline">scp -P 2222 lfs-temp-tools-13.1-systemd.tar.xz* student@127.0.0.1:</code>), then <b>as root on the Debian host, not in chroot</b>:</p>
+    <p>You need the 9.2 disk setup done (your <code class="inline">/dev/sdb1</code> and its fstab line). First, as <b>student</b> (your normal login, not root), download both files straight into the VM. It's 1.2 GB, so give it a few minutes:</p>
+    <pre class="term">cd ~
+wget https://github.com/KevinSays/251/releases/download/lfs-catchup-13.1/lfs-temp-tools-13.1-systemd.tar.xz
+wget https://github.com/KevinSays/251/releases/download/lfs-catchup-13.1/lfs-temp-tools-13.1-systemd.tar.xz.sha256</pre>
+    <p>(If your instructor hands it out on a USB stick instead, copy it in with <code class="inline">scp -P 2222 lfs-temp-tools-13.1-systemd.tar.xz* student@127.0.0.1:</code> from your laptop.) Then <b>as root on the Debian host, not in chroot</b>:</p>
     <pre class="term">sudo -i
 cd ~student &amp;&amp; sha256sum -c lfs-temp-tools-13.1-systemd.tar.xz.sha256
 U=$(blkid -s UUID -o value /dev/sdb1)     # remember the partition's UUID
@@ -592,7 +596,7 @@ Next time I start at: (book section + which resume card)</pre>
     {t:"set +h", d:"Turns off bash's command-path hashing, so newly built tools in $LFS/tools/bin are used right away."},
     {t:"MAKEFLAGS", d:"An environment variable make reads as extra options. -j$(nproc) runs one build job per CPU core."},
     {t:"umask 022", d:"Makes new files 644 and directories 755 by default. Set in LFS so permissions in the new system come out right."},
-    {t:"Test suite", d:"A package's own checks (make check / make test). Required in this class for Glibc, Binutils and GCC; optional for the rest."},
+    {t:"Test suite", d:"A package's own checks (make check / make test). Required in this class for Glibc, Binutils, GCC, GMP and MPFR; optional for the rest."},
     {t:"md5sum", d:"Computes a checksum. md5sum -c md5sums confirms every downloaded tarball is complete and unchanged. It detects corruption, not a malicious mirror."},
     {t:"Tarball", d:"A .tar archive, usually compressed (.tar.xz, .tar.gz). Every LFS package arrives as one."},
     {t:"MBR (dos) partition table", d:"The classic partition table format, used on our LFS disk because our VMs boot in legacy BIOS mode."},

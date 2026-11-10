@@ -277,6 +277,7 @@ findmnt -R $LFS          # should list dev, dev/pts, proc, sys, run under /mnt/l
       <thead><tr><th>Package</th><th>Run the tests?</th></tr></thead>
       <tbody>
         <tr><td>Glibc, Binutils, GCC</td><td><b>Required.</b> The book calls these "of the utmost importance."</td></tr>
+        <tr><td>GMP, MPFR</td><td><b>Required too.</b> GCC is built on these math libraries, and the book says their tests are "considered critical. Do not skip it under any circumstances." They only take a few minutes.</td></tr>
         <tr><td>Everything else in Ch. 8</td><td>Optional. Skip them if you're short on time; it doesn't affect your grade.</td></tr>
       </tbody>
     </table>
