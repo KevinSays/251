@@ -219,11 +219,12 @@
       <h3>Work inside tmux</h3>
       <p>A build runs <i>inside</i> your SSH window. If that window closes, your Wi-Fi drops, or you close your laptop's terminal, the build is killed halfway. <code class="inline">tmux</code> fixes this: it keeps your session running inside the VM, and you can reconnect to it later. Start it <b>first</b> every time you sit down to build, as <code class="inline">student</code>, before <code class="inline">sudo -i</code>:</p>
       <pre class="term">tmux new -s lfs          # first time: start a session named "lfs"
-tmux attach -t lfs       # every time after: reconnect to it (also after an SSH drop)</pre>
+tmux attach -d -t lfs    # every time after: reconnect to it (also after an SSH drop)</pre>
       <ul>
         <li>To leave a build running and close the window, press <b>Ctrl+b</b>, let go, then press <b>d</b> ("detach"). The build keeps going.</li>
         <li>A green bar at the bottom of the window means you're inside tmux.</li>
         <li>If <code class="inline">tmux attach</code> says <i>no sessions</i>, the VM was rebooted (that ends tmux too). Start a new one, run your resume card, and redo the package you were on.</li>
+        <li><b>Why the <code class="inline">-d</code>?</b> It kicks off any old connection that's still hanging on to your session. That happens most after you <b>save the VM's state</b> in VirtualBox ("Save the machine state" when you close it) in the middle of a build. Saving the state is safe: the build is frozen and picks up right where it stopped when you start the VM again. But your old SSH window died while the VM was frozen, and tmux may still think it's there. If you reconnect with a plain <code class="inline">tmux attach</code>, part of your screen fills with rows of dots (<code class="inline">·····</code>), because tmux is sizing everything to the old, dead window. Nothing is broken. Press <b>Ctrl+b</b>, let go, press <b>d</b>, then run <code class="inline">tmux attach -d -t lfs</code>.</li>
         <li>tmux can't help if your <b>laptop</b> goes to sleep, because the whole VM pauses. See <a href="IT251_LFS_Lab.html#awake">Keep your laptop awake</a>.</li>
       </ul>
     </div>
